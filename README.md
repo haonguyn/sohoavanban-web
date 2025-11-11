@@ -1,20 +1,38 @@
-🚀 1. Yêu cầu hệ thống
-    Công cụ	Phiên bản khuyến nghị
-    Node.js	>= 16.x
-    npm	>= 8.x
-    Git	(tuỳ chọn, để clone repo)
+# 📝 SohoAvanBan Web
 
-    node -v
-    npm -v
+Ứng dụng web quản lý và xử lý văn bản số hóa (OCR) — xây dựng bằng **Vue 3 + Vite + TypeScript**.
 
+---
+
+## ⚙️ Yêu cầu hệ thống
+
+| Công cụ | Phiên bản khuyến nghị |
+|----------|------------------------|
+| Node.js | >= 16.x |
+| npm | >= 8.x |
+| Git | Tuỳ chọn (để clone repo) |
+
+---
+
+## 🚀 Cài đặt & Chạy dự án
+
+```bash
+# Kiểm tra phiên bản
+node -v
+npm -v
+
+# Cài đặt dependencies
 cd sohoavanban-web
 npm install
 
-run: npm run dev
+# Chạy môi trường phát triển
+npm run dev
 
-build: npm run build
+# Build cho production
+npm run build
 
-Preview sau build: npm run preview
+# Preview sau khi build
+npm run preview
 
 
 
