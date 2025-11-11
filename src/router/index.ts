@@ -3,12 +3,15 @@ import HomeView from '../views/HomeView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView },
-  { path: '/ocr', name: 'ocr', component: () => import('../views/OCRScanView.vue') },
+  { path: '/tra-cuu', name: 'advancedsearch', component: () => import('../views/AdvancedSearchView.vue') },
+  { path: '/quan-ly', name: 'quanly', component: () => import('../views/QuanLyView.vue') },
+  { path: '/ocr-vanban', name: 'ocrvanban', component: () => import('../views/OCRScanView.vue') },
+  { path: '/login', name : 'login', compoment: () => import('../views/LoginView.vue')}
 ]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 })
 
 export default router
