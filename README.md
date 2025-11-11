@@ -1,4 +1,4 @@
-# 📝 SohoAvanBan Web
+# 📝 OCR-APP
 
 Ứng dụng web quản lý và xử lý văn bản số hóa (OCR) — xây dựng bằng **Vue 3 + Vite + TypeScript**.
 
