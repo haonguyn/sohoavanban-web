@@ -13,133 +13,164 @@
                 </p>
             </header>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                 <!-- CỘT TẢI LÊN -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-4">
-                        Tải lên tệp của bạn
-                    </h2>
+                <div class="md:col-span-4 space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                            Tải lên tệp của bạn
+                        </h2>
 
-                    <!-- Vùng kéo thả -->
-                    <div
-                        @dragover.prevent="onDragOver"
-                        @dragleave.prevent="onDragLeave"
-                        @drop.prevent="onDrop"
-                        :class="{ 'border-blue-500 bg-blue-50': isDragging }"
-                        class="flex justify-center items-center w-full h-64 px-6 py-10 border-2 border-gray-300 border-dashed rounded-md transition-colors"
-                    >
-                        <div class="text-center">
-                            <svg
-                                class="mx-auto h-12 w-12 text-gray-400"
-                                stroke="currentColor"
-                                fill="none"
-                                viewBox="0 0 48 48"
-                                aria-hidden="true"
-                            >
-                                <path
-                                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h4"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </svg>
-                            <p class="mt-2 text-sm text-gray-600">
-                                Kéo thả file vào đây
-                            </p>
-                            <p class="text-xs text-gray-500">hoặc</p>
-                            <label
-                                for="file-upload"
-                                class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                            >
-                                <span>chọn một tệp</span>
-                                <input
-                                    id="file-upload"
-                                    name="file-upload"
-                                    type="file"
-                                    class="sr-only"
-                                    @change="onFileSelect"
-                                />
-                            </label>
-                            <p class="text-xs text-gray-500 mt-1">
-                                PNG, JPG, PDF (tối đa 10MB)
-                            </p>
+                        <!-- Vùng kéo thả -->
+                        <div @dragover.prevent="onDragOver" @dragleave.prevent="onDragLeave" @drop.prevent="onDrop"
+                            :class="{ 'border-blue-500 bg-blue-50': isDragging }"
+                            class="flex justify-center items-center w-full h-64 px-6 py-10 border-2 border-gray-300 border-dashed rounded-md transition-colors">
+                            <div class="text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none"
+                                    viewBox="0 0 48 48" aria-hidden="true">
+                                    <path
+                                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h4"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <p class="mt-2 text-sm text-gray-600">
+                                    Kéo thả file vào đây
+                                </p>
+                                <p class="text-xs text-gray-500">hoặc</p>
+                                <label for="file-upload"
+                                    class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                    <span>chọn một tệp</span>
+                                    <input id="file-upload" name="file-upload" type="file" class="sr-only"
+                                        accept=".png,.jpg,.jpeg,.pdf" @change="onFileSelect" />
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    PNG, JPG, PDF (tối đa 10MB)
+                                </p>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Hiển thị file đã chọn -->
-                    <div v-if="selectedFile" class="mt-4">
-                        <p class="text-sm font-medium text-gray-700">
-                            Tệp đã chọn:
-                        </p>
-                        <div
-                            class="flex justify-between items-center bg-gray-50 p-3 rounded-md mt-1"
-                        >
-                            <span class="text-sm text-gray-900 truncate">{{
-                                selectedFile.name
-                            }}</span>
-                            <button
-                                @click="clearFile"
-                                class="text-red-500 hover:text-red-700 text-sm font-medium"
-                            >
-                                Xóa
+                        <!-- Hiển thị file đã chọn -->
+                        <div v-if="selectedFile" class="mt-4">
+                            <p class="text-sm font-medium text-gray-700">
+                                Tệp đã chọn:
+                            </p>
+                            <div class="flex justify-between items-center bg-gray-50 p-3 rounded-md mt-1">
+                                <span class="text-sm text-gray-900 truncate">{{
+                                    selectedFile.name
+                                    }}</span>
+                                <button @click="clearFile" class="text-red-500 hover:text-red-700 text-sm font-medium">
+                                    Xóa
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Nút bắt đầu OCR -->
+                        <button @click="startOCR" :disabled="!selectedFile || isLoading"
+                            class="w-full mt-6 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                            <span v-if="!isLoading">Bắt đầu trích xuất</span>
+                            <span v-else class="flex items-center justify-center">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                                Đang xử lý...
+                            </span>
+                        </button>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-700">Thêm văn bản mới</h2>
+                        <form id="addVanBanForm" class="space-y-4">
+                            <div>
+                                <div class="flex justify-between items-center">
+                                    <label for="tenVanBan" class="block text-sm font-medium text-gray-600">Tên văn bản
+                                        <span class="text-red-500">*</span></label>
+                                    <!-- NÚT GỢI Ý GEMINI MỚI -->
+                                    <button id="generateNameButton" type="button"
+                                        class="text-xs text-blue-600 hover:text-blue-800 font-medium inline-flex items-center">
+                                        <svg id="generateNameSpinner"
+                                            class="animate-spin -ml-1 mr-1 h-3 w-3 text-blue-600"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                        ✨ Gợi ý
+                                    </button>
+                                </div>
+                                <input type="text" id="tenVanBan" name="tenVanBan" required
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="soKyHieu" class="block text-sm font-medium text-gray-600">Số / Ký
+                                    hiệu</label>
+                                <input type="text" id="soKyHieu" name="soKyHieu"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="ngayBanHanh" class="block text-sm font-medium text-gray-600">Ngày ban
+                                    hành</label>
+                                <input type="date" id="ngayBanHanh" name="ngayBanHanh"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="coQuanBanHanh" class="block text-sm font-medium text-gray-600">Cơ quan ban
+                                    hành</label>
+                                <input type="text" id="coQuanBanHanh" name="coQuanBanHanh"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="loaiVanBan" class="block text-sm font-medium text-gray-600">Loại văn
+                                    bản</label>
+                                <select id="loaiVanBan" name="loaiVanBan"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <option value="Khác">Khác</option>
+                                    <option value="Quyết định">Quyết định</option>
+                                    <option value="Công văn">Công văn</option>
+                                    <option value="Hợp đồng">Hợp đồng</option>
+                                    <option value="Thông báo">Thông báo</option>
+                                    <option value="Giấy tờ cá nhân">Giấy tờ cá nhân (CCCD, GPLX...)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="linkLuuTru" class="block text-sm font-medium text-gray-600">Link lưu trữ
+                                    (Google
+                                    Drive, v.v.)</label>
+                                <input type="url" id="linkLuuTru" name="linkLuuTru" placeholder="https://"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="ghiChu" class="block text-sm font-medium text-gray-600">Ghi chú</label>
+                                <textarea id="ghiChu" name="ghiChu" rows="3"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                            </div>
+                            <button type="submit" id="submitButton"
+                                class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Thêm văn bản
                             </button>
-                        </div>
+                        </form>
                     </div>
-
-                    <!-- Nút bắt đầu OCR -->
-                    <button
-                        @click="startOCR"
-                        :disabled="!selectedFile || isLoading"
-                        class="w-full mt-6 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                        <span v-if="!isLoading">Bắt đầu trích xuất</span>
-                        <span v-else class="flex items-center justify-center">
-                            <svg
-                                class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                            >
-                                <circle
-                                    class="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    stroke-width="4"
-                                ></circle>
-                                <path
-                                    class="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                ></path>
-                            </svg>
-                            Đang xử lý...
-                        </span>
-                    </button>
                 </div>
 
                 <!-- CỘT KẾT QUẢ -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="md:col-span-8 bg-white p-6 rounded-lg shadow-md">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-semibold text-gray-800">
                             Kết quả trích xuất
                         </h2>
-                        <button
-                            @click="copyText"
-                            :disabled="!extractedText"
-                            class="text-sm font-medium text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-                        >
+                        <button @click="copyText" :disabled="!extractedText"
+                            class="text-sm font-medium text-blue-600 hover:text-blue-800 disabled:text-gray-400">
                             Sao chép
                         </button>
                     </div>
 
-                    <textarea
-                        v-model="extractedText"
-                        placeholder="Văn bản được trích xuất sẽ xuất hiện ở đây..."
+                    <textarea v-model="extractedText" placeholder="Văn bản được trích xuất sẽ xuất hiện ở đây..."
                         readonly
-                        class="w-full h-96 p-4 bg-gray-50 border border-gray-200 rounded-md font-mono text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    ></textarea>
+                        class="w-full h-96 p-4 bg-gray-50 border border-gray-200 rounded-md font-mono text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                 </div>
             </div>
         </div>
@@ -179,7 +210,7 @@ export default defineComponent({
         onDrop(event: DragEvent) {
             this.isDragging = false;
             const file = event.dataTransfer?.files[0];
-            if (file) {
+            if (file && this.validateFile(file)) {
                 this.selectedFile = file;
             }
         },
@@ -187,11 +218,26 @@ export default defineComponent({
         onFileSelect(event: Event) {
             const target = event.target as HTMLInputElement;
             const file = target.files?.[0];
-            if (file) {
+            if (file && this.validateFile(file)) {
                 this.selectedFile = file;
             }
         },
+        validateFile(file: File) {
+            const allowedTypes = ["image/png", "image/jpeg", "application/pdf"];
+            const maxSize = 10 * 1024 * 1024; // 10MB
 
+            if (!allowedTypes.includes(file.type)) {
+                alert(`❌ File "${file.name}" không hợp lệ. Chỉ chấp nhận PNG, JPG hoặc PDF.`);
+                return false;
+            }
+
+            if (file.size > maxSize) {
+                alert(`⚠️ File "${file.name}" vượt quá dung lượng tối đa 10MB.`);
+                return false;
+            }
+
+            return true;
+        },
         clearFile() {
             this.selectedFile = null;
         },

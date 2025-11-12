@@ -4,9 +4,7 @@
         <Header />
         <!-- Phần Hero & Thanh Tìm kiếm chính -->
         <div class="bg-white shadow-sm">
-            <div
-                class="container mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center"
-            >
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
                 <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
                     Hệ thống Tra cứu Văn bản
                 </h1>
@@ -18,36 +16,19 @@
                 <!-- Thanh tìm kiếm -->
                 <div class="max-w-2xl mx-auto">
                     <form @submit.prevent="handleSearch" class="flex">
-                        <input
-                            type="text"
-                            v-model="searchQuery"
+                        <input type="text" v-model="searchQuery"
                             placeholder="Nhập từ khóa, số hiệu, nội dung văn bản..."
-                            class="flex-grow w-full px-5 py-3 text-base text-gray-700 bg-white border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                        <button
-                            type="submit"
-                            class="px-6 py-3 bg-blue-600 text-white font-medium rounded-r-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                        >
-                            <svg
-                                class="h-6 w-6"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                />
+                            class="flex-grow w-full px-5 py-3 text-base text-gray-700 bg-white border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                        <button type="submit"
+                            class="px-6 py-3 bg-blue-600 text-white font-medium rounded-r-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </button>
                     </form>
-                    <a
-                        href="/advance-search"
-                        class="inline-block mt-4 text-sm text-blue-600 hover:underline"
-                    >
+                    <a href="/advance-search" class="inline-block mt-4 text-sm text-blue-600 hover:underline">
                         Tìm kiếm nâng cao
                     </a>
                 </div>
@@ -69,24 +50,13 @@
                 <div class="grid md:grid-cols-3 gap-8">
                     <!-- Tính năng 1: Tra cứu -->
                     <div
-                        class="bg-white p-6 rounded-lg shadow-lg text-center transform hover:scale-105 transition-transform duration-300"
-                    >
+                        class="bg-white p-6 rounded-lg shadow-lg text-center transform hover:scale-105 transition-transform duration-300">
                         <div
-                            class="flex items-center justify-center h-16 w-16 bg-blue-100 text-blue-600 rounded-full mx-auto mb-4"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="currentColor"
-                                class="w-8 h-8"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                                />
+                            class="flex items-center justify-center h-16 w-16 bg-blue-100 text-blue-600 rounded-full mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-8 h-8">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                             </svg>
                         </div>
                         <h3 class="text-xl font-semibold text-gray-900 mb-2">
@@ -100,24 +70,13 @@
 
                     <!-- Tính năng 2: Quản lý -->
                     <div
-                        class="bg-white p-6 rounded-lg shadow-lg text-center transform hover:scale-105 transition-transform duration-300"
-                    >
+                        class="bg-white p-6 rounded-lg shadow-lg text-center transform hover:scale-105 transition-transform duration-300">
                         <div
-                            class="flex items-center justify-center h-16 w-16 bg-green-100 text-green-600 rounded-full mx-auto mb-4"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="currentColor"
-                                class="w-8 h-8"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M3.75 9.776c.814.246 1.668.4 2.55.465a7.5 7.5 0 0 1 7.5 0c.882-.065 1.736-.219 2.55-.465M2.25 10.5v8.25c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-8.25M12 15.75V3.75m0 12V3.75m0 12v-8.25m0 8.25V3.75m-4.5 0v12m0 0V3.75m0 0v12m0-12V3.75m9 12V3.75m0 0v12m0 0V3.75m0 0v12m0-12V3.75"
-                                />
+                            class="flex items-center justify-center h-16 w-16 bg-green-100 text-green-600 rounded-full mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-8 h-8">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.75 9.776c.814.246 1.668.4 2.55.465a7.5 7.5 0 0 1 7.5 0c.882-.065 1.736-.219 2.55-.465M2.25 10.5v8.25c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-8.25M12 15.75V3.75m0 12V3.75m0 12v-8.25m0 8.25V3.75m-4.5 0v12m0 0V3.75m0 0v12m0-12V3.75m9 12V3.75m0 0v12m0 0V3.75m0 0v12m0-12V3.75" />
                             </svg>
                         </div>
                         <h3 class="text-xl font-semibold text-gray-900 mb-2">
@@ -131,24 +90,13 @@
 
                     <!-- Tính năng 3: OCR -->
                     <div
-                        class="bg-white p-6 rounded-lg shadow-lg text-center transform hover:scale-105 transition-transform duration-300"
-                    >
+                        class="bg-white p-6 rounded-lg shadow-lg text-center transform hover:scale-105 transition-transform duration-300">
                         <div
-                            class="flex items-center justify-center h-16 w-16 bg-purple-100 text-purple-600 rounded-full mx-auto mb-4"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="currentColor"
-                                class="w-8 h-8"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.745 3.745 0 0 1 3.296-1.043A3.745 3.745 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.745 3.745 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z"
-                                />
+                            class="flex items-center justify-center h-16 w-16 bg-purple-100 text-purple-600 rounded-full mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-8 h-8">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.745 3.745 0 0 1 3.296-1.043A3.745 3.745 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.745 3.745 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
                             </svg>
                         </div>
                         <h3 class="text-xl font-semibold text-gray-900 mb-2">
@@ -172,53 +120,36 @@
 
                 <div class="space-y-4">
                     <!-- Mockup item văn bản -->
-                    <div
-                        v-for="doc in featuredDocs"
-                        :key="doc.id"
-                        class="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
-                    >
-                        <div
-                            class="flex flex-col sm:flex-row justify-between sm:items-center"
-                        >
+                    <div v-for="doc in featuredDocs" :key="doc.id"
+                        class="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center">
                             <div>
-                                <span
-                                    :class="getStatusClass(doc.status)"
-                                    class="text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2 inline-block"
-                                >
+                                <span :class="getStatusClass(doc.status)"
+                                    class="text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2 inline-block">
                                     {{ doc.status }}
                                 </span>
-                                <h3
-                                    class="text-lg font-semibold text-blue-700 hover:underline"
-                                >
+                                <h3 class="text-lg font-semibold text-blue-700 hover:underline">
                                     <a href="#">{{ doc.title }}</a>
                                 </h3>
                                 <p class="text-sm text-gray-600 mt-1">
                                     {{ doc.description }}
                                 </p>
                             </div>
-                            <div
-                                class="mt-3 sm:mt-0 sm:ml-6 text-left sm:text-right flex-shrink-0"
-                            >
+                            <div class="mt-3 sm:mt-0 sm:ml-6 text-left sm:text-right flex-shrink-0">
                                 <p class="text-sm text-gray-500">
                                     Ngày ban hành: {{ doc.issueDate }}
                                 </p>
                                 <p class="text-sm text-gray-500">
                                     Ngày hiệu lực: {{ doc.effectiveDate }}
                                 </p>
-                                <a
-                                    href="#"
-                                    class="text-sm text-blue-600 hover:underline mt-2 inline-block"
-                                    >Xem chi tiết &rarr;</a
-                                >
+                                <a href="#" class="text-sm text-blue-600 hover:underline mt-2 inline-block">Xem chi tiết
+                                    &rarr;</a>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="text-center mt-8">
-                    <a
-                        href="#"
-                        class="text-blue-600 font-medium hover:underline"
-                    >
+                    <a href="#" class="text-blue-600 font-medium hover:underline">
                         Xem tất cả văn bản
                     </a>
                 </div>
@@ -230,7 +161,7 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
 import { defineComponent } from "vue";
 import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
@@ -293,7 +224,7 @@ export default defineComponent({
                 alert("Vui lòng nhập từ khóa tìm kiếm.");
             }
         },
-        getStatusClass(status) {
+        getStatusClass(status: string) {
             switch (status) {
                 case "Còn hiệu lực":
                     return "bg-green-100 text-green-800";
