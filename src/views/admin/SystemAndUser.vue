@@ -1,0 +1,95 @@
+<template>
+    <div v-if="activeTab === 'admin'" class="p-6 h-full overflow-y-auto">
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">Quản trị hệ thống</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2"><i data-lucide="users"
+                            class="w-5 h-5"></i> Quản lý Users</h3>
+                    <button @click="openAddUser"
+                        class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-blue-700"><i
+                            data-lucide="user-plus" class="w-4 h-4"></i> Thêm User</button>
+                </div>
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-50 text-slate-500 uppercase font-bold text-xs">
+                        <tr>
+                            <th class="px-4 py-3">User</th>
+                            <th class="px-4 py-3">Role</th>
+                            <th class="px-4 py-3">Email</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr v-for="u in users" :key="u.id" class="hover:bg-slate-50">
+                            <td class="px-4 py-3">
+                                <p class="font-bold text-slate-800">{{ u.username }}</p>
+                                <p class="text-xs text-slate-500">{{ u.name }}</p>
+                            </td>
+                            <td class="px-4 py-3"><span class="bg-slate-100 px-2 py-1 rounded text-xs font-medium">{{
+                                    u.role }}</span></td>
+                            <td class="px-4 py-3 text-slate-600">{{ u.email }}</td>
+                            <td class="px-4 py-3">
+                                <span v-if="u.active" class="text-emerald-600 font-bold text-xs">Active</span>
+                                <span v-else class="text-slate-400 font-bold text-xs">Locked</span>
+                            </td>
+                            <td class="px-4 py-3 text-right flex justify-end gap-2">
+                                <button @click="openEditUser(u)" class="text-blue-600"><i data-lucide="edit"
+                                        class="w-4 h-4"></i></button>
+                                <button v-if="u.id !== 1" @click="deleteUser(u.id)" class="text-rose-600"><i
+                                        data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-[600px] flex flex-col">
+                <h3 class="font-bold text-lg mb-4 flex items-center gap-2 text-slate-800"><i data-lucide="activity"
+                        class="w-5 h-5"></i> Nhật ký</h3>
+                <div class="flex-1 overflow-y-auto space-y-3 pr-2">
+                    <div v-for="log in logs" :key="log.id" class="text-sm border-l-2 border-slate-200 pl-3 py-1">
+                        <span class="text-slate-400 text-xs block font-mono">{{ log.time }}</span>
+                        <p class="text-slate-700"><span class="font-bold text-xs bg-slate-100 px-1 rounded">{{ log.type
+                                }}</span> {{ log.message }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN MODAL -->
+    <div v-if="showUserModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-96 p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">{{ editingUser ? 'Sửa User' : 'Thêm User' }}</h3>
+                <button @click="showUserModal = false" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"
+                        class="w-6 h-6"></i></button>
+            </div>
+            <form @submit.prevent="submitUserForm" class="space-y-4">
+                <div><label class="block text-sm font-bold text-slate-700 mb-1">Username</label><input
+                        v-model="userForm.username" :disabled="!!editingUser" required
+                        class="w-full border p-2 rounded"></div>
+                <div><label class="block text-sm font-bold text-slate-700 mb-1">Họ tên</label><input
+                        v-model="userForm.name" required class="w-full border p-2 rounded"></div>
+                <div><label class="block text-sm font-bold text-slate-700 mb-1">Email</label><input
+                        v-model="userForm.email" type="email" required class="w-full border p-2 rounded"></div>
+                <div><label class="block text-sm font-bold text-slate-700 mb-1">Vai trò</label>
+                    <select v-model="userForm.role" class="w-full border p-2 rounded">
+                        <option value="Inputter">Nhập liệu</option>
+                        <option value="Approver">Duyệt</option>
+                        <option value="Viewer">Xem</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2"><input type="checkbox" id="active" v-model="userForm.active"><label
+                        htmlFor="active" class="text-sm">Đang hoạt động</label></div>
+                <div class="pt-4 flex justify-end gap-2">
+                    <button type="button" @click="showUserModal = false"
+                        class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded">Hủy</button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700">Lưu lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</template>

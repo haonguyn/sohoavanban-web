@@ -3,14 +3,14 @@
         <!-- Thanh điều hướng (Navbar) -->
         <Header />
         <!-- Phần Hero & Thanh Tìm kiếm chính -->
-        <div class="bg-white shadow-sm">
+        <div class="bg-gradient-to-br from-white via-indigo-50 to-white border-b border-gray-200 shadow-inner">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
                 <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                    Hệ thống Tra cứu Văn bản
+                    Hệ thống tra cứu văn bản
                 </h1>
                 <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
                     Tìm kiếm, quản lý và trích xuất nội dung văn bản một cách
-                    hiệu quả.
+                    hiệu quả
                 </p>
 
                 <!-- Thanh tìm kiếm -->
@@ -36,14 +36,14 @@
         </div>
 
         <!-- Phần Tính năng -->
-        <section classsection="py-16 bg-gray-50">
+        <section class="py-16 bg-gray-50">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-12">
                     <h2 class="text-2xl font-bold text-gray-800">
                         Tính năng nổi bật
                     </h2>
                     <p class="text-gray-600">
-                        Các công cụ mạnh mẽ giúp bạn làm việc với văn bản.
+                        Các công cụ mạnh mẽ giúp bạn làm việc với văn bản
                     </p>
                 </div>
 
@@ -60,11 +60,11 @@
                             </svg>
                         </div>
                         <h3 class="text-xl font-semibold text-gray-900 mb-2">
-                            Tra cứu Thông minh
+                            Tra cứu thông minh
                         </h3>
                         <p class="text-gray-600">
-                            Tìm kiếm chính xác và nhanh chóng với bộ lọc đa
-                            dạng: từ khóa, ngày ban hành, cơ quan ban hành...
+                            Tìm kiếm chính xác và nhanh chóng với bộ lọc đa dạng:
+                            từ khóa, ngày ban hành, cơ quan ban hành...
                         </p>
                     </div>
 
@@ -83,8 +83,8 @@
                             Quản lý & Lưu trữ
                         </h3>
                         <p class="text-gray-600">
-                            Lưu trữ, phân loại và quản lý các văn bản cá nhân
-                            hoặc của tổ chức một cách an toàn và khoa học.
+                            Lưu trữ, phân loại và quản lý các văn bản cá nhân hoặc của tổ chức một cách an toàn và khoa
+                            học.
                         </p>
                     </div>
 
@@ -111,8 +111,22 @@
             </div>
         </section>
 
+        <section class="py-16 bg-white border-b border-gray-200">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-10">
+                    <span class="text-gray-500 font-semibold uppercase tracking-widest text-sm">Tra cứu nhanh</span>
+                    <h3 class="text-3xl font-extrabold text-gray-900 mt-1">Chủ đề được quan tâm gần đây</h3>
+                </div>
+                <div class="flex flex-wrap justify-center gap-3 md:gap-4 max-w-5xl mx-auto">
+                    <a v-for="topic in trendingTopics" href="#" class="px-5 py-2 text-base font-medium rounded-full bg-gray-100 text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 transition duration-150 shadow-md cursor-pointer">
+                        #{{ topic }}
+                    </a>
+                </div>
+            </div>
+        </section>
+
         <!-- Danh sách văn bản (mới/xem nhiều) -->
-        <section class="py-16 bg-white">
+        <section class="py-16 bg-gray-100">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">
                     Văn bản mới cập nhật
@@ -175,6 +189,10 @@ export default defineComponent({
     data() {
         return {
             searchQuery: "",
+            trendingTopics: [
+                "Thuế VAT mới", "Luật đất đai 2024", "Chính sách tiền lương", "Thủ tục hành chính", 
+                "Đấu thầu qua mạng", "Đầu tư công", "Quy định về hóa đơn điện tử", "Bảo hiểm xã hội"
+            ],
             featuredDocs: [
                 {
                     id: 1,

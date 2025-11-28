@@ -7,7 +7,7 @@
             <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900">
-                        Quản lý Văn bản
+                        Quản lý văn bản
                     </h1>
                     <p class="text-lg text-gray-600 mt-1">
                         Lưu trữ và tổ chức các văn bản cá nhân của bạn.

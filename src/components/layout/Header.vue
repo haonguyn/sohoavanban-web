@@ -21,13 +21,18 @@
                     </RouterLink>
                 </div>
 
-                <!-- Nút Đăng nhập -->
-                <div class="flex items-center">
-                    <RouterLink to="/login">
-                        <a href="#"
-                            class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-                            Đăng nhập
-                        </a>
+                <!-- Nút Đăng ký / Đăng nhập -->
+                <div class="flex items-center space-x-3">
+                    <!-- Nút Đăng ký (Text/Ghost style) -->
+                    <RouterLink to="/register"
+                        class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-500 hover:text-white transition-colors">
+                        Đăng ký
+                    </RouterLink>
+
+                    <!-- Nút Đăng nhập (Filled style) -->
+                    <RouterLink to="/login"
+                        class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-500 hover:text-white transition-colors">
+                        Đăng nhập
                     </RouterLink>
                 </div>
             </div>

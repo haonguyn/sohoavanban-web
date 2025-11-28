@@ -1,5 +1,6 @@
 <template>
-    <div class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <Header />
+    <div class="bg-gray-100 h-[70vh] flex items-center justify-center p-4">
         <div class="w-full max-w-md">
             <!-- Thẻ Đăng nhập -->
             <div class="bg-white p-8 rounded-xl shadow-xl">
@@ -39,7 +40,7 @@
                                 <label for="password" class="block text-sm font-medium text-gray-700">
                                     Mật khẩu
                                 </label>
-                                <a href="#" class="text-sm text-blue-600 hover:underline">
+                                <a href="#" tabindex="-1" class="text-sm text-blue-600 hover:underline">
                                     Quên mật khẩu?
                                 </a>
                             </div>
@@ -69,15 +70,19 @@
             </div>
         </div>
     </div>
+    <Footer />
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
-
+import Header from "../components/layout/Header.vue";
+import Footer from "../components/layout/Footer.vue";
+// import api from "../api/userApi"
 export default defineComponent({
     name: "LoginForm",
     components: {
-
+        Header,
+        Footer,
     },
     data() {
         return {
@@ -87,23 +92,21 @@ export default defineComponent({
     },
 
     methods: {
-        handleLogin() {
-            if (!this.email || !this.password) {
-                console.error("Vui lòng nhập đầy đủ thông tin");
-                // TODO: Thêm hiển thị thông báo lỗi cho người dùng ở đây
-                return;
-            }
-
-            console.log("Đang đăng nhập với:");
-            console.log("Email:", this.email);
-            console.log("Password:", this.password);
-
-            // ---
-            // Logic gọi API đăng nhập sẽ nằm ở đây
-            // ---
-
-            // Sau khi đăng nhập thành công:
-            // this.$router.push("/dashboard");
+        async handleLogin() {
+            // if (!this.email || !this.password) {
+            //     console.error("Vui lòng nhập đầy đủ thông tin");
+            //     // TODO: Thêm hiển thị thông báo lỗi cho người dùng ở đây
+            //     return;
+            // }
+            // try {
+            //     const res = await api.post("/auth/token/", { username: this.email, password: this.password });
+            //     localStorage.setItem("access_token", res.data.access);
+            //     localStorage.setItem("refresh_token", res.data.refresh);
+            //     console.log("Đang đăng nhập với:");
+            //     console.log("Email:", this.email);
+            //     console.log("Password:", this.password);
+            //     this.$router.push("/");
+            // } catch (e) { alert("Login failed") }
         },
     },
 });
