@@ -4,8 +4,13 @@ const routes = [
   { path: "/", name: "home", component: () => import("../views/HomeView.vue") },
   {
     path: "/tra-cuu",
-    name: "advancedsearch",
+    name: "advanced-search",
     component: () => import("../views/AdvancedSearchView.vue"),
+  },
+  {
+    path: "/document-detail",
+    name: "document-detail",
+    component: () => import("../views/DocumentDetailView.vue"),
   },
   {
     path: "/quan-ly",
@@ -29,8 +34,13 @@ const routes = [
   },
   {
     path: "/admin",
-    name: "admin",
-    component: () => import("../views/Register.vue"),
+    name: "dashboard",
+    component: () => import("../views/admin/DashBoardView.vue"),
+  },
+  {
+    path: "/admin/system-user",
+    name: "system-user",
+    component: () => import("../views/admin/SystemAndUser.vue"),
   },
 ];
 
