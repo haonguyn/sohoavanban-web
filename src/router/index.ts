@@ -15,7 +15,7 @@ const routes = [
   {
     path: "/quan-ly",
     name: "quanly",
-    component: () => import("../views/QuanLyView.vue"),
+    component: () => import("../views/DocumentListView.vue"),
   },
   {
     path: "/ocr-vanban",
@@ -36,6 +36,21 @@ const routes = [
     path: "/admin",
     name: "dashboard",
     component: () => import("../views/admin/DashBoardView.vue"),
+  },
+  {
+    path: "/admin/create-ocr",
+    name: "createocr",
+    component: () => import("../views/admin/CreateOCRView.vue"),
+  },
+  {
+    path: "/admin/manager",
+    name: "manager",
+    component: () => import("../views/admin/ManageDocsView.vue"),
+  },
+  {
+    path: "/admin/report",
+    name: "report",
+    component: () => import("../views/admin/ReportView.vue"),
   },
   {
     path: "/admin/system-user",

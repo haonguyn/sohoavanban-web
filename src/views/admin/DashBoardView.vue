@@ -15,7 +15,7 @@
                                 <h3 class="text-3xl font-bold text-slate-800 mt-1">{{ kpi.val }}</h3>
                             </div>
                             <div :class="`p-3 rounded-full bg-${kpi.color}-50 text-${kpi.color}-600`">
-                                <i :data-lucide="kpi.icon" class="w-6 h-6"></i>
+                                <i :class="`${kpi.icon}`"></i>
                             </div>
                         </div>
                     </div>
@@ -26,7 +26,7 @@
                     <!-- Bar Chart -->
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 col-span-2">
                         <h3 class="font-bold text-lg text-slate-800 mb-6 flex items-center gap-2">
-                            <i data-lucide="bar-chart-3" class="text-blue-600 w-5 h-5"></i> Tiến độ nhập liệu
+                            <i class="fas fa-chart-bar text-blue-600 w-5 h-5"></i> Tiến độ nhập liệu
                         </h3>
                         <div class="h-64 w-full flex items-end justify-between gap-2 px-2">
                             <div v-for="(h, i) in chartData" :key="i"
@@ -44,7 +44,7 @@
                     <!-- Recent Activity -->
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
                         <h3 class="font-bold text-lg text-slate-800 mb-6 flex items-center gap-2">
-                            <i data-lucide="activity" class="text-purple-600 w-5 h-5"></i> Hoạt động mới nhất
+                            <i class="fas fa-chart-line text-purple-600 w-5 h-5"></i> Hoạt động mới nhất
                         </h3>
                         <div class="space-y-4 max-h-64 overflow-y-auto pr-2">
                             <div v-for="(log, i) in logs.slice(0, 6)" :key="i"
@@ -76,10 +76,10 @@ export default defineComponent({
         return {
             // KPI Cards
             dashboardStats: [
-                { label: "Tài liệu", val: 120, color: "blue", icon: "file-text" },
-                { label: "Người dùng", val: 45, color: "emerald", icon: "users" },
-                { label: "Đã duyệt", val: 80, color: "purple", icon: "check-circle" },
-                { label: "OCR", val: 60, color: "orange", icon: "scan" },
+                { label: "Tài liệu", val: 120, color: "blue", icon: "fas fa-file" },
+                { label: "Người dùng", val: 45, color: "amber", icon: "fas fa-user" },
+                { label: "Đã duyệt", val: 80, color: "emerald", icon: "fas fa-check" },
+                { label: "Đang chờ duyệt", val: 60, color: "rose", icon: "fas fa-triangle-exclamation" },
             ],
 
             // Chart Data
@@ -87,13 +87,19 @@ export default defineComponent({
 
             // Logs
             logs: [
-                { type: "OCR", message: "OCR thành công cho tài liệu #123", time: "10 phút trước" },
-                { type: "APPROVE", message: "Tài liệu #122 đã được duyệt", time: "20 phút trước" },
-                { type: "OTHER", message: "Người dùng mới đăng nhập", time: "30 phút trước" },
+                { type: "OCR", message: "OCR thành công cho tài liệu #123", time: "2023-06-10 09:00" },
+                { type: "APPROVE", message: "Tài liệu #122 đã được duyệt", time: "2023-06-10 09:00" },
+                { type: "OTHER", message: "Người dùng mới đăng nhập", time: "2023-06-10 09:00" },
+                { type: "OCR", message: "OCR thành công cho tài liệu #123", time: "2023-06-10 09:00" },
+                { type: "APPROVE", message: "Tài liệu #122 đã được duyệt", time: "2023-06-10 09:00" },
+                { type: "OTHER", message: "Người dùng mới đăng nhập", time: "2023-06-10 09:00" },
+                { type: "OCR", message: "OCR thành công cho tài liệu #123", time: "2023-06-10 09:00" },
+                { type: "APPROVE", message: "Tài liệu #122 đã được duyệt", time: "2023-06-10 09:00" },
+                { type: "OTHER", message: "Người dùng mới đăng nhập", time: "2023-06-10 09:00" },
             ],
         };
     },
-
+    
     methods: {
     },
 });
