@@ -118,7 +118,7 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Tên văn bản / Trích yếu <span
                                         class="text-red-500">*</span></label>
-                                <textarea v-model="form.tenVanBan" rows="2"
+                                <textarea v-model="form.full_text" rows="2"
                                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                     placeholder="VD: Quyết định về việc..."></textarea>
                             </div>
@@ -127,13 +127,13 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Số / Ký hiệu</label>
-                                    <input type="text" v-model="form.soKyHieu"
+                                    <input type="text" v-model="form.doc_number"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         placeholder="123/QĐ-..." />
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Loại văn bản</label>
-                                    <select v-model="form.loaiVanBan"
+                                    <select v-model="form.doc_type"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                         <option value="">-- Chọn loại --</option>
                                         <option value="Quyết định">Quyết định</option>
@@ -149,12 +149,12 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Cơ quan ban hành</label>
-                                    <input type="text" v-model="form.coQuanBanHanh"
+                                    <input type="text" v-model="form.summary"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Người ký</label>
-                                    <input type="text" v-model="form.nguoiKy"
+                                    <input type="text" v-model="form.signer"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                                 </div>
                             </div>
@@ -163,12 +163,12 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Số trang</label>
-                                    <input type="number" v-model="form.soTrang" min="1"
+                                    <input type="number" v-model="form.pageCount" min="1"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Lĩnh vực</label>
-                                    <input type="text" v-model="form.linhVuc" placeholder="VD: Y tế, Giáo dục"
+                                    <input type="text" v-model="form.doc_type" placeholder="VD: Y tế, Giáo dục"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                                 </div>
                             </div>
@@ -178,17 +178,17 @@
                                 class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-600 mb-1">Ngày ban hành</label>
-                                    <input type="date" v-model="form.ngayBanHanh"
+                                    <input type="date" v-model="form.issued_date"
                                         class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-blue-600 mb-1">Ngày hiệu lực</label>
-                                    <input type="date" v-model="form.ngayHieuLuc"
+                                    <input type="date" v-model="form.effective_start_date"
                                         class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-red-600 mb-1">Ngày hết hiệu lực</label>
-                                    <input type="date" v-model="form.ngayHetHieuLuc"
+                                    <input type="date" v-model="form.effective_end_date"
                                         class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
                                 </div>
                             </div>
@@ -196,7 +196,7 @@
                             <!-- Hàng cuối: Link & Submit -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Ghi chú thêm</label>
-                                <input type="text" v-model="form.ghiChu"
+                                <input type="text" v-model="form.field"
                                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                             </div>
 
@@ -283,6 +283,8 @@
 <script lang="ts">
 
 import { defineComponent } from "vue";
+import { processOCR } from "../api/ocrApi";
+import { createDocument } from "../api/documentApi";
 
 export default defineComponent({
     name: "OCRComponent",
@@ -297,18 +299,22 @@ export default defineComponent({
 
             // FORM DATA MODEL (Để OCR tự fill vào đây)
             form: {
-                tenVanBan: "",
-                soKyHieu: "",
-                loaiVanBan: "",
-                coQuanBanHanh: "",
-                nguoiKy: "",
-                soTrang: null as number | null, // MỚI
-                linhVuc: "", // MỚI
-                ngayBanHanh: "", // MỚI
-                ngayHieuLuc: "", // MỚI
-                ngayHetHieuLuc: "", // MỚI
-                ghiChu: ""
+                doc_number: "",
+                title: "",
+                doc_type: "",
+                issued_date: "",
+                issued_by: "",
+                signer: "",
+                summary: "",
+                full_text: "",
+                status: "draft",
+                effective_start_date: "",
+                effective_end_date: "",
+                // chỉ dùng nội bộ UI
+                pageCount: null as number | null,
+                field: "",
             }
+
         };
     },
     computed: {
@@ -373,53 +379,89 @@ export default defineComponent({
         },
         resetForm() {
             this.form = {
-                tenVanBan: "", soKyHieu: "", loaiVanBan: "", coQuanBanHanh: "",
-                nguoiKy: "", soTrang: null, linhVuc: "", ngayBanHanh: "",
-                ngayHieuLuc: "", ngayHetHieuLuc: "", ghiChu: ""
-            };
+                doc_number: "",
+                title: "",
+                doc_type: "",
+                issued_date: "",
+                issued_by: "",
+                signer: "",
+                summary: "",
+                full_text: "",
+                status: "draft",
+                effective_start_date: "",
+                effective_end_date: "",
+                // chỉ dùng nội bộ UI
+                pageCount: null as number | null,
+                field: "",
+                };
+
         },
 
-        startOCR() {
+        async startOCR() {
             if (!this.selectedFile) return;
 
             this.isLoading = true;
             this.extractedText = "";
             this.isOcrDone = false;
 
-            // --- GIẢ LẬP GỌI API OCR & AI EXTRACTION ---
-            setTimeout(() => {
-                const fileName = this.selectedFile?.name || "Tai_lieu";
+            try {
+                const res = await processOCR(this.selectedFile);
 
-                // 1. Giả lập văn bản trích xuất (Raw Text)
-                this.extractedText = `CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập - Tự do - Hạnh phúc\n\nSố: 288/2025/NĐ-CP\n\nNGHỊ ĐỊNH\nQUY ĐỊNH VỀ QUẢN LÝ TÀU BAY KHÔNG NGƯỜI LÁI VÀ PHƯƠNG TIỆN BAY SIÊU NHẸ\n\nCăn cứ Luật Tổ chức Chính phủ ngày 19 tháng 6 năm 2015;\n...\nĐiều 1. Phạm vi điều chỉnh\nNghị định này quy định về quản lý tàu bay không người lái...\n\nTM. CHÍNH PHỦ\nTHỦ TƯỚNG\n(Đã ký)\nPhạm Minh Chính`;
+                // dữ liệu trả về theo JSON bạn mô tả
+                const { text, data } = res.data;
 
-                // 2. Giả lập AI tự động điền vào Form (Auto-fill)
+                // 1. Văn bản trích xuất
+                this.extractedText = text;
+
+                // 2. Điền form từ data
                 this.form = {
-                    tenVanBan: "Nghị định quy định về quản lý tàu bay không người lái và phương tiện bay siêu nhẹ",
-                    soKyHieu: "288/2025/NĐ-CP",
-                    loaiVanBan: "Nghị định",
-                    coQuanBanHanh: "Chính phủ",
-                    nguoiKy: "Phạm Minh Chính",
-                    soTrang: 12, // Số trang giả lập
-                    linhVuc: "Giao thông vận tải, An ninh quốc phòng",
-                    ngayBanHanh: "2025-11-05",
-                    ngayHieuLuc: "2025-12-20",
-                    ngayHetHieuLuc: "", // Để trống nếu chưa hết hạn
-                    ghiChu: "Văn bản được trích xuất tự động từ tệp " + fileName
-                };
+                    doc_number: data.soVanBan,
+                    title: data.trichYeu,
+                    doc_type: data.loaiVanBan,
+                    issued_by: data.coQuanBanHanh,
+                    signer: data.nguoiKy,
+                    summary: "Văn bản được trích xuất từ tệp " + (this.selectedFile?.name || ""),
+                    full_text: text,
+                    issued_date: data.ngayBanHanh,
+                    effective_start_date: data.ngayHieuLuc || "",
+                    effective_end_date: data.ngayHetHieuLuc || "",
+                    status: "draft",
+                    pageCount: Number(data.pageCount) || null,   // thêm vào
+                    field: data.linhVuc || "",                   // thêm vào
+                    };
 
-                this.isLoading = false;
+
                 this.isOcrDone = true;
-                // alert("✅ Đã trích xuất thông tin thành công!");
-            }, 2500); // Đợi 2.5s
+            } catch (err: any) {
+                console.error("OCR error:", err.response?.data || err.message);
+                this.extractedText = "❌ Lỗi khi trích xuất văn bản";
+            } finally {
+                this.isLoading = false;
+            }
         },
 
-        saveDocument() {
-            console.log("Saving document:", this.form);
-            alert("Đã lưu văn bản vào hệ thống thành công!");
-            // Logic gọi API lưu DB ở đây
-        },
+        async saveDocument() {
+            try {
+                console.log("Saving document:", this.form);
 
+                // Tạo FormData từ this.form
+                const formData = new FormData();
+                Object.entries(this.form).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    formData.append(key, String(value));
+                }
+                });
+
+                // Gọi API
+                const res = await createDocument(formData);
+
+                alert("✅ Đã lưu văn bản vào hệ thống thành công!");
+                console.log("Server response:", res);
+            } catch (err: any) {
+                console.error("Lỗi khi lưu văn bản:", err.response?.data || err.message);
+                alert("❌ Lưu văn bản thất bại!");
+            }
+        },
         copyText(text: string) {
             if (!text) return;
             navigator.clipboard.writeText(text).then(() => {

@@ -25,12 +25,12 @@
                 <!-- Form đăng nhập -->
                 <form @submit.prevent="handleLogin">
                     <div class="space-y-4">
-                        <!-- Email -->
+                        <!-- username -->
                         <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-                                Email
+                            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
+                                Username
                             </label>
-                            <input type="email" id="email" v-model="email" placeholder="ten@example.com" required
+                            <input id="username" v-model="username" placeholder="ten@example.com" required
                                 class="mt-1 block w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm" />
                         </div>
 
@@ -77,36 +77,38 @@
 import { defineComponent } from "vue";
 import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
-// import api from "../api/userApi"
+import { login } from "../api/userApi";
+
 export default defineComponent({
     name: "LoginForm",
-    components: {
-        Header,
-        Footer,
-    },
+    components: { Header, Footer },
     data() {
         return {
-            email: "" as string,
+            username: "" as string,
             password: "" as string,
+            errorMessage: "" as string,
         };
     },
-
     methods: {
         async handleLogin() {
-            // if (!this.email || !this.password) {
-            //     console.error("Vui lòng nhập đầy đủ thông tin");
-            //     // TODO: Thêm hiển thị thông báo lỗi cho người dùng ở đây
-            //     return;
-            // }
-            // try {
-            //     const res = await api.post("/auth/token/", { username: this.email, password: this.password });
-            //     localStorage.setItem("access_token", res.data.access);
-            //     localStorage.setItem("refresh_token", res.data.refresh);
-            //     console.log("Đang đăng nhập với:");
-            //     console.log("Email:", this.email);
-            //     console.log("Password:", this.password);
-            //     this.$router.push("/");
-            // } catch (e) { alert("Login failed") }
+            if (!this.username || !this.password) {
+                this.errorMessage = "Vui lòng nhập đầy đủ thông tin";
+                return;
+            }
+            try {
+                // xử lý login ở đây
+                const res = await login({ username: this.username, password: this.password });
+
+                // lưu token vào localStorage để interceptor axios dùng
+                localStorage.setItem("access_token", res.access_token);
+
+                // có thể lưu thêm thông tin user nếu cần
+                // localStorage.setItem("username", res.username);
+                // localStorage.setItem("role", res.role);
+                this.$router.push("/");
+            } catch (e) {
+                this.errorMessage = "Đăng nhập thất bại";
+            }
         },
     },
 });
