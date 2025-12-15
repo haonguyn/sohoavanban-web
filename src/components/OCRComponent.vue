@@ -116,13 +116,13 @@
                         <form @submit.prevent="saveDocument" class="space-y-4">
                             <!-- Hàng 1: Tên văn bản (Full width) -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Tên văn bản / Trích yếu <span
+                                <label class="block text-sm font-medium text-gray-700">Trích yếu<span
                                         class="text-red-500">*</span></label>
-                                <textarea v-model="form.full_text" rows="2"
+                                <textarea v-model="form.title" rows="2"
                                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                     placeholder="VD: Quyết định về việc..."></textarea>
                             </div>
-
+                            
                             <!-- Hàng 2: Số ký hiệu & Loại văn bản -->
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
@@ -133,15 +133,9 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Loại văn bản</label>
-                                    <select v-model="form.doc_type"
-                                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                        <option value="">-- Chọn loại --</option>
-                                        <option value="Quyết định">Quyết định</option>
-                                        <option value="Nghị định">Nghị định</option>
-                                        <option value="Thông tư">Thông tư</option>
-                                        <option value="Công văn">Công văn</option>
-                                        <option value="Tờ trình">Tờ trình</option>
-                                    </select>
+                                        <input type="text" v-model="form.doc_type"
+                                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        placeholder="Quyết Định,...." />
                                 </div>
                             </div>
 
@@ -168,7 +162,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Lĩnh vực</label>
-                                    <input type="text" v-model="form.doc_type" placeholder="VD: Y tế, Giáo dục"
+                                    <input type="text" v-model="form.field" placeholder="VD: Y tế, Giáo dục"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                                 </div>
                             </div>
@@ -177,10 +171,13 @@
                             <div
                                 class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-600 mb-1">Ngày ban hành</label>
-                                    <input type="date" v-model="form.issued_date"
-                                        class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
-                                </div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Ngày ban hành</label>
+                        <input 
+                            type="date" 
+                            v-model="form.issued_date"
+                            class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm" 
+                        />
+                    </div>
                                 <div>
                                     <label class="block text-xs font-bold text-blue-600 mb-1">Ngày hiệu lực</label>
                                     <input type="date" v-model="form.effective_start_date"
@@ -196,7 +193,7 @@
                             <!-- Hàng cuối: Link & Submit -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Ghi chú thêm</label>
-                                <input type="text" v-model="form.field"
+                                <input type="text" v-model="form.summary"
                                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                             </div>
 
@@ -408,11 +405,11 @@ export default defineComponent({
                 const res = await processOCR(this.selectedFile);
 
                 // dữ liệu trả về theo JSON bạn mô tả
-                const { text, data } = res.data;
+                const { text, data } = res.data;    
 
                 // 1. Văn bản trích xuất
                 this.extractedText = text;
-
+                console.log(this.convertToISODate(data.ngayBanHanh))
                 // 2. Điền form từ data
                 this.form = {
                     doc_number: data.soVanBan,
@@ -422,12 +419,13 @@ export default defineComponent({
                     signer: data.nguoiKy,
                     summary: "Văn bản được trích xuất từ tệp " + (this.selectedFile?.name || ""),
                     full_text: text,
-                    issued_date: data.ngayBanHanh,
+                    issued_date: this.convertToISODate(data.ngayBanHanh),
                     effective_start_date: data.ngayHieuLuc || "",
                     effective_end_date: data.ngayHetHieuLuc || "",
                     status: "draft",
                     pageCount: Number(data.pageCount) || null,   // thêm vào
-                    field: data.linhVuc || "",                   // thêm vào
+                    //field: this.checkTag(data.linhVuc), 
+                    field: data.linhVuc || null                 // thêm vào
                     };
 
 
@@ -469,6 +467,35 @@ export default defineComponent({
             }).catch(err => {
                 console.error("Lỗi copy:", err);
             });
+        },
+        convertToISODate(vietnameseDateString: string): string {
+            try {
+                // Lấy 3 nhóm số theo thứ tự: ngày - tháng - năm
+                const parts = vietnameseDateString.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)/);
+
+                if (parts && parts[1] && parts[2] && parts[3]) {
+                    const day = parts[1].padStart(2, '0');
+                    const month = parts[2].padStart(2, '0');
+                    const year = parts[3];
+                    return `${year}-${month}-${day}`;
+                }
+
+                return "";
+            } catch (error) {
+                console.error("convertToISODate error:", error);
+                return "";
+            }
+        }
+            ,
+
+         checkTag(tag: string): string {
+
+            if (tag == " ")
+                {
+                    tag ="khác"
+                }
+
+            return tag;
         }
     },
 });
