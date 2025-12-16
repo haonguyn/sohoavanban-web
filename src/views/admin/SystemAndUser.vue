@@ -188,7 +188,7 @@ export default defineComponent({
         } else {
           await createUser(this.userForm);
           this.users.push({ ...this.userForm });
-          this.logs.unshift({ id: Date.now(), type: "CREATE", message: `Thêm user #`, time: new Date().toISOString() });
+          this.logs.unshift({ id: Date.now(), type: "CREATE", message: `Thêm user #${this.userForm.username}`, time: new Date().toISOString() });
         }
         this.showUserModal = false;
       } catch (e: any) {
