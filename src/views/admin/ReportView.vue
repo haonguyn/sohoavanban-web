@@ -116,11 +116,11 @@ export default defineComponent({
   methods: {
     async fetchDataByMonthYear() {
       try {
-        // Sau này gọi API thật
-        // const res = await fetch(`/api/reports?month=${this.selectedMonth}&year=${this.selectedYear}`);
-        // const data = await res.json();
-        // this.staffStats = data.staffStats;
-        // this.docTypes = data.docTypes;
+        //Sau này gọi API thật
+        const res = await fetch(`/api/reports?month=${this.selectedMonth}&year=${this.selectedYear}`);
+        const data = await res.json();
+        this.staffStats = data.staffStats;
+        this.docTypes = data.docTypes;
 
         // Dữ liệu giả lập
         const seed = this.selectedMonth + this.selectedYear;
