@@ -19,10 +19,11 @@
             </select>
 
             <!-- Xuất Excel -->
-            <button
-              @click="exportExcel"
-              class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
-              <i class="fas fa-download w-4 h-4"></i> Xuất Excel
+           <button
+                @click="exportExcel"
+                class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+              >
+                <i class="fas fa-download"></i> Xuất Excel
             </button>
           </div>
         </div>
@@ -117,12 +118,30 @@ export default defineComponent({
     async fetchDataByMonthYear() {
       try {
         //Sau này gọi API thật
-        const res = await fetch(`/api/reports?month=${this.selectedMonth}&year=${this.selectedYear}`);
-        const data = await res.json();
-        this.staffStats = data.staffStats;
-        this.docTypes = data.docTypes;
+        const res = await fetch(
+            `/api/reports/?month=${this.selectedMonth}&year=${this.selectedYear}`,
+            {
+              method: "GET",
+              headers: {
+                "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+                "Accept": "application/json"
+              }
+            }
+          );
 
-        // Dữ liệu giả lập
+          if (!res.ok) {
+            const text = await res.text();
+            console.error("API trả về lỗi:", text);
+            return;
+          }
+
+          const data = await res.json();
+
+          this.staffStats = data.staffStats;
+          this.docTypes = data.docTypes;
+
+
+        /* Dữ liệu giả lập
         const seed = this.selectedMonth + this.selectedYear;
         this.staffStats = [
           { name: 'Trần Văn Nhập', count: seed * 2 % 200, errorRate: seed % 3 },
@@ -134,14 +153,40 @@ export default defineComponent({
           { label: 'Báo cáo', val: seed % 40 + 10, color: 'bg-emerald-500' },
           { label: 'Thông báo', val: seed % 30 + 5, color: 'bg-rose-500' },
         ];
+        */
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu theo tháng & năm:", error);
       }
     },
-    exportExcel() {
-      console.log(`Xuất dữ liệu tháng ${this.selectedMonth}/${this.selectedYear} ra Excel...`);
-      // Sau này tích hợp SheetJS hoặc API xuất file
-    }
+    async exportExcel() {
+        try {
+          const res = await fetch(
+            `/api/reports/export-excel/?month=${this.selectedMonth}&year=${this.selectedYear}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("access_token")}`
+              }
+            }
+          );
+
+          if (!res.ok) throw new Error("Export failed");
+
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `Bao_cao_${this.selectedMonth}_${this.selectedYear}.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+
+          window.URL.revokeObjectURL(url);
+        } catch (err) {
+          alert("Xuất Excel thất bại!");
+          console.error(err);
+        }
+      }
   }
 });
 </script>
