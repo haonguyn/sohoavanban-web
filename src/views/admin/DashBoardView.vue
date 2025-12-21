@@ -108,31 +108,31 @@ export default defineComponent({
         this.fetchLogs();
     },
     methods: {
-        async updateChartData() {
+       async updateChartData() {
             try {
-                // Sau này gọi API thật
-                // const res = await fetch(`/api/chart-data?range=${this.selectedRange}`);
-                // const data = await res.json();
-                // this.rawChartData = data.values;
-                // this.labels = data.labels;
+                const year = new Date().getFullYear();
 
-                // Hiện tại giả lập dữ liệu
-                this.rawChartData = [45, 70, 30, 85, 50, 60, 40, 90, 20, 55, 75, 65];
-                this.labels = Array.from({ length: 12 }, (_, i) => `W${i + 1}`);
+                const res = await fetch(
+                `/api/dashboard/chart/year/?year=${year}`,
+                {
+                    headers: {
+                    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                    },
+                }
+                );
 
-                this.maxValue = Math.max(...this.rawChartData);
+                if (!res.ok) throw new Error("API lỗi");
 
-                // Reset dữ liệu hiển thị và gọi animateChart
+                const data = await res.json();
+
+                this.rawChartData = data.values;
+                this.labels = data.labels;
+                this.maxValue = Math.max(...this.rawChartData, 1);
+
                 this.animatedChartData = this.rawChartData.map(() => 0);
                 this.animateChart();
             } catch (error) {
-                console.error("Lỗi khi lấy dữ liệu biểu đồ:", error);
-                // fallback dữ liệu giả nếu API lỗi
-                this.rawChartData = [10, 20, 30, 40];
-                this.labels = ["A", "B", "C", "D"];
-                this.maxValue = Math.max(...this.rawChartData);
-                this.animatedChartData = this.rawChartData.map(() => 0);
-                this.animateChart();
+                console.error("Lỗi khi lấy dữ liệu biểu đồ năm:", error);
             }
         },
 
@@ -153,42 +153,29 @@ export default defineComponent({
         },
         async fetchDashboardStats() {
             try {
-                // Sau này gọi API thật
-                // const res = await fetch("/api/dashboard/stats");
-                // const data = await res.json();
-                // this.dashboardStats = data;
+                const res = await fetch("/api/dashboard/stats/", {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                },
+                });
 
-                // Hiện tại giả lập dữ liệu
-                this.dashboardStats = [
-                    { label: "Tài liệu", val: Math.floor(Math.random() * 200) + 50, color: "blue", icon: "fas fa-file" },
-                    { label: "Người dùng", val: Math.floor(Math.random() * 100) + 10, color: "amber", icon: "fas fa-user" },
-                    { label: "Đã duyệt", val: Math.floor(Math.random() * 150) + 20, color: "emerald", icon: "fas fa-check" },
-                    { label: "Đang chờ duyệt", val: Math.floor(Math.random() * 80) + 5, color: "rose", icon: "fas fa-triangle-exclamation" },
-                ];
+                if (!res.ok) throw new Error("API lỗi");
+
+                this.dashboardStats = await res.json();
             } catch (error) {
                 console.error("Lỗi khi lấy dashboard stats:", error);
             }
         },
+
         async fetchLogs() {
             try {
-                // Sau này gọi API thật
-                // const res = await fetch("/api/dashboard/logs");
-                // const data = await res.json();
-                // this.logs = data;
+                const res = await fetch("/api/dashboard/logs/", {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                },
+                });
 
-                // Hiện tại giả lập dữ liệu
-                const now = new Date();
-                const formatTime = (date: Date) =>
-                    date.toISOString().slice(0, 16).replace("T", " ");
-
-                this.logs = [
-                    { type: "OCR", message: "OCR thành công cho tài liệu #123", time: formatTime(now) },
-                    { type: "APPROVE", message: "Tài liệu #122 đã được duyệt", time: formatTime(new Date(now.getTime() - 60000)) },
-                    { type: "OTHER", message: "Người dùng mới đăng nhập", time: formatTime(new Date(now.getTime() - 120000)) },
-                    { type: "OCR", message: "OCR thành công cho tài liệu #124", time: formatTime(new Date(now.getTime() - 180000)) },
-                    { type: "APPROVE", message: "Tài liệu #125 đã được duyệt", time: formatTime(new Date(now.getTime() - 240000)) },
-                    { type: "OTHER", message: "Người dùng vừa đăng xuất", time: formatTime(new Date(now.getTime() - 300000)) },
-                ];
+                this.logs = await res.json();
             } catch (error) {
                 console.error("Lỗi khi lấy logs:", error);
             }
