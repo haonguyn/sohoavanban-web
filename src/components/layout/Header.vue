@@ -14,7 +14,7 @@
 
                 <!-- Menu điều hướng -->
                 <div class="hidden md:flex md:items-center md:space-x-6">
-                    <RouterLink v-for="item in menu" :key="item.to" :to="item.to"
+                    <RouterLink v-if="can(['admin'])" v-for="item in menu" :key="item.to" :to="item.to"
                         class="px-3 py-2 rounded-md text-sm font-medium transition-colors"
                         :class="isActive(item.to) ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'">
                         {{ item.label }}
@@ -23,12 +23,6 @@
 
                 <!-- Nút Đăng ký / Đăng nhập -->
                 <div class="flex items-center space-x-3">
-                    <!-- Nút Đăng ký (Text/Ghost style) -->
-                    <RouterLink to="/register"
-                        class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-500 hover:text-white transition-colors">
-                        Đăng ký
-                    </RouterLink>
-
                     <!-- Nút Đăng nhập (Filled style) -->
                     <RouterLink to="/login"
                         class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-500 hover:text-white transition-colors">
@@ -43,6 +37,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useRoute } from 'vue-router'
+import { getRole } from '../../utils/authUtils';
 
 export default defineComponent({
     name: 'HeaderMenu',
@@ -53,14 +48,32 @@ export default defineComponent({
                 { to: '/tra-cuu', label: 'Tra cứu' },
                 { to: '/quan-ly', label: 'Quản lý' },
                 { to: '/ocr-vanban', label: 'OCR Văn bản' }
-            ]
+            ],
+            role: getRole(),
         }
     },
     methods: {
         isActive(path: string) {
             const route = useRoute()
             return route.path === path
-        }
+        },
+        can(roles: string[]) {
+            return this.role ? roles.includes(this.role) : false;
+        },
+        goAdmin() {
+            if (!this.can(["admin"])) {
+                (this.$refs.myToast as any)?.warning("Quyền truy cập", "Bạn không có quyền vào khu vực quản trị");
+                return;
+            }
+            this.$router.push("/admin");
+        },
+        goSensitiveAction() {
+            if (!this.can(["admin"])) {
+                (this.$refs.myToast as any)?.error("Từ chối", "Bạn không đủ quyền thực hiện hành động này");
+                return;
+            }
+            // Thực hiện hành động
+        },
     }
 })
 </script>

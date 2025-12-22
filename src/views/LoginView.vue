@@ -71,43 +71,58 @@
         </div>
     </div>
     <Footer />
+    <ToastNotification ref="myToast" />
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
 import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
+import { setAuth } from "../utils/authUtils";
+import ToastNotification from '../components/ToastNotification.vue';
 import { login } from "../api/userApi";
 
 export default defineComponent({
     name: "LoginForm",
-    components: { Header, Footer },
+    components: { Header, Footer, ToastNotification },
     data() {
         return {
             username: "" as string,
             password: "" as string,
             errorMessage: "" as string,
+            loading: false,
+            title: "Đăng nhập",
         };
     },
     methods: {
         async handleLogin() {
             if (!this.username || !this.password) {
                 this.errorMessage = "Vui lòng nhập đầy đủ thông tin";
+                (this.$refs.myToast as any).warning(this.title, this.errorMessage);
                 return;
             }
+            this.loading = true;
+            this.errorMessage = "";
+
             try {
-                // xử lý login ở đây
+                // Gọi API login
                 const res = await login({ username: this.username, password: this.password });
 
-                // lưu token vào localStorage để interceptor axios dùng
-                localStorage.setItem("access_token", res.access_token);
+                // Lưu token và role cho phân quyền
+                setAuth({ access_token: res.access_token, role: res.role });
 
-                // có thể lưu thêm thông tin user nếu cần
-                // localStorage.setItem("username", res.username);
-                // localStorage.setItem("role", res.role);
-                this.$router.push("/");
-            } catch (e) {
-                this.errorMessage = "Đăng nhập thất bại";
+                // Toast thành công lấy từ backend
+                (this.$refs.myToast as any).success(this.title, "res.message");
+
+                // Nếu có redirect trong query, quay lại trang đó; nếu không, về home
+                const redirect = this.$route.query.redirect as string | undefined;
+                this.$router.push(redirect || "/");
+            } catch (e: any) {
+                // Lấy thông báo lỗi từ backend: detail
+                this.errorMessage = e?.response?.data?.detail || "Đăng nhập thất bại";
+                (this.$refs.myToast as any).error(this.title, this.errorMessage);
+            } finally {
+                this.loading = false;
             }
         },
     },

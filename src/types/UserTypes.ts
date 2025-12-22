@@ -19,5 +19,8 @@ export interface LoginPayload {
 export interface LoginResponse {
   message: string;
   access_token: string;
-  user: User;
+  user_id: string | number;
+  username: string;
+  role: string;
+  full_name: string;
 }
