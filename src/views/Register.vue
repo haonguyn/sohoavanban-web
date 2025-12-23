@@ -76,9 +76,12 @@
                 <div class="mt-6 text-center">
                     <p class="text-sm text-gray-600">
                         Đã có tài khoản?
-                        <a href="/login" class="font-medium text-blue-600 hover:underline">
+                        <RouterLink
+                            to="/login"
+                            class="font-medium text-blue-600 hover:underline"
+                            >
                             Đăng nhập ngay
-                        </a>
+                        </RouterLink>
                     </p>
                 </div>
             </div>

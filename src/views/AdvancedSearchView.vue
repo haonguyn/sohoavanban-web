@@ -1,3 +1,4 @@
+
 <template>
     <Header />
     <div class="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8">
@@ -20,9 +21,16 @@
                             <h2 class="text-xl font-semibold text-gray-800">
                                 Bộ lọc tìm kiếm
                             </h2>
-                            <button type="button" @click="resetFilters" class="text-sm text-blue-600 hover:underline">
-                                Đặt lại
+                           <button
+                            type="button"
+                            @click="resetFilters"
+                            class="text-xs px-3 py-1.5 rounded-full border border-blue-200
+                                    text-blue-600 hover:bg-blue-50 hover:border-blue-300
+                                    transition flex items-center gap-1"
+                            >
+                            🔄 Đặt lại
                             </button>
+
                         </div>
 
                         <form @submit.prevent="applyFilters">
@@ -121,9 +129,17 @@
 
                                 <!-- Nút tìm kiếm -->
                                 <div class="pt-4">
-                                    <button type="submit"
-                                        class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                                        Tìm kiếm
+                                    <button
+                                        type="submit"
+                                        class="w-full flex items-center justify-center gap-2
+                                                py-3 px-4 rounded-xl
+                                                text-sm font-semibold text-white
+                                                bg-gradient-to-r from-blue-600 to-blue-500
+                                                hover:from-blue-700 hover:to-blue-600
+                                                shadow-md hover:shadow-lg
+                                                transition-all duration-200"
+                                        >
+                                        🔍 Tìm kiếm
                                     </button>
                                 </div>
                             </div>
@@ -139,7 +155,7 @@
                             class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 pb-4 mb-6 gap-4">
                             <h3 class="text-lg font-medium text-gray-700">
                                 Tìm thấy
-                                <span class="font-bold text-blue-600">{{ searchResults.length }}</span>
+                                <span class="font-bold text-blue-600">{{ totalItems }}</span>
                                 văn bản
                             </h3>
                             <div class="flex items-center">
@@ -154,80 +170,160 @@
                             </div>
                         </div>
 
-                        <!-- Danh sách kết quả -->
+                        <!-- DANH SÁCH / SKELETON / EMPTY STATE -->
                         <div class="space-y-4">
-                            <div v-for="doc in searchResults" :key="doc.id"
-                                class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200 relative group">
-                                <div class="flex flex-col md:flex-row justify-between md:items-start gap-4">
-                                    <!-- Thông tin chính -->
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2 mb-2 flex-wrap">
-                                            <span :class="getStatusClass(doc.status)"
-                                                class="text-xs font-bold px-2.5 py-1 rounded-full border">
-                                                {{ doc.status }}
-                                            </span>
-                                            <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                                                {{ doc.type }}
-                                            </span>
-                                        </div>
 
-                                        <h3 class="text-lg font-bold text-blue-700 hover:underline cursor-pointer mb-1">
-                                            <a href="#">{{ doc.title }}</a>
-                                        </h3>
-
-                                        <p class="text-sm text-gray-600 line-clamp-2 mb-3">
-                                            {{ doc.description }}
-                                        </p>
-
-                                        <!-- Meta data (Ngày tháng) -->
-                                        <div class="flex flex-wrap gap-y-2 gap-x-6 text-sm text-gray-500">
-                                            <div class="flex items-center">
-                                                <svg class="w-4 h-4 mr-1.5 text-gray-400" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                                Ban hành: <span class="text-gray-700 font-medium ml-1">{{ doc.issueDate
-                                                    }}</span>
-                                            </div>
-                                            <div class="flex items-center">
-                                                <svg class="w-4 h-4 mr-1.5 text-gray-400" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                Hiệu lực: <span class="text-gray-700 font-medium ml-1">{{
-                                                    doc.effectiveDate }}</span>
+                            <!-- 1️⃣ Skeleton loading -->
+                            <template v-if="loading">
+                                <div
+                                    v-for="i in pageSize"
+                                    :key="i"
+                                    class="animate-pulse bg-white border border-gray-200 rounded-lg p-4"
+                                >
+                                    <div class="flex gap-4">
+                                        <div class="flex-1 space-y-3">
+                                            <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+                                            <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                                            <div class="h-4 bg-gray-200 rounded w-full"></div>
+                                            <div class="flex gap-4">
+                                                <div class="h-3 bg-gray-200 rounded w-32"></div>
+                                                <div class="h-3 bg-gray-200 rounded w-32"></div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Nút hành động -->
-                                    <div class="flex md:flex-col gap-2 mt-2 md:mt-0 md:pl-4 border-t md:border-t-0 md:border-l border-gray-100 md:w-32 flex-shrink-0 pt-3 md:pt-0">
-                                        <button class="flex-1 bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded text-sm font-medium transition-colors text-center">
-                                            Xem
-                                        </button>
-                                        <button class="flex-1 bg-gray-50 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded text-sm font-medium transition-colors text-center">
-                                            Tải về
-                                        </button>
+                                        <div class="w-28 space-y-2">
+                                            <div class="h-8 bg-gray-200 rounded"></div>
+                                            <div class="h-8 bg-gray-200 rounded"></div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </template>
+
+                            <!-- 2️⃣ Có kết quả -->
+                            <template v-else-if="searchResults.length > 0">
+                                <div
+                                    v-for="doc in searchResults"
+                                    :key="doc.id"
+                                    class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                                >
+                                    <!-- 👉 giữ nguyên UI item của bạn -->
+                                    <div class="flex flex-col md:flex-row justify-between gap-4">
+                                        <div class="flex-1">
+                                            <div class="flex gap-2 mb-2">
+                                                <span
+                                                    :class="getStatusClass(doc.status)"
+                                                    class="text-xs font-bold px-2.5 py-1 rounded-full border"
+                                                >
+                                                    {{ doc.status }}
+                                                </span>
+                                                <span class="text-xs bg-gray-100 px-2 py-0.5 rounded">
+                                                    {{ doc.doc_type }}
+                                                </span>
+                                            </div>
+
+                                            <h3 class="text-lg font-bold text-blue-700 mb-1">
+                                                {{ doc.title }}
+                                            </h3>
+
+                                            <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                                                {{ doc.summary }}
+                                            </p>
+
+                                            <div class="flex gap-6 text-sm text-gray-500">
+                                                <span>📅 Ban hành: {{ doc.issued_date }}</span>
+                                                <span>✅ Hiệu lực: {{ doc.effective_start_date }}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex md:flex-col gap-2 mt-2 md:mt-0 md:pl-4 border-t md:border-t-0 md:border-l border-gray-100 md:w-40 flex-shrink-0 pt-3 md:pt-0">
+                                            
+                                            <button class="flex-1 flex items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out border border-blue-100 shadow-sm">
+                                                <i class="fa-regular fa-eye"></i>
+                                                <span>Xem</span>
+                                            </button>
+
+                                            <button class="flex-1 flex items-center justify-center gap-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out border border-emerald-100 shadow-sm">
+                                                <i class="fa-solid fa-cloud-arrow-down"></i>
+                                                <span>Tải xuống</span>
+                                            </button>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- 3️⃣ Không tìm thấy -->
+                            <template v-else>
+                                <div class="text-center py-16">
+                                    <div class="text-6xl mb-4">📄</div>
+                                    <h3 class="text-lg font-semibold text-gray-700 mb-2">
+                                        Không tìm thấy văn bản
+                                    </h3>
+                                    <p class="text-sm text-gray-500 mb-4">
+                                        Không có văn bản nào phù hợp với điều kiện tìm kiếm của bạn.
+                                    </p>
+                                    <button
+                                        @click="resetFilters"
+                                        class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+                                    >
+                                        🔄 Xóa bộ lọc
+                                    </button>
+                                </div>
+                            </template>
+
                         </div>
 
                         <!-- Phân trang (Mock) -->
-                        <div class="flex justify-center mt-8">
-                            <nav class="flex space-x-2" aria-label="Pagination">
-                                <a href="#" class="px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">Trước</a>
-                                <a href="#" class="px-3 py-2 rounded-md border border-blue-500 bg-blue-50 text-blue-600 font-medium">1</a>
-                                <a href="#" class="px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50">2</a>
-                                <a href="#" class="px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50">3</a>
-                                <span class="px-3 py-2 text-gray-500">...</span>
-                                <a href="#" class="px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">Sau</a>
-                            </nav>
-                        </div>
+                        <nav class="flex justify-center items-center gap-1 mt-3 text-sm">
+
+                            <!-- Prev -->
+                            <button
+                                @click="changePage(currentPage - 1)"
+                                :disabled="currentPage === 1"
+                                class="px-3 py-2 rounded-lg border border-gray-300
+                                        bg-white hover:bg-gray-100
+                                        disabled:opacity-40 disabled:cursor-not-allowed
+                                        transition"
+                            >
+                                «
+                            </button>
+
+                            <!-- Pages -->
+                            <template v-for="(page, index) in visiblePages" :key="`${page}-${index}`">
+                                <span
+                                    v-if="page === '...'"
+                                    class="px-2 py-1 text-gray-400"
+                                >
+                                    ...
+                                </span>
+
+                                <button
+                                    v-else
+                                    @click="changePage(page as number)"
+                                    :class="[
+                                        'px-3 py-2 rounded-lg min-w-[36px] transition font-medium',
+                                        page === currentPage
+                                            ? 'bg-blue-600 text-white shadow'
+                                            : 'bg-white border border-gray-300 hover:bg-gray-100'
+                                        ]"
+
+                                >
+                                    {{ page }}
+                                </button>
+                            </template>
+
+                            <!-- Next -->
+                            <button
+                                @click="changePage(currentPage + 1)"
+                                :disabled="currentPage === totalPages"
+                                class="px-3 py-2 rounded-lg border border-gray-300
+                                        bg-white hover:bg-gray-100
+                                        disabled:opacity-40 disabled:cursor-not-allowed
+                                        transition"
+                            >
+                                »
+                            </button>
+                        </nav>
                     </div>
                 </main>
             </div>
@@ -236,19 +332,21 @@
     <Footer />
 </template>
 
+
+
 <script lang="ts">
 import { defineComponent } from "vue";
 import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
-
+import axios from "axios";
 interface SearchResult {
-    id: number;
-    title: string;
-    description: string;
-    type: string;
-    issueDate: string;
-    effectiveDate: string;
-    status: string;
+  id: number;
+  title: string;
+  summary: string;
+  doc_type: string;
+  issued_date: string;
+  effective_start_date: string;
+  status: string;
 }
 
 export default defineComponent({
@@ -257,97 +355,37 @@ export default defineComponent({
         Header,
         Footer,
     },
-    data() {
+        data() {
         return {
+            loading: false,
+            hasSearched: false,
+
+            currentPage: 1,
+            pageSize: 5,
+            totalItems: 0,
+            totalPages: 1,
+
             filters: {
-                keyword: "",
-                docType: "",
-                issuer: "",
-                // Ngày ban hành
-                releaseDateFrom: "",
-                releaseDateTo: "",
-                // Ngày bắt đầu có hiệu lực
-                effectiveDateFrom: "",
-                effectiveDateTo: "",
-                // Ngày hết hiệu lực
-                expirationDateFrom: "",
-                expirationDateTo: "",
+            keyword: "",
+            docType: "",
+            issuer: "",
+            releaseDateFrom: "",
+            releaseDateTo: "",
+            effectiveDateFrom: "",
+            effectiveDateTo: "",
+            expirationDateFrom: "",
+            expirationDateTo: "",
             },
-            sortBy: "relevance" as string,
-            searchResults: [
-                {
-                    id: 1,
-                    title: "Luật Đất đai 2024 (Số 31/2024/QH15)",
-                    type: "Luật",
-                    description: "Quy định về chế độ sở hữu đất đai, quyền hạn và trách nhiệm của Nhà nước đại diện chủ sở hữu toàn dân về đất đai...",
-                    issueDate: "18/01/2024",
-                    effectiveDate: "01/01/2025",
-                    status: "Sắp có hiệu lực",
-                },
-                {
-                    id: 2,
-                    title: "Nghị định 288/2025/NĐ-CP về Quản lý phương tiện bay",
-                    type: "Nghị định",
-                    description: "Quy định chi tiết về việc đăng ký, cấp phép và quản lý hoạt động của tàu bay không người lái và phương tiện bay siêu nhẹ.",
-                    issueDate: "05/11/2025",
-                    effectiveDate: "05/11/2025",
-                    status: "Còn hiệu lực",
-                },
-                {
-                    id: 3,
-                    title: "Thông tư 39/2016/TT-NHNN Hoạt động cho vay",
-                    type: "Thông tư",
-                    description: "Quy định về hoạt động cho vay của tổ chức tín dụng, chi nhánh ngân hàng nước ngoài đối với khách hàng.",
-                    issueDate: "30/12/2016",
-                    effectiveDate: "15/03/2017",
-                    status: "Còn hiệu lực",
-                },
-                {
-                    id: 4,
-                    title: "Luật Dân sự 2005 (Số 33/2005/QH11)",
-                    type: "Luật",
-                    description: "Bộ luật này quy định địa vị pháp lý, chuẩn mực pháp lý cho cách ứng xử của cá nhân, pháp nhân, chủ thể khác.",
-                    issueDate: "14/06/2005",
-                    effectiveDate: "01/01/2006",
-                    status: "Hết hiệu lực",
-                },
-                {
-                    id: 5,
-                    title: "Nghị định 46/2016/NĐ-CP Xử phạt vi phạm giao thông",
-                    type: "Nghị định",
-                    description: "Quy định xử phạt vi phạm hành chính trong lĩnh vực giao thông đường bộ và đường sắt.",
-                    issueDate: "26/05/2016",
-                    effectiveDate: "01/08/2016",
-                    status: "Hết hiệu lực một phần",
-                },
-                {
-                    id: 6,
-                    title: "Quyết định 18/2024/QĐ-TTg",
-                    type: "Quyết định",
-                    description: "Quy định về điều kiện, hồ sơ, trình tự đề nghị chấp thuận mức cấp tín dụng tối đa vượt giới hạn của tổ chức tín dụng.",
-                    issueDate: "05/03/2024",
-                    effectiveDate: "01/05/2024",
-                    status: "Còn hiệu lực",
-                },
-                {
-                    id: 7,
-                    title: "Chỉ thị 16/CT-TTg năm 2020",
-                    type: "Chỉ thị",
-                    description: "Về thực hiện các biện pháp cấp bách phòng, chống dịch COVID-19. Thực hiện cách ly toàn xã hội.",
-                    issueDate: "31/03/2020",
-                    effectiveDate: "01/04/2020",
-                    status: "Hết hiệu lực",
-                }
-            ] as SearchResult[],
+
+            sortBy: "relevance",
+            searchResults: [] as SearchResult[],
+            searchTimeout: null as ReturnType<typeof setTimeout> | null,
         };
     },
 
+
     methods: {
-        applyFilters(): void {
-            console.log("Applying filters:", this.filters);
-            // Giả lập loading hoặc gọi API
-        },
-        resetFilters(): void {
+        resetFilters() {
             this.filters = {
                 keyword: "",
                 docType: "",
@@ -359,7 +397,14 @@ export default defineComponent({
                 expirationDateFrom: "",
                 expirationDateTo: "",
             };
+
+            this.hasSearched = false;
+            this.currentPage = 1;
+
+            this.fetchAllDocuments();
         },
+
+
 
         getStatusClass(status: string): string {
             switch (status) {
@@ -375,6 +420,211 @@ export default defineComponent({
                     return "bg-gray-100 text-gray-600";
             }
         },
+            async applyFilters() {
+                this.hasSearched = true;
+                this.currentPage = 1;
+
+                try {
+                    this.loading = true;
+                    this.loading = false;
+                    const params = {
+                    keyword: this.filters.keyword || undefined,
+                    doc_type: this.filters.docType || undefined,
+                    issued_by: this.filters.issuer || undefined,
+                    issued_from: this.filters.releaseDateFrom || undefined,
+                    issued_to: this.filters.releaseDateTo || undefined,
+                    effective_from: this.filters.effectiveDateFrom || undefined,
+                    effective_to: this.filters.effectiveDateTo || undefined,
+                    page: this.currentPage,
+                    page_size: this.pageSize,
+                    };
+
+                    const response = await axios.get(
+                    "http://127.0.0.1:8000/api/documents/filter/",
+                    {
+                        params,
+                        headers: {
+                        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                        },
+                    }
+                    );
+
+                    this.searchResults = response.data.results || [];
+                    this.totalItems = response.data.pagination.total_items || 0;
+                    this.totalPages = response.data.pagination.total_pages || 1;
+
+                    this.applySort();
+
+
+                } catch (error) {
+                    console.error("Lỗi khi filter văn bản", error);
+                } finally {
+                    this.loading = false;
+                }
+            },
+            async fetchAllDocuments() {
+                    try {
+                        this.loading = true;
+                        this.loading = false;
+                        const response = await axios.get(
+                        "http://127.0.0.1:8000/api/documents/",
+                        {
+                            headers: {
+                            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                            },
+                        }
+                        );
+
+                        const allDocs = response.data || [];
+
+                        this.totalItems = allDocs.length;
+                        this.totalPages = Math.max(1, Math.ceil(this.totalItems / this.pageSize));
+
+                        const start = (this.currentPage - 1) * this.pageSize;
+                        const end = start + this.pageSize;
+
+                        this.searchResults = allDocs.slice(start, end);
+                        this.applySort();
+
+                    } catch (error) {
+                        console.error("Lỗi load toàn bộ văn bản", error);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                changePage(page: number) {
+                    if (!Number.isInteger(page)) return;
+                    if (page < 1 || page > this.totalPages) return;
+
+                    this.currentPage = page;
+
+                    if (this.hasSearched) {
+                        this.applyFilters();
+                    } else {
+                        this.fetchAllDocuments();
+                    }
+                },
+                applySort() {
+                    if (!this.searchResults || this.searchResults.length === 0) return;
+
+                    const sorted = [...this.searchResults];
+
+                    switch (this.sortBy) {
+                        case "newest":
+                            sorted.sort((a, b) =>
+                                new Date(b.issued_date).getTime() -
+                                new Date(a.issued_date).getTime()
+                            );
+                            break;
+
+                        case "effective_asc":
+                            sorted.sort((a, b) =>
+                                new Date(a.effective_start_date).getTime() -
+                                new Date(b.effective_start_date).getTime()
+                            );
+                            break;
+
+                        case "effective_desc":
+                            sorted.sort((a, b) =>
+                                new Date(b.effective_start_date).getTime() -
+                                new Date(a.effective_start_date).getTime()
+                            );
+                            break;
+
+                        case "relevance":
+                        default:
+                            // Không làm gì – giữ nguyên thứ tự backend
+                            return;
+                    }
+
+                    this.searchResults = sorted;
+                },
+
+        },
+        mounted() {
+        this.fetchAllDocuments();
+
     },
+            watch: {
+                    // 🔹 Watch sắp xếp
+                    sortBy() {
+                        if (this.hasSearched) {
+                            this.applyFilters();
+                        } else {
+                            this.fetchAllDocuments();
+                        }
+                    },
+
+                    // 🔹 Watch từ khóa (search realtime)
+                    "filters.keyword"(newVal: string) {
+                        // Nếu rỗng → load lại toàn bộ
+                        if (!newVal || newVal.trim() === "") {
+                            this.hasSearched = false;
+                            this.currentPage = 1;
+                            this.fetchAllDocuments();
+                            return;
+                        }
+
+                        // Debounce
+                        if (this.searchTimeout) {
+                            clearTimeout(this.searchTimeout);
+                        }
+
+                        this.searchTimeout = setTimeout(() => {
+                            this.hasSearched = true;
+                            this.currentPage = 1;
+                            this.applyFilters();
+                        }, 400);
+                    },
+                },
+
+        
+
+        computed: {
+           visiblePages(): (number | string)[] {
+            const pages: (number | string)[] = [];
+
+            const total = Number(this.totalPages);
+            const current = Number(this.currentPage);
+
+            // 🚫 Chặn NaN tuyệt đối
+            if (!Number.isInteger(total) || total < 1) {
+                return [1];
+            }
+
+            if (!Number.isInteger(current) || current < 1) {
+                return [1];
+            }
+
+            if (total <= 7) {
+                for (let i = 1; i <= total; i++) pages.push(i);
+                return pages;
+            }
+
+            pages.push(1);
+
+            if (current > 4) {
+                pages.push("...");
+            }
+
+            const start = Math.max(2, current - 1);
+            const end = Math.min(total - 1, current + 1);
+
+            for (let i = start; i <= end; i++) {
+                if (Number.isInteger(i)) pages.push(i);
+            }
+
+            if (current < total - 3) {
+                pages.push("...");
+            }
+
+            pages.push(total);
+
+            return pages;
+            }
+
+        },
+
 });
 </script>

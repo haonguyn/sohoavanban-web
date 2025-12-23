@@ -2,8 +2,9 @@
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <!-- Logo/Tên trang web -->
-                <div class="flex-shrink-0 flex items-center">
+
+                <!-- Logo -->
+                <div class="flex items-center">
                     <svg class="h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
                         viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -12,68 +13,108 @@
                     <span class="ml-2 text-xl font-bold text-gray-800">OCR</span>
                 </div>
 
-                <!-- Menu điều hướng -->
-                <div class="hidden md:flex md:items-center md:space-x-6">
-                    <RouterLink v-if="can(['admin'])" v-for="item in menu" :key="item.to" :to="item.to"
-                        class="px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                        :class="isActive(item.to) ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'">
+                <!-- Menu -->
+                <div class="hidden md:flex space-x-6">
+                    <RouterLink
+                        v-for="item in menu"
+                        :key="item.to"
+                        :to="item.to"
+                        class="px-3 py-2 text-sm font-medium transition"
+                        :class="isActive(item.to)
+                            ? 'text-blue-600 font-semibold'
+                            : 'text-gray-600 hover:text-blue-600'"
+                    >
                         {{ item.label }}
                     </RouterLink>
                 </div>
 
-                <!-- Nút Đăng ký / Đăng nhập -->
+                <!-- Auth buttons -->
                 <div class="flex items-center space-x-3">
-                    <!-- Nút Đăng nhập (Filled style) -->
-                    <RouterLink to="/login"
-                        class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-500 hover:text-white transition-colors">
-                        Đăng nhập
-                    </RouterLink>
+                    <!-- ĐÃ ĐĂNG NHẬP -->
+                    <template v-if="username">
+                        <span class="text-sm text-gray-700">
+                            Xin chào,
+                            <span class="font-semibold text-blue-600">
+                                {{ username }}
+                            </span>
+                        </span>
+
+                        <button
+                            @click="logout"
+                            class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition"
+                        >
+                            Đăng xuất
+                        </button>
+                    </template>
+
+                    <!-- CHƯA ĐĂNG NHẬP -->
+                    <template v-else>
+                        <RouterLink
+                            to="/login"
+                            class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600"
+                        >
+                            Đăng nhập
+                        </RouterLink>
+
+                        <RouterLink
+                            to="/register"
+                            class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                        >
+                            Đăng ký
+                        </RouterLink>
+                    </template>
                 </div>
+
             </div>
         </div>
     </nav>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { useRoute } from 'vue-router'
-import { getRole } from '../../utils/authUtils';
+import { defineComponent } from "vue";
+import { useRoute } from "vue-router";
+import { getRole } from "../../utils/authUtils";
 
 export default defineComponent({
-    name: 'HeaderMenu',
+    name: "HeaderMenu",
+
     data() {
         return {
             menu: [
-                { to: '/', label: 'Trang chủ' },
-                { to: '/tra-cuu', label: 'Tra cứu' },
-                { to: '/quan-ly', label: 'Quản lý' },
-                { to: '/ocr-vanban', label: 'OCR Văn bản' }
+                { to: "/", label: "Trang chủ" },
+                { to: "/tra-cuu", label: "Tra cứu" },
+                { to: "/quan-ly", label: "Quản lý" },
+                { to: "/ocr-vanban", label: "OCR Văn bản" },
             ],
             role: getRole(),
-        }
+            isAuthenticated: false,
+            username: localStorage.getItem("username"),
+        };
     },
+
+    mounted() {
+        this.checkAuth();
+    },
+
     methods: {
         isActive(path: string) {
-            const route = useRoute()
-            return route.path === path
+            const route = useRoute();
+            return route.path === path;
         },
-        can(roles: string[]) {
-            return this.role ? roles.includes(this.role) : false;
+
+        checkAuth() {
+            this.isAuthenticated = !!localStorage.getItem("access_token");
         },
-        goAdmin() {
-            if (!this.can(["admin"])) {
-                (this.$refs.myToast as any)?.warning("Quyền truy cập", "Bạn không có quyền vào khu vực quản trị");
-                return;
-            }
-            this.$router.push("/admin");
-        },
-        goSensitiveAction() {
-            if (!this.can(["admin"])) {
-                (this.$refs.myToast as any)?.error("Từ chối", "Bạn không đủ quyền thực hiện hành động này");
-                return;
-            }
-            // Thực hiện hành động
-        },
-    }
-})
+
+        logout() {
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("role");
+            localStorage.removeItem("username"); // ✅ QUAN TRỌNG
+
+            (this.$refs.myToast as any)?.success("Đăng xuất", "Bạn đã đăng xuất");
+
+            this.$router.push("/login");
+        }
+            },
+});
 </script>

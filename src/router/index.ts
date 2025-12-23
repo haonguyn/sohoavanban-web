@@ -1,9 +1,12 @@
-// src/router/index.ts
 import { createRouter, createWebHistory } from "vue-router";
 import { getToken, getRole } from "../utils/authUtils";
 
 const routes = [
-  { path: "/", name: "home", component: () => import("../views/HomeView.vue") },
+  {
+    path: "/",
+    name: "home",
+    component: () => import("../views/HomeView.vue"),
+  },
   {
     path: "/tra-cuu",
     name: "advanced-search",
@@ -26,12 +29,22 @@ const routes = [
     component: () => import("../views/OCRScanView.vue"),
     meta: { requiresAuth: true, roles: ["employee", "admin"] },
   },
+
+  /* ================= AUTH ================= */
+
   {
     path: "/login",
     name: "login",
     component: () => import("../views/LoginView.vue"),
   },
-  // Khu admin
+  {
+    path: "/register",
+    name: "register",
+    component: () => import("../views/Register.vue"),
+  },
+
+  /* ================= ADMIN ================= */
+
   {
     path: "/admin",
     name: "dashboard",
@@ -69,26 +82,29 @@ const router = createRouter({
   routes,
 });
 
-// Guard: kiểm tra token và quyền theo meta
+/* ================= ROUTER GUARD ================= */
+
 router.beforeEach((to, _from, next) => {
   const token = getToken();
   const role = getRole();
 
-  // Nếu đã đăng nhập, hạn chế quay lại login
-  if (to.name === "login" && token) {
+  // ✅ Nếu đã đăng nhập → không cho quay lại login / register
+  if ((to.name === "login" || to.name === "register") && token) {
     return next({ name: "home" });
   }
 
-  // Route yêu cầu đăng nhập
+  // ✅ Route yêu cầu đăng nhập
   if (to.meta?.requiresAuth) {
     if (!token) {
-      // Chưa login → chuyển đến login và lưu lại đường dẫn muốn tới
-      return next({ name: "login", query: { redirect: to.fullPath } });
+      return next({
+        name: "login",
+        query: { redirect: to.fullPath },
+      });
     }
+
     const roles = (to.meta.roles as string[]) || [];
     if (roles.length && (!role || !roles.includes(role))) {
-      // Có token nhưng không đủ quyền
-      return next({ name: "home" }); // hoặc một trang 403 nếu bạn có
+      return next({ name: "home" }); // có thể đổi sang trang 403 sau
     }
   }
 
