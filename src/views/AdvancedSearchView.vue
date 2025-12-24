@@ -357,6 +357,8 @@ export default defineComponent({
     },
         data() {
         return {
+            keyword: "",
+            documents: [],
             loading: false,
             hasSearched: false,
 
@@ -428,17 +430,16 @@ export default defineComponent({
                     this.loading = true;
                     this.loading = false;
                     const params = {
-                    keyword: this.filters.keyword || undefined,
-                    doc_type: this.filters.docType || undefined,
-                    issued_by: this.filters.issuer || undefined,
-                    issued_from: this.filters.releaseDateFrom || undefined,
-                    issued_to: this.filters.releaseDateTo || undefined,
-                    effective_from: this.filters.effectiveDateFrom || undefined,
-                    effective_to: this.filters.effectiveDateTo || undefined,
-                    page: this.currentPage,
-                    page_size: this.pageSize,
+                        keyword: this.filters.keyword || undefined,
+                        doc_type: this.filters.docType || undefined,
+                        issued_by: this.filters.issuer || undefined,
+                        issued_from: this.filters.releaseDateFrom || undefined,
+                        issued_to: this.filters.releaseDateTo || undefined,
+                        effective_from: this.filters.effectiveDateFrom || undefined,
+                        effective_to: this.filters.effectiveDateTo || undefined,
+                        page: this.currentPage,
+                        page_size: this.pageSize,
                     };
-
                     const response = await axios.get(
                     "http://127.0.0.1:8000/api/documents/filter/",
                     {
@@ -543,9 +544,15 @@ export default defineComponent({
 
         },
         mounted() {
-        this.fetchAllDocuments();
-
-    },
+            this.fetchAllDocuments();
+            const keyword = this.$route.query.keyword as string;
+            if (keyword && keyword.trim()) {
+                this.filters.keyword = keyword;
+                this.hasSearched = true;
+                this.currentPage = 1;
+                this.applyFilters();
+            }
+        },
             watch: {
                     // 🔹 Watch sắp xếp
                     sortBy() {
@@ -576,6 +583,16 @@ export default defineComponent({
                             this.currentPage = 1;
                             this.applyFilters();
                         }, 400);
+
+                        
+                    },
+                    "$route.query.keyword"(newVal: string) {
+                        if (newVal && newVal.trim()) {
+                            this.filters.keyword = newVal;
+                            this.hasSearched = true;
+                            this.currentPage = 1;
+                            this.applyFilters();
+                        }
                     },
                 },
 
