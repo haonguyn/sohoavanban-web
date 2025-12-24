@@ -27,10 +27,10 @@
                     <div class="space-y-4">
                         <!-- Họ và tên -->
                         <div>
-                            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">
-                                Họ và tên
+                            <label for="Username" class="block text-sm font-medium text-gray-700 mb-1">
+                                Username
                             </label>
-                            <input type="text" id="fullName" v-model="fullName" placeholder="Nguyễn Văn A" required
+                            <input type="text" id="Username" v-model="username" placeholder="Tên đăng nhập" required
                                 class="mt-1 block w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm" />
                         </div>
 
@@ -64,9 +64,13 @@
 
                         <!-- Nút Đăng ký -->
                         <div>
-                            <button type="submit"
-                                class="w-full flex justify-center py-3 px-4 mt-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                                Đăng ký
+                            <button
+                                type="submit"
+                                :disabled="loading"
+                                class="w-full flex justify-center py-3 px-4 mt-4 rounded-lg text-sm font-medium text-white
+                                    bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 transition"
+                            >
+                                {{ loading ? "Đang đăng ký..." : "Đăng ký" }}
                             </button>
                         </div>
                     </div>
@@ -76,9 +80,12 @@
                 <div class="mt-6 text-center">
                     <p class="text-sm text-gray-600">
                         Đã có tài khoản?
-                        <a href="/login" class="font-medium text-blue-600 hover:underline">
+                        <RouterLink
+                            to="/login"
+                            class="font-medium text-blue-600 hover:underline"
+                            >
                             Đăng nhập ngay
-                        </a>
+                        </RouterLink>
                     </p>
                 </div>
             </div>
@@ -91,7 +98,7 @@
 import { defineComponent } from "vue";
 import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
-// import api from "../api/userApi"
+import axios from "axios";
 
 export default defineComponent({
     name: "RegisterForm",
@@ -101,47 +108,44 @@ export default defineComponent({
     },
     data() {
         return {
-            fullName: "" as string,
-            email: "" as string,
-            password: "" as string,
-            confirmPassword: "" as string,
+            username: "",
+            email: "",
+            password: "",
+            confirmPassword: "",
+            loading: false,
         };
     },
 
     methods: {
-        async handleRegister() {
-            // Kiểm tra mật khẩu nhập lại
+       async handleRegister() {
             if (this.password !== this.confirmPassword) {
                 alert("Mật khẩu xác nhận không khớp!");
                 return;
             }
 
-            // if (!this.fullName || !this.email || !this.password) {
-            //     console.error("Vui lòng nhập đầy đủ thông tin");
-            //     return;
-            // }
+            try {
+                const payload = {
+                    username: this.username,
+                    email: this.email,
+                    password: this.password,
+                };
 
-            // try {
-            //     const payload = {
-            //         full_name: this.fullName,
-            //         email: this.email,
-            //         password: this.password
-            //     };
-            //     const res = await api.post("/auth/register/", payload);
-            //     console.log("Đăng ký thành công:", res.data);
-            //     alert("Đăng ký thành công! Vui lòng đăng nhập.");
-            //     this.$router.push("/login");
-            // } catch (e) { 
-            //     console.error(e);
-            //     alert("Đăng ký thất bại"); 
-            // }
-            
-            console.log("Submit Register:", {
-                name: this.fullName,
-                email: this.email,
-                password: this.password
-            });
-        },
+                const res = await axios.post(
+                    "http://127.0.0.1:8000/api/auth/register/",
+                    payload
+                );
+
+                alert("Đăng ký thành công! Vui lòng đăng nhập.");
+                this.$router.push("/login");
+
+            } catch (err: any) {
+                console.error("Lỗi đăng ký:", err);
+                alert(
+                    err.response?.data?.message ||
+                    "Đăng ký thất bại"
+                );
+            }
+        }
     },
 });
 </script>

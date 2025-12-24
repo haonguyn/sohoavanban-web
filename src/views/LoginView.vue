@@ -96,35 +96,43 @@ export default defineComponent({
     },
     methods: {
         async handleLogin() {
-            if (!this.username || !this.password) {
-                this.errorMessage = "Vui lòng nhập đầy đủ thông tin";
-                (this.$refs.myToast as any).warning(this.title, this.errorMessage);
-                return;
-            }
-            this.loading = true;
-            this.errorMessage = "";
+                if (!this.username || !this.password) {
+                    (this.$refs.myToast as any).warning("Đăng nhập", "Vui lòng nhập đầy đủ thông tin");
+                    return;
+                }
 
-            try {
-                // Gọi API login
-                const res = await login({ username: this.username, password: this.password });
+                this.loading = true;
 
-                // Lưu token và role cho phân quyền
-                setAuth({ access_token: res.access_token, role: res.role });
+                try {
+                    const res = await login({
+                        username: this.username,
+                        password: this.password,
+                    });
 
-                // Toast thành công lấy từ backend
-                (this.$refs.myToast as any).success(this.title, "res.message");
+                    // ✅ LƯU TOKEN + ROLE
+                    setAuth({
+                        access_token: res.access_token,
+                        role: res.role,
+                    });
 
-                // Nếu có redirect trong query, quay lại trang đó; nếu không, về home
-                const redirect = this.$route.query.redirect as string | undefined;
-                this.$router.push(redirect || "/");
-            } catch (e: any) {
-                // Lấy thông báo lỗi từ backend: detail
-                this.errorMessage = e?.response?.data?.detail || "Đăng nhập thất bại";
-                (this.$refs.myToast as any).error(this.title, this.errorMessage);
-            } finally {
-                this.loading = false;
-            }
+                    // ✅ LƯU USERNAME (QUAN TRỌNG)
+                    localStorage.setItem("username", this.username);
+
+                    (this.$refs.myToast as any).success("Đăng nhập", "Đăng nhập thành công");
+
+                    const redirect = this.$route.query.redirect as string | undefined;
+                    this.$router.push(redirect || "/");
+                } catch (e: any) {
+                    (this.$refs.myToast as any).error(
+                        "Đăng nhập",
+                        e?.response?.data?.detail || "Đăng nhập thất bại"
+                    );
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+
         },
-    },
 });
 </script>
