@@ -19,7 +19,7 @@ export const listUsers = async () => {
 };
 
 export const createUser = async (
-  data: Partial<User> & { password: string }
+  data: Partial<User>
 ) => {
   const res = await api.post("/admin/users/create/", data);
   return res.data;

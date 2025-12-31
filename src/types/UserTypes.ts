@@ -3,12 +3,11 @@
 export interface User {
   id: string | number;
   username : string,
-  password :string,
+  password? :string,
   email: string;
   full_name: string;
   is_active: boolean;
   role?: string;
-  created_at?: string;
 }
 
 export interface LoginPayload {

@@ -122,7 +122,7 @@
                                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                     placeholder="VD: Quyết định về việc..."></textarea>
                             </div>
-                            
+
                             <!-- Hàng 2: Số ký hiệu & Loại văn bản -->
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
@@ -133,7 +133,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Loại văn bản</label>
-                                        <input type="text" v-model="form.doc_type"
+                                    <input type="text" v-model="form.doc_type"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         placeholder="Quyết Định,...." />
                                 </div>
@@ -157,7 +157,7 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Số trang</label>
-                                    <input type="number" v-model="form.pageCount" min="1"
+                                    <input type="number" v-model="form.page_count" min="1"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                                 </div>
                                 <div>
@@ -171,13 +171,10 @@
                             <div
                                 class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
                                 <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Ngày ban hành</label>
-                        <input 
-                            type="date" 
-                            v-model="form.issued_date"
-                            class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm" 
-                        />
-                    </div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Ngày ban hành</label>
+                                    <input type="date" v-model="form.issued_date"
+                                        class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                                </div>
                                 <div>
                                     <label class="block text-xs font-bold text-blue-600 mb-1">Ngày hiệu lực</label>
                                     <input type="date" v-model="form.effective_start_date"
@@ -282,6 +279,7 @@
 import { defineComponent } from "vue";
 import { processOCR } from "../api/ocrApi";
 import { createDocument } from "../api/documentApi";
+import { createAttachment } from "../api/attachmentApi";
 
 export default defineComponent({
     name: "OCRComponent",
@@ -304,11 +302,11 @@ export default defineComponent({
                 signer: "",
                 summary: "",
                 full_text: "",
-                status: "draft",
+                status: "pending",
                 effective_start_date: "",
                 effective_end_date: "",
                 // chỉ dùng nội bộ UI
-                pageCount: null as number | null,
+                page_count: null as number | null,
                 field: "",
             }
 
@@ -384,13 +382,13 @@ export default defineComponent({
                 signer: "",
                 summary: "",
                 full_text: "",
-                status: "draft",
+                status: "pending",
                 effective_start_date: "",
                 effective_end_date: "",
                 // chỉ dùng nội bộ UI
-                pageCount: null as number | null,
+                page_count: null as number | null,
                 field: "",
-                };
+            };
 
         },
 
@@ -405,7 +403,7 @@ export default defineComponent({
                 const res = await processOCR(this.selectedFile);
 
                 // dữ liệu trả về theo JSON bạn mô tả
-                const { text, data } = res.data;    
+                const { text, data } = res.data;
 
                 // 1. Văn bản trích xuất
                 this.extractedText = text;
@@ -422,11 +420,11 @@ export default defineComponent({
                     issued_date: this.convertToISODate(data.ngayBanHanh),
                     effective_start_date: data.ngayHieuLuc || "",
                     effective_end_date: data.ngayHetHieuLuc || "",
-                    status: "draft",
-                    pageCount: Number(data.pageCount) || null,   // thêm vào
+                    status: "pending",
+                    page_count: Number(data.pageCount) || null,   // thêm vào
                     //field: this.checkTag(data.linhVuc), 
                     field: data.linhVuc || null                 // thêm vào
-                    };
+                };
 
 
                 this.isOcrDone = true;
@@ -438,26 +436,65 @@ export default defineComponent({
             }
         },
 
-        async saveDocument() {
-            try {
-                console.log("Saving document:", this.form);
+        // async saveDocument() {
+        //     try {
+        //         console.log("Saving document:", this.form);
 
-                // Tạo FormData từ this.form
+        //         // Tạo FormData từ this.form
+        //         const formData = new FormData();
+        //         Object.entries(this.form).forEach(([key, value]) => {
+        //             if (value !== undefined && value !== null) {
+        //                 formData.append(key, String(value));
+        //             }
+        //         });
+
+        //         // Gọi API
+        //         const res = await createDocument(formData);
+
+        //         alert("✅ Đã lưu văn bản vào hệ thống thành công!");
+        //         console.log("Server response:", res);
+        //     } catch (err: any) {
+        //         console.error("Lỗi khi lưu văn bản:", err.response?.data || err.message);
+        //         alert("❌ Lưu văn bản thất bại!");
+        //     }
+        // },
+        async saveDocument() {
+            if (!this.selectedFile) {
+                alert("❌ Chưa có file để upload");
+                return;
+            }
+
+            try {
+                // 1️⃣ Tạo FormData cho document
                 const formData = new FormData();
                 Object.entries(this.form).forEach(([key, value]) => {
-                if (value !== undefined && value !== null) {
-                    formData.append(key, String(value));
-                }
+                    if (value !== undefined && value !== null) {
+                        formData.append(key, String(value));
+                    }
                 });
 
-                // Gọi API
+                // 2️⃣ Gọi API tạo document
                 const res = await createDocument(formData);
+                console.log(res);
+                console.log(res.data);
+                const documentId = res.data.data.id; // ⭐ RẤT QUAN TRỌNG
 
-                alert("✅ Đã lưu văn bản vào hệ thống thành công!");
-                console.log("Server response:", res);
+                if (!documentId) {
+                    throw new Error("Không nhận được document_id từ server");
+                }
+
+                // 3️⃣ Upload file vào attachment
+                await createAttachment(documentId, this.selectedFile);
+
+                alert("✅ Lưu văn bản & đính kèm file thành công!");
+                console.log("Document ID:", documentId);
+
+                // (Optional) reset UI
+                this.clearFile();
+
             } catch (err: any) {
-                console.error("Lỗi khi lưu văn bản:", err.response?.data || err.message);
-                alert("❌ Lưu văn bản thất bại!");
+                console.error("Lỗi khi lưu:", err.response?.data || err.message);
+                alert("❌ Lưu văn bản hoặc upload file thất bại!");
             }
         },
         copyText(text: string) {
@@ -486,14 +523,13 @@ export default defineComponent({
                 return "";
             }
         }
-            ,
+        ,
 
-         checkTag(tag: string): string {
+        checkTag(tag: string): string {
 
-            if (tag == " ")
-                {
-                    tag ="khác"
-                }
+            if (tag == " ") {
+                tag = "khác"
+            }
 
             return tag;
         }

@@ -73,6 +73,8 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Navbar from "../../components/admin/Navbar.vue";
+import type { DashboardStat, LogItem } from "../../types/DashBoardTypes";
+import { getDashboardStats, getLogs, getYearChartData } from "../../api/dashboardApi";
 export default defineComponent({
     name: "DashBoard",
     components: {
@@ -81,19 +83,10 @@ export default defineComponent({
     data() {
         return {
             // KPI Cards
-            dashboardStats: [] as {
-                label: string;
-                val: number;
-                color: string;
-                icon: string;
-            }[],
+            dashboardStats: [] as DashboardStat[],
 
             // Logs
-            logs: [] as {
-                type: string;
-                message: string;
-                time: string;
-            }[],
+            logs: [] as LogItem[],
 
             // Chart Data
             rawChartData: [] as number[],
@@ -108,22 +101,11 @@ export default defineComponent({
         this.fetchLogs();
     },
     methods: {
-       async updateChartData() {
+        async updateChartData() {
             try {
                 const year = new Date().getFullYear();
 
-                const res = await fetch(
-                `/api/dashboard/chart/year/?year=${year}`,
-                {
-                    headers: {
-                    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-                    },
-                }
-                );
-
-                if (!res.ok) throw new Error("API lỗi");
-
-                const data = await res.json();
+                const data = await getYearChartData(year);
 
                 this.rawChartData = data.values;
                 this.labels = data.labels;
@@ -153,15 +135,7 @@ export default defineComponent({
         },
         async fetchDashboardStats() {
             try {
-                const res = await fetch("/api/dashboard/stats/", {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-                },
-                });
-
-                if (!res.ok) throw new Error("API lỗi");
-
-                this.dashboardStats = await res.json();
+                this.dashboardStats = await getDashboardStats();
             } catch (error) {
                 console.error("Lỗi khi lấy dashboard stats:", error);
             }
@@ -169,13 +143,7 @@ export default defineComponent({
 
         async fetchLogs() {
             try {
-                const res = await fetch("/api/dashboard/logs/", {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-                },
-                });
-
-                this.logs = await res.json();
+                this.logs = await getLogs();
             } catch (error) {
                 console.error("Lỗi khi lấy logs:", error);
             }

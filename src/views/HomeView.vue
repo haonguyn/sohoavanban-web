@@ -13,10 +13,10 @@
                 <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">
                     Hệ thống tra cứu văn bản
                 </h1>
-                <p class="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+                <h3 class="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
                     Tìm kiếm, quản lý và trích xuất nội dung văn bản một cách
                     <p class="text-indigo-600 font-semibold" > Nhanh chóng – Chính xác – Thông minh</p>
-                </p>
+                </h3>
                 <!-- Search box -->
                 <div
                     class="max-w-2xl mx-auto bg-white/70 backdrop-blur-lg p-2 rounded-2xl shadow-xl border border-white/50">

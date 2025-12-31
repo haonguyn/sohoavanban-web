@@ -55,7 +55,7 @@
             </h3>
             <div class="flex-1 overflow-y-auto space-y-3 pr-2">
               <div v-for="log in logs" :key="log.id" class="text-sm border-l-2 border-slate-200 pl-3 py-1">
-                <span class="text-slate-400 text-xs block font-mono">{{ log.time }}</span>
+                <span class="text-slate-400 text-xs block font-mono">{{ log.created_at }}</span>
                 <p class="text-slate-700"><span class="font-bold text-xs bg-slate-100 px-1 rounded">
                     {{ log.type }}</span>
                   {{ log.message }}</p>
@@ -78,7 +78,7 @@
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Email</label><input typeof="email"
                 v-model="userForm.email" type="email" required class="w-full border p-2 rounded"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Password</label><input
-                v-model="userForm.password" required class="w-full border p-2 rounded"></div>
+                placeholder="*********" v-model="userForm.password" class="w-full border p-2 rounded"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Họ tên</label><input
                 v-model="userForm.full_name" required class="w-full border p-2 rounded"></div>
             <div><label class="block text-sm font-bold text-slate-700 mb-1">Vai trò</label>
@@ -100,24 +100,22 @@
       </div>
     </main>
   </div>
+  <LoadingComponent ref="loadingRef" />
+  <ToastNotification ref="myToast" />
 </template>
 <script lang="ts">
 import { defineComponent } from "vue";
 import Navbar from "../../components/admin/Navbar.vue";
 import type { User } from "../../types/UserTypes";
 import { createUser, deleteUser, listUsers, updateUser } from "../../api/userApi";
-
-
-interface Log {
-  id: number;
-  type: string;
-  message: string;
-  time: string;
-}
+import type { Log } from "../../types/SystemUserTypes";
+import ToastNotification from "../../components/ToastNotification.vue";
+import LoadingComponent from "../../components/LoadingComponent.vue";
+import { fetchActionLogs } from "../../api/actionLogApi";
 
 export default defineComponent({
   name: "SystemAndUser",
-  components: { Navbar },
+  components: { Navbar, ToastNotification, LoadingComponent },
   data() {
     return {
       users: [] as User[],   // ban đầu rỗng
@@ -125,7 +123,7 @@ export default defineComponent({
       showUserModal: false,
       editingUser: null as User | null,
       userForm: {
-        id: 0,
+        id: "",
         username: "",
         password: "",
         full_name: "",
@@ -140,6 +138,9 @@ export default defineComponent({
     try {
       const res = await listUsers();
       this.users = res; // gán dữ liệu từ API
+
+      const reslog = await fetchActionLogs();
+      this.logs = reslog; 
     } catch (e: any) {
       this.errorMessage = e.response?.data?.detail || "Không thể tải danh sách user";
     }
@@ -147,58 +148,90 @@ export default defineComponent({
   methods: {
     openAddUser() {
       this.editingUser = null;
-      this.userForm = { id: 0, username: "", password: "", full_name: "", email: "", role: "employee", is_active: true };
+      this.userForm = { id: "", username: "", password: "", full_name: "", email: "", role: "employee", is_active: true };
       this.showUserModal = true;
     },
     openEditUser(user: User) {
       this.editingUser = user;
-      this.userForm = { ...user };
+      this.userForm = { id: user.id, username: user.username, password: "********", full_name: user.full_name, email: user.email, role: user.role, is_active: user.is_active };
       this.showUserModal = true;
+    },
+    addLog(type: Log["type"], message: string) {
+      this.logs.unshift({
+        id: Date.now(),
+        type,
+        message,
+        created_at: new Date().toLocaleString("sv-SE"),
+      });
     },
     async deleteUser(id: string | number) {
       try {
         await deleteUser(id);
         this.users = this.users.filter(u => u.id !== id);
-        this.logs.unshift({
-          id: Date.now(),
-          type: "DELETE",
-          message: `Xóa user #${id}`,
-          time: new Date().toISOString(),
-        });
+        this.addLog("DELETE", `Xóa user #${id}`);
+        (this.$refs.myToast as any).success(
+          "Xoá",
+          `Xóa user #${id}`
+        );
       } catch (e: any) {
         console.error("Delete user error:", e.response?.data || e.message);
-        this.logs.unshift({
-          id: Date.now(),
-          type: "ERROR",
-          message: `Lỗi khi xóa user #${id}`,
-          time: new Date().toISOString(),
-        });
+        this.addLog("ERROR", `Lỗi khi xóa user #${id}`);
       }
     },
     async submitUserForm() {
+      (this.$refs.loadingRef as any).show();
       try {
         if (this.editingUser) {
+          const payload: Partial<User> = {
+            username: this.userForm.username,
+            email: this.userForm.email,
+            full_name: this.userForm.full_name,
+            role: this.userForm.role,
+            is_active: this.userForm.is_active,
+          };
+          //Chỉ gửi password nếu có nhập
+          const isMaskedPassword = (value: string) => {
+            return /^\*+$/.test(value);
+          };
+          if (
+            this.userForm.password?.trim() &&
+            !isMaskedPassword(this.userForm.password)
+          ) {
+            payload.password = this.userForm.password;
+          }
           await updateUser(
-            String(this.editingUser.id), this.userForm
+            String(this.editingUser.id), payload
+          );
+          (this.$refs.myToast as any).success(
+            "Cập nhật",
+            `Cập nhật thành công #${this.userForm.username}`
           );
           // cập nhật lại danh sách hiển thị
           const idx = this.users.findIndex(u => u.id === this.editingUser?.id);
           if (idx !== -1) this.users[idx] = { ...this.userForm };
-          this.logs.unshift({ id: Date.now(), type: "UPDATE", message: `Cập nhật user #${this.userForm.username}`, time: new Date().toISOString() });
+          this.addLog("UPDATE", `Cập nhật user #${this.userForm.username}`);
+
         } else {
-          await createUser(this.userForm);
-          this.users.push({ ...this.userForm });
-          this.logs.unshift({ id: Date.now(), type: "CREATE", message: `Thêm user #${this.userForm.username}`, time: new Date().toISOString() });
+          const res = await createUser(this.userForm);
+          (this.$refs.myToast as any).success(
+            "Thêm",
+            `${res.message} #${this.userForm.username}`
+          );
+          
+          this.users.push({ ...this.userForm, id: res.id });
+          this.addLog("CREATE", `Thêm user #${this.userForm.username}`);
         }
         this.showUserModal = false;
       } catch (e: any) {
-        console.error("User API error:", e.response?.data || e.message);
-        this.logs.unshift({
-          id: Date.now(),
-          type: "ERROR",
-          message: "Lỗi khi xử lý user",
-          time: new Date().toISOString(),
-        });
+        const { username, password } = e.response.data; 
+        const message = (username?.[0] ?? "") + (username && password ? " || " : "") + (password?.[0] ?? "");
+        (this.$refs.myToast as any).error(
+          "Lỗi",
+          `${message}`
+        );
+        this.addLog("ERROR", `Lỗi khi xử lý user`);
+      } finally {
+        (this.$refs.loadingRef as any).hide();
       }
     },
   },

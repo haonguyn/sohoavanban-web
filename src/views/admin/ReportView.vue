@@ -7,23 +7,19 @@
           <h2 class="text-2xl font-bold text-slate-800">Báo cáo & Thống kê</h2>
           <div class="flex gap-2">
             <!-- Chọn tháng -->
-            <select v-model="selectedMonth" @change="fetchDataByMonthYear"
-                    class="border rounded px-3 py-2 text-sm">
+            <select v-model="selectedMonth" @change="fetchDataByMonthYear" class="border rounded px-3 py-2 text-sm">
               <option v-for="m in months" :key="m.value" :value="m.value">{{ m.label }}</option>
             </select>
 
             <!-- Chọn năm -->
-            <select v-model="selectedYear" @change="fetchDataByMonthYear"
-                    class="border rounded px-3 py-2 text-sm">
+            <select v-model="selectedYear" @change="fetchDataByMonthYear" class="border rounded px-3 py-2 text-sm">
               <option v-for="y in years" :key="y" :value="y">Năm {{ y }}</option>
             </select>
 
             <!-- Xuất Excel -->
-           <button
-                @click="exportExcel"
-                class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
-              >
-                <i class="fas fa-download"></i> Xuất Excel
+            <button @click="exportExcel"
+              class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
+              <i class="fas fa-download"></i> Xuất Excel
             </button>
           </div>
         </div>
@@ -47,7 +43,7 @@
                   <td class="px-4 py-3 font-medium">{{ u.name }}</td>
                   <td class="px-4 py-3">{{ u.count }}</td>
                   <td class="px-4 py-3"
-                      :class="u.errorRate > 0 ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold'">
+                    :class="u.errorRate > 0 ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold'">
                     {{ u.errorRate }}%
                   </td>
                 </tr>
@@ -76,15 +72,21 @@
       </div>
     </main>
   </div>
+  <LoadingComponent ref="loadingRef" />
+  <ToastNotification ref="myToast" />
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
 import Navbar from "../../components/admin/Navbar.vue";
+import { exportReportExcel, getReportByMonthYear } from "../../api/reportApi";
+import ToastNotification from "../../components/ToastNotification.vue";
+import LoadingComponent from "../../components/LoadingComponent.vue";
+import { downloadFile } from "../../utils/fileUtils";
 
 export default defineComponent({
   name: 'Reports',
-  components: { Navbar },
+  components: { Navbar, ToastNotification, LoadingComponent },
   data() {
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
@@ -116,77 +118,54 @@ export default defineComponent({
   },
   methods: {
     async fetchDataByMonthYear() {
+      (this.$refs.loadingRef as any).show();
       try {
-        //Sau này gọi API thật
-        const res = await fetch(
-            `/api/reports/?month=${this.selectedMonth}&year=${this.selectedYear}`,
-            {
-              method: "GET",
-              headers: {
-                "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
-                "Accept": "application/json"
-              }
-            }
-          );
+        const data = await getReportByMonthYear(
+          this.selectedMonth,
+          this.selectedYear
+        );
 
-          if (!res.ok) {
-            const text = await res.text();
-            console.error("API trả về lỗi:", text);
-            return;
-          }
-
-          const data = await res.json();
-
-          this.staffStats = data.staffStats;
-          this.docTypes = data.docTypes;
-
-
-        /* Dữ liệu giả lập
-        const seed = this.selectedMonth + this.selectedYear;
-        this.staffStats = [
-          { name: 'Trần Văn Nhập', count: seed * 2 % 200, errorRate: seed % 3 },
-          { name: 'Lê Thị Duyệt', count: seed * 3 % 150, errorRate: seed % 2 },
-          { name: 'Nguyễn Văn A', count: seed * 4 % 100, errorRate: seed % 4 },
-        ];
-        this.docTypes = [
-          { label: 'Quyết định', val: seed % 50 + 20, color: 'bg-blue-500' },
-          { label: 'Báo cáo', val: seed % 40 + 10, color: 'bg-emerald-500' },
-          { label: 'Thông báo', val: seed % 30 + 5, color: 'bg-rose-500' },
-        ];
-        */
+        this.staffStats = data.staffStats;
+        this.docTypes = data.docTypes;
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu theo tháng & năm:", error);
+      } finally {
+        (this.$refs.loadingRef as any).hide();
       }
     },
     async exportExcel() {
-        try {
-          const res = await fetch(
-            `/api/reports/export-excel/?month=${this.selectedMonth}&year=${this.selectedYear}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("access_token")}`
-              }
-            }
+      (this.$refs.loadingRef as any).show();
+
+      try {
+        const blob = await exportReportExcel(
+          this.selectedMonth,
+          this.selectedYear
+        );
+        
+        if (!blob || blob.size <= 5900) {
+          (this.$refs.myToast as any).warning(
+            "Lỗi xuất excel",
+            "Không có dữ liệu để xuất Excel"
           );
-
-          if (!res.ok) throw new Error("Export failed");
-
-          const blob = await res.blob();
-          const url = window.URL.createObjectURL(blob);
-
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `Bao_cao_${this.selectedMonth}_${this.selectedYear}.xlsx`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-
-          window.URL.revokeObjectURL(url);
-        } catch (err) {
-          alert("Xuất Excel thất bại!");
-          console.error(err);
+          return;
         }
+
+        downloadFile(
+          blob,
+          `Bao_cao_${this.selectedMonth}_${this.selectedYear}.xlsx`
+        );
+
+        (this.$refs.myToast as any).success(
+          "Download",
+          "Xuất excel thành công"
+        );
+      } catch (err) {
+        alert("Xuất Excel thất bại!");
+        console.error(err);
+      } finally {
+        (this.$refs.loadingRef as any).hide();
       }
+    }
   }
 });
 </script>

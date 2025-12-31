@@ -30,7 +30,7 @@
                             <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
                                 Username
                             </label>
-                            <input id="username" v-model="username" placeholder="ten@example.com" required
+                            <input id="username" v-model="username" placeholder="username" required
                                 class="mt-1 block w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm" />
                         </div>
 
@@ -57,20 +57,11 @@
                         </div>
                     </div>
                 </form>
-
-                <!-- Link Đăng ký -->
-                <div class="mt-6 text-center">
-                    <p class="text-sm text-gray-600">
-                        Chưa có tài khoản?
-                        <a href="#" class="font-medium text-blue-600 hover:underline">
-                            Đăng ký ngay
-                        </a>
-                    </p>
-                </div>
             </div>
         </div>
     </div>
     <Footer />
+    <LoadingComponent ref="loadingRef" />
     <ToastNotification ref="myToast" />
 </template>
 
@@ -80,59 +71,51 @@ import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
 import { setAuth } from "../utils/authUtils";
 import ToastNotification from '../components/ToastNotification.vue';
+import LoadingComponent from "../components/LoadingComponent.vue";
 import { login } from "../api/userApi";
 
 export default defineComponent({
     name: "LoginForm",
-    components: { Header, Footer, ToastNotification },
+    components: { Header, Footer, ToastNotification, LoadingComponent },
     data() {
         return {
             username: "" as string,
             password: "" as string,
             errorMessage: "" as string,
-            loading: false,
             title: "Đăng nhập",
         };
     },
     methods: {
         async handleLogin() {
-                if (!this.username || !this.password) {
-                    (this.$refs.myToast as any).warning("Đăng nhập", "Vui lòng nhập đầy đủ thông tin");
-                    return;
-                }
+            if (!this.username || !this.password) {
+                this.errorMessage = "Vui lòng nhập đầy đủ thông tin";
+                (this.$refs.myToast as any).warning(this.title, this.errorMessage);
+                return;
+            }
+            (this.$refs.loadingRef as any).show();
+            this.errorMessage = "";
 
-                this.loading = true;
+            try {
+                // Gọi API login
+                const res = await login({ username: this.username, password: this.password });
 
-                try {
-                    const res = await login({
-                        username: this.username,
-                        password: this.password,
-                    });
+                // Lưu token và role cho phân quyền
+                setAuth({ access_token: res.access_token, username: res.username, full_name: res.full_name, role: res.role, });
 
-                    // ✅ LƯU TOKEN + ROLE
-                    setAuth({
-                        access_token: res.access_token,
-                        role: res.role,
-                    });
+                // Toast thành công lấy từ backend
+                (this.$refs.myToast as any).success(this.title, res.message);
 
-                    // ✅ LƯU USERNAME (QUAN TRỌNG)
-                    localStorage.setItem("username", this.username);
-
-                    (this.$refs.myToast as any).success("Đăng nhập", "Đăng nhập thành công");
-
-                    const redirect = this.$route.query.redirect as string | undefined;
-                    this.$router.push(redirect || "/");
-                } catch (e: any) {
-                    (this.$refs.myToast as any).error(
-                        "Đăng nhập",
-                        e?.response?.data?.detail || "Đăng nhập thất bại"
-                    );
-                } finally {
-                    this.loading = false;
-                }
-            },
-
-
+                // Nếu có redirect trong query, quay lại trang đó; nếu không, về home
+                const redirect = this.$route.query.redirect as string | undefined;
+                this.$router.push(redirect || "/");
+            } catch (e: any) {
+                // Lấy thông báo lỗi từ backend: detail
+                this.errorMessage = e?.response?.data?.detail || "Đăng nhập thất bại";
+                (this.$refs.myToast as any).error(this.title, this.errorMessage);
+            } finally {
+                (this.$refs.loadingRef as any).hide();
+            }
         },
+    },
 });
 </script>
