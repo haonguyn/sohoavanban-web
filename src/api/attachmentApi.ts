@@ -6,18 +6,11 @@ export const fetchAttachmentsByDoc = (docId: number) => {
     params: { doc_id: docId, include_file: 1 },
   });
 };
-export interface CreateAttachmentPayload {
-  document_id: number;
-  file: File;
-}
-export function createAttachment(documentId: number, file: File) {
-  const formData = new FormData();
-  formData.append("document_id", String(documentId));
-  formData.append("file", file);
 
-  return api.post("/api/attachments/create/", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-}
+export const uploadAttachment = async (document_id: number, file: File): Promise<Attach> => {
+  const formData = new FormData();
+  formData.append("document_id", String(document_id));
+  formData.append("file", file);
+  const res = await api.post<Attach>("/attachments/create/", formData);
+  return res.data;
+};

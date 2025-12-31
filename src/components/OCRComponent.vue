@@ -53,7 +53,7 @@
                                     <span class="text-xs font-semibold text-blue-800 uppercase">{{ fileType }}</span>
                                 </div>
                                 <p class="text-sm font-medium text-gray-900 truncate max-w-[90%]">{{ selectedFile.name
-                                    }}</p>
+                                }}</p>
                                 <button @click="clearFile"
                                     class="mt-2 text-xs text-red-500 hover:text-red-700 underline">
                                     Xóa và chọn lại
@@ -279,7 +279,7 @@
 import { defineComponent } from "vue";
 import { processOCR } from "../api/ocrApi";
 import { createDocument } from "../api/documentApi";
-import { createAttachment } from "../api/attachmentApi";
+import { uploadAttachment } from "../api/attachmentApi";
 
 export default defineComponent({
     name: "OCRComponent",
@@ -435,29 +435,6 @@ export default defineComponent({
                 this.isLoading = false;
             }
         },
-
-        // async saveDocument() {
-        //     try {
-        //         console.log("Saving document:", this.form);
-
-        //         // Tạo FormData từ this.form
-        //         const formData = new FormData();
-        //         Object.entries(this.form).forEach(([key, value]) => {
-        //             if (value !== undefined && value !== null) {
-        //                 formData.append(key, String(value));
-        //             }
-        //         });
-
-        //         // Gọi API
-        //         const res = await createDocument(formData);
-
-        //         alert("✅ Đã lưu văn bản vào hệ thống thành công!");
-        //         console.log("Server response:", res);
-        //     } catch (err: any) {
-        //         console.error("Lỗi khi lưu văn bản:", err.response?.data || err.message);
-        //         alert("❌ Lưu văn bản thất bại!");
-        //     }
-        // },
         async saveDocument() {
             if (!this.selectedFile) {
                 alert("❌ Chưa có file để upload");
@@ -465,7 +442,6 @@ export default defineComponent({
             }
 
             try {
-                // 1️⃣ Tạo FormData cho document
                 const formData = new FormData();
                 Object.entries(this.form).forEach(([key, value]) => {
                     if (value !== undefined && value !== null) {
@@ -473,23 +449,16 @@ export default defineComponent({
                     }
                 });
 
-                // 2️⃣ Gọi API tạo document
                 const res = await createDocument(formData);
-                console.log(res);
-                console.log(res.data);
-                const documentId = res.data.data.id; // ⭐ RẤT QUAN TRỌNG
-
+                const documentId = res.data?.data?.id; // ⭐ RẤT QUAN TRỌNG
                 if (!documentId) {
                     throw new Error("Không nhận được document_id từ server");
                 }
-
-                // 3️⃣ Upload file vào attachment
-                await createAttachment(documentId, this.selectedFile);
+                await uploadAttachment(documentId, this.selectedFile);
 
                 alert("✅ Lưu văn bản & đính kèm file thành công!");
                 console.log("Document ID:", documentId);
 
-                // (Optional) reset UI
                 this.clearFile();
 
             } catch (err: any) {
