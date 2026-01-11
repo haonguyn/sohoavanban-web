@@ -38,3 +38,30 @@ export function base64ToBlob(base64: string, mime = "application/octet-stream") 
   const byteArray = new Uint8Array(byteNumbers);
   return new Blob([byteArray], { type: mime });
 }
+
+export function formatDate(dateString: string): string {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+  return new Intl.DateTimeFormat("vi-VN").format(date);
+}
+
+export function getDocumentEffectiveStatus(
+  {
+    effective_start_date,
+    effective_end_date,
+  }: {
+    effective_start_date?: string;
+    effective_end_date?: string;
+  },
+  now: Date = new Date()
+) {
+  const start = effective_start_date && new Date(effective_start_date);
+  const end = effective_end_date && new Date(effective_end_date);
+
+  if (start && now < start) return "Sắp có hiệu lực";
+  if (end && now > end) return "Hết hiệu lực";
+  if (start && end) return "Hết hiệu lực một phần";
+  return "Còn hiệu lực";
+}
+

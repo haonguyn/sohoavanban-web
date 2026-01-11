@@ -1,4 +1,3 @@
-
 <template>
     <Header />
     <div class="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8">
@@ -21,14 +20,10 @@
                             <h2 class="text-xl font-semibold text-gray-800">
                                 Bộ lọc tìm kiếm
                             </h2>
-                           <button
-                            type="button"
-                            @click="resetFilters"
-                            class="text-xs px-3 py-1.5 rounded-full border border-blue-200
+                            <button type="button" @click="resetFilters" class="text-xs px-3 py-1.5 rounded-full border border-blue-200
                                     text-blue-600 hover:bg-blue-50 hover:border-blue-300
-                                    transition flex items-center gap-1"
-                            >
-                            🔄 Đặt lại
+                                    transition flex items-center gap-1">
+                                🔄 Đặt lại
                             </button>
 
                         </div>
@@ -129,16 +124,13 @@
 
                                 <!-- Nút tìm kiếm -->
                                 <div class="pt-4">
-                                    <button
-                                        type="submit"
-                                        class="w-full flex items-center justify-center gap-2
+                                    <button type="submit" class="w-full flex items-center justify-center gap-2
                                                 py-3 px-4 rounded-xl
                                                 text-sm font-semibold text-white
                                                 bg-gradient-to-r from-blue-600 to-blue-500
                                                 hover:from-blue-700 hover:to-blue-600
                                                 shadow-md hover:shadow-lg
-                                                transition-all duration-200"
-                                        >
+                                                transition-all duration-200">
                                         🔍 Tìm kiếm
                                     </button>
                                 </div>
@@ -175,11 +167,8 @@
 
                             <!-- 1️⃣ Skeleton loading -->
                             <template v-if="loading">
-                                <div
-                                    v-for="i in pageSize"
-                                    :key="i"
-                                    class="animate-pulse bg-white border border-gray-200 rounded-lg p-4"
-                                >
+                                <div v-for="i in pageSize" :key="i"
+                                    class="animate-pulse bg-white border border-gray-200 rounded-lg p-4">
                                     <div class="flex gap-4">
                                         <div class="flex-1 space-y-3">
                                             <div class="h-4 bg-gray-200 rounded w-1/4"></div>
@@ -201,19 +190,14 @@
 
                             <!-- 2️⃣ Có kết quả -->
                             <template v-else-if="searchResults.length > 0">
-                                <div
-                                    v-for="doc in searchResults"
-                                    :key="doc.id"
-                                    class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                                >
+                                <div v-for="doc in searchResults" :key="doc.id"
+                                    class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                     <!-- 👉 giữ nguyên UI item của bạn -->
                                     <div class="flex flex-col md:flex-row justify-between gap-4">
                                         <div class="flex-1">
                                             <div class="flex gap-2 mb-2">
-                                                <span
-                                                    :class="getStatusClass(doc.status)"
-                                                    class="text-xs font-bold px-2.5 py-1 rounded-full border"
-                                                >
+                                                <span :class="getStatusClass(doc.status)"
+                                                    class="text-xs font-bold px-2.5 py-1 rounded-full border">
                                                     {{ doc.status }}
                                                 </span>
                                                 <span class="text-xs bg-gray-100 px-2 py-0.5 rounded">
@@ -235,14 +219,17 @@
                                             </div>
                                         </div>
 
-                                        <div class="flex md:flex-col gap-2 mt-2 md:mt-0 md:pl-4 border-t md:border-t-0 md:border-l border-gray-100 md:w-40 flex-shrink-0 pt-3 md:pt-0">
-                                            
-                                            <button class="flex-1 flex items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out border border-blue-100 shadow-sm">
+                                        <div
+                                            class="flex md:flex-col gap-2 mt-2 md:mt-0 md:pl-4 border-t md:border-t-0 md:border-l border-gray-100 md:w-40 flex-shrink-0 pt-3 md:pt-0">
+
+                                            <button @click="goDetail(doc.id)"
+                                                class="flex-1 flex items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out border border-blue-100 shadow-sm">
                                                 <i class="fa-regular fa-eye"></i>
                                                 <span>Xem</span>
                                             </button>
 
-                                            <button class="flex-1 flex items-center justify-center gap-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out border border-emerald-100 shadow-sm">
+                                            <button @click="doDownloadFile(doc.id)"
+                                                class="flex-1 flex items-center justify-center gap-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out border border-emerald-100 shadow-sm">
                                                 <i class="fa-solid fa-cloud-arrow-down"></i>
                                                 <span>Tải xuống</span>
                                             </button>
@@ -262,10 +249,8 @@
                                     <p class="text-sm text-gray-500 mb-4">
                                         Không có văn bản nào phù hợp với điều kiện tìm kiếm của bạn.
                                     </p>
-                                    <button
-                                        @click="resetFilters"
-                                        class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
-                                    >
+                                    <button @click="resetFilters"
+                                        class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">
                                         🔄 Xóa bộ lọc
                                     </button>
                                 </div>
@@ -277,50 +262,34 @@
                         <nav class="flex justify-center items-center gap-1 mt-3 text-sm">
 
                             <!-- Prev -->
-                            <button
-                                @click="changePage(currentPage - 1)"
-                                :disabled="currentPage === 1"
-                                class="px-3 py-2 rounded-lg border border-gray-300
+                            <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1" class="px-3 py-2 rounded-lg border border-gray-300
                                         bg-white hover:bg-gray-100
                                         disabled:opacity-40 disabled:cursor-not-allowed
-                                        transition"
-                            >
+                                        transition">
                                 «
                             </button>
 
                             <!-- Pages -->
                             <template v-for="(page, index) in visiblePages" :key="`${page}-${index}`">
-                                <span
-                                    v-if="page === '...'"
-                                    class="px-2 py-1 text-gray-400"
-                                >
+                                <span v-if="page === '...'" class="px-2 py-1 text-gray-400">
                                     ...
                                 </span>
 
-                                <button
-                                    v-else
-                                    @click="changePage(page as number)"
-                                    :class="[
-                                        'px-3 py-2 rounded-lg min-w-[36px] transition font-medium',
-                                        page === currentPage
-                                            ? 'bg-blue-600 text-white shadow'
-                                            : 'bg-white border border-gray-300 hover:bg-gray-100'
-                                        ]"
-
-                                >
+                                <button v-else @click="changePage(page as number)" :class="[
+                                    'px-3 py-2 rounded-lg min-w-[36px] transition font-medium',
+                                    page === currentPage
+                                        ? 'bg-blue-600 text-white shadow'
+                                        : 'bg-white border border-gray-300 hover:bg-gray-100'
+                                ]">
                                     {{ page }}
                                 </button>
                             </template>
 
                             <!-- Next -->
-                            <button
-                                @click="changePage(currentPage + 1)"
-                                :disabled="currentPage === totalPages"
-                                class="px-3 py-2 rounded-lg border border-gray-300
+                            <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages" class="px-3 py-2 rounded-lg border border-gray-300
                                         bg-white hover:bg-gray-100
                                         disabled:opacity-40 disabled:cursor-not-allowed
-                                        transition"
-                            >
+                                        transition">
                                 »
                             </button>
                         </nav>
@@ -330,6 +299,7 @@
         </div>
     </div>
     <Footer />
+    <ToastNotification ref="myToast" />
 </template>
 
 
@@ -339,14 +309,19 @@ import { defineComponent } from "vue";
 import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
 import axios from "axios";
+import { getStatusClass } from "../utils/textUtils";
+import { base64ToBlob, downloadFile, getDocumentEffectiveStatus } from "../utils/fileUtils";
+import ToastNotification from "../components/ToastNotification.vue";
+import { fetchAttachmentsByDoc } from "../api/attachmentApi";
 interface SearchResult {
-  id: number;
-  title: string;
-  summary: string;
-  doc_type: string;
-  issued_date: string;
-  effective_start_date: string;
-  status: string;
+    id: number;
+    title: string;
+    summary: string;
+    doc_type: string;
+    issued_date: string;
+    effective_start_date: string;
+    effective_end_date: string;
+    status: string;
 }
 
 export default defineComponent({
@@ -354,8 +329,9 @@ export default defineComponent({
     components: {
         Header,
         Footer,
+        ToastNotification,
     },
-        data() {
+    data() {
         return {
             keyword: "",
             documents: [],
@@ -368,15 +344,15 @@ export default defineComponent({
             totalPages: 1,
 
             filters: {
-            keyword: "",
-            docType: "",
-            issuer: "",
-            releaseDateFrom: "",
-            releaseDateTo: "",
-            effectiveDateFrom: "",
-            effectiveDateTo: "",
-            expirationDateFrom: "",
-            expirationDateTo: "",
+                keyword: "",
+                docType: "",
+                issuer: "",
+                releaseDateFrom: "",
+                releaseDateTo: "",
+                effectiveDateFrom: "",
+                effectiveDateTo: "",
+                expirationDateFrom: "",
+                expirationDateTo: "",
             },
 
             sortBy: "relevance",
@@ -406,200 +382,204 @@ export default defineComponent({
             this.fetchAllDocuments();
         },
 
+        async applyFilters() {
+            this.hasSearched = true;
+            this.currentPage = 1;
 
-
-        getStatusClass(status: string): string {
-            switch (status) {
-                case "Còn hiệu lực":
-                    return "bg-green-100 text-green-700 border-green-200";
-                case "Sắp có hiệu lực":
-                    return "bg-blue-100 text-blue-700 border-blue-200";
-                case "Hết hiệu lực một phần":
-                    return "bg-yellow-100 text-yellow-800 border-yellow-200";
-                case "Hết hiệu lực":
-                    return "bg-gray-100 text-gray-500 border-gray-200 line-through-gray"; // Thêm style xám cho văn bản cũ
-                default:
-                    return "bg-gray-100 text-gray-600";
-            }
-        },
-            async applyFilters() {
-                this.hasSearched = true;
-                this.currentPage = 1;
-
-                try {
-                    this.loading = true;
-                    this.loading = false;
-                    const params = {
-                        keyword: this.filters.keyword || undefined,
-                        doc_type: this.filters.docType || undefined,
-                        issued_by: this.filters.issuer || undefined,
-                        issued_from: this.filters.releaseDateFrom || undefined,
-                        issued_to: this.filters.releaseDateTo || undefined,
-                        effective_from: this.filters.effectiveDateFrom || undefined,
-                        effective_to: this.filters.effectiveDateTo || undefined,
-                        page: this.currentPage,
-                        page_size: this.pageSize,
-                    };
-                    const response = await axios.get(
+            try {
+                this.loading = true;
+                this.loading = false;
+                const params = {
+                    keyword: this.filters.keyword || undefined,
+                    doc_type: this.filters.docType || undefined,
+                    issued_by: this.filters.issuer || undefined,
+                    issued_from: this.filters.releaseDateFrom || undefined,
+                    issued_to: this.filters.releaseDateTo || undefined,
+                    effective_from: this.filters.effectiveDateFrom || undefined,
+                    effective_to: this.filters.effectiveDateTo || undefined,
+                    page: this.currentPage,
+                    page_size: this.pageSize,
+                };
+                const response = await axios.get(
                     "http://127.0.0.1:8000/api/documents/filter/",
                     {
                         params,
                         headers: {
-                        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
                         },
                     }
-                    );
+                );
 
-                    this.searchResults = response.data.results || [];
-                    this.totalItems = response.data.pagination.total_items || 0;
-                    this.totalPages = response.data.pagination.total_pages || 1;
+                this.searchResults = response.data.results || [];
+                this.totalItems = response.data.pagination.total_items || 0;
+                this.totalPages = response.data.pagination.total_pages || 1;
 
-                    this.applySort();
+                this.applySort();
 
 
-                } catch (error) {
-                    console.error("Lỗi khi filter văn bản", error);
-                } finally {
-                    this.loading = false;
-                }
-            },
-            async fetchAllDocuments() {
-                    try {
-                        this.loading = true;
-                        this.loading = false;
-                        const response = await axios.get(
-                        "http://127.0.0.1:8000/api/documents/",
-                        {
-                            headers: {
+            } catch (error) {
+                console.error("Lỗi khi filter văn bản", error);
+            } finally {
+                this.loading = false;
+            }
+        },
+        goDetail(id: number) {
+            this.$router.push({
+                name: "document-detail",
+                params: { id }
+            });
+        },
+        async fetchAllDocuments() {
+            try {
+                this.loading = true;
+                this.loading = false;
+                const response = await axios.get(
+                    "http://127.0.0.1:8000/api/documents/",
+                    {
+                        headers: {
                             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-                            },
-                        }
-                        );
-
-                        const allDocs = response.data || [];
-
-                        this.totalItems = allDocs.length;
-                        this.totalPages = Math.max(1, Math.ceil(this.totalItems / this.pageSize));
-
-                        const start = (this.currentPage - 1) * this.pageSize;
-                        const end = start + this.pageSize;
-
-                        this.searchResults = allDocs.slice(start, end);
-                        this.applySort();
-
-                    } catch (error) {
-                        console.error("Lỗi load toàn bộ văn bản", error);
-                    } finally {
-                        this.loading = false;
+                        },
                     }
-                },
+                );
 
-                changePage(page: number) {
-                    if (!Number.isInteger(page)) return;
-                    if (page < 1 || page > this.totalPages) return;
+                const allDocs = response.data || [];
 
-                    this.currentPage = page;
+                this.totalItems = allDocs.length;
+                this.totalPages = Math.max(1, Math.ceil(this.totalItems / this.pageSize));
 
-                    if (this.hasSearched) {
-                        this.applyFilters();
-                    } else {
-                        this.fetchAllDocuments();
-                    }
-                },
-                applySort() {
-                    if (!this.searchResults || this.searchResults.length === 0) return;
+                const start = (this.currentPage - 1) * this.pageSize;
+                const end = start + this.pageSize;
 
-                    const sorted = [...this.searchResults];
+                this.searchResults = allDocs.slice(start, end);
+                this.applySort();
 
-                    switch (this.sortBy) {
-                        case "newest":
-                            sorted.sort((a, b) =>
-                                new Date(b.issued_date).getTime() -
-                                new Date(a.issued_date).getTime()
-                            );
-                            break;
+            } catch (error) {
+                console.error("Lỗi load toàn bộ văn bản", error);
+            } finally {
+                this.loading = false;
+            }
+        },
 
-                        case "effective_asc":
-                            sorted.sort((a, b) =>
-                                new Date(a.effective_start_date).getTime() -
-                                new Date(b.effective_start_date).getTime()
-                            );
-                            break;
+        changePage(page: number) {
+            if (!Number.isInteger(page)) return;
+            if (page < 1 || page > this.totalPages) return;
 
-                        case "effective_desc":
-                            sorted.sort((a, b) =>
-                                new Date(b.effective_start_date).getTime() -
-                                new Date(a.effective_start_date).getTime()
-                            );
-                            break;
+            this.currentPage = page;
 
-                        case "relevance":
-                        default:
-                            // Không làm gì – giữ nguyên thứ tự backend
-                            return;
-                    }
+            if (this.hasSearched) {
+                this.applyFilters();
+            } else {
+                this.fetchAllDocuments();
+            }
+        },
+        applySort() {
+            if (!this.searchResults || this.searchResults.length === 0) return;
 
-                    this.searchResults = sorted;
-                },
+            const sorted = [...this.searchResults];
+
+            switch (this.sortBy) {
+                case "newest":
+                    sorted.sort((a, b) =>
+                        new Date(b.issued_date).getTime() -
+                        new Date(a.issued_date).getTime()
+                    );
+                    break;
+
+                case "effective_asc":
+                    sorted.sort((a, b) =>
+                        new Date(a.effective_start_date).getTime() -
+                        new Date(b.effective_start_date).getTime()
+                    );
+                    break;
+
+                case "effective_desc":
+                    sorted.sort((a, b) =>
+                        new Date(b.effective_start_date).getTime() -
+                        new Date(a.effective_start_date).getTime()
+                    );
+                    break;
+
+                case "relevance":
+                default:
+                    // Không làm gì – giữ nguyên thứ tự backend
+                    return;
+            }
+
+            this.searchResults = sorted;
+        },
+        async doDownloadFile(document_id: number) {
+            const attachRes = await fetchAttachmentsByDoc(document_id)
+            const att = attachRes.data.length > 0 ? attachRes.data[attachRes.data.length - 1] : null;
+            if (!att || !att.file_base64) {
+                (this.$refs.myToast as any).error(
+                    "Lỗi",
+                    `Xảy ra lỗi khi yêu cầu tải file xuống`
+                );
+                return;
+            }
+            const blob = base64ToBlob(att.file_base64);
+            downloadFile(blob, att.filename);
+        },
+        getStatusClass
+
+    },
+    mounted() {
+        this.fetchAllDocuments();
+        const keyword = this.$route.query.keyword as string;
+        if (keyword && keyword.trim()) {
+            this.filters.keyword = keyword;
+            this.hasSearched = true;
+            this.currentPage = 1;
+            this.applyFilters();
+        }
+    },
+    watch: {
+        // 🔹 Watch sắp xếp
+        sortBy() {
+            if (this.hasSearched) {
+                this.applyFilters();
+            } else {
+                this.fetchAllDocuments();
+            }
+        },
+
+        // 🔹 Watch từ khóa (search realtime)
+        "filters.keyword"(newVal: string) {
+            // Nếu rỗng → load lại toàn bộ
+            if (!newVal || newVal.trim() === "") {
+                this.hasSearched = false;
+                this.currentPage = 1;
+                this.fetchAllDocuments();
+                return;
+            }
+
+            // Debounce
+            if (this.searchTimeout) {
+                clearTimeout(this.searchTimeout);
+            }
+
+            this.searchTimeout = setTimeout(() => {
+                this.hasSearched = true;
+                this.currentPage = 1;
+                this.applyFilters();
+            }, 400);
+
 
         },
-        mounted() {
-            this.fetchAllDocuments();
-            const keyword = this.$route.query.keyword as string;
-            if (keyword && keyword.trim()) {
-                this.filters.keyword = keyword;
+        "$route.query.keyword"(newVal: string) {
+            if (newVal && newVal.trim()) {
+                this.filters.keyword = newVal;
                 this.hasSearched = true;
                 this.currentPage = 1;
                 this.applyFilters();
             }
         },
-            watch: {
-                    // 🔹 Watch sắp xếp
-                    sortBy() {
-                        if (this.hasSearched) {
-                            this.applyFilters();
-                        } else {
-                            this.fetchAllDocuments();
-                        }
-                    },
+    },
 
-                    // 🔹 Watch từ khóa (search realtime)
-                    "filters.keyword"(newVal: string) {
-                        // Nếu rỗng → load lại toàn bộ
-                        if (!newVal || newVal.trim() === "") {
-                            this.hasSearched = false;
-                            this.currentPage = 1;
-                            this.fetchAllDocuments();
-                            return;
-                        }
 
-                        // Debounce
-                        if (this.searchTimeout) {
-                            clearTimeout(this.searchTimeout);
-                        }
 
-                        this.searchTimeout = setTimeout(() => {
-                            this.hasSearched = true;
-                            this.currentPage = 1;
-                            this.applyFilters();
-                        }, 400);
-
-                        
-                    },
-                    "$route.query.keyword"(newVal: string) {
-                        if (newVal && newVal.trim()) {
-                            this.filters.keyword = newVal;
-                            this.hasSearched = true;
-                            this.currentPage = 1;
-                            this.applyFilters();
-                        }
-                    },
-                },
-
-        
-
-        computed: {
-           visiblePages(): (number | string)[] {
+    computed: {
+        visiblePages(): (number | string)[] {
             const pages: (number | string)[] = [];
 
             const total = Number(this.totalPages);
@@ -639,9 +619,15 @@ export default defineComponent({
             pages.push(total);
 
             return pages;
-            }
-
         },
+        effectiveStatus(doc: any) {
+            return getDocumentEffectiveStatus({
+                effective_start_date: doc.effective_start_date,
+                effective_end_date: doc.effective_end_date,
+            });
+        },
+
+    },
 
 });
 </script>

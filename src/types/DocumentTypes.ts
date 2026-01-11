@@ -14,6 +14,8 @@ export interface Doc {
   doc_number: string;
   title?: string;
   issued_date: string;
+  effective_start_date: string;
+  effective_end_date: string;
   status: string;
   signer?: string;
   doc_type?: string;

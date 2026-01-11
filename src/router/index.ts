@@ -18,7 +18,7 @@ const routes = [
     component: () => import("../views/AdvancedSearchView.vue"),
   },
   {
-    path: "/document-detail",
+    path: "/document-detail/:id",
     name: "document-detail",
     component: () => import("../views/DocumentDetailView.vue"),
   },
