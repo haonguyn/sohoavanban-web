@@ -61,7 +61,7 @@ export default defineComponent({
     return {
       currentUser: { username: "", full_name: "", role: "", },
       features: [
-        { to: '/admin/', icon: 'layout-dashboard', label: 'Dashboard' },
+        { to: '/admin/dashboard', icon: 'layout-dashboard', label: 'Dashboard' },
         { to: '/admin/create-ocr', icon: 'plus-circle', label: 'Tạo mới (OCR)' },
         { to: '/admin/manager', icon: 'file-text', label: 'Kho văn bản' },
       ],

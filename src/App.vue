@@ -1,9 +1,10 @@
 <template>
     <RouterView></RouterView>
+    <BaseConfirm />
 </template>
 
 <style scoped></style>
 
-<script lang="ts">
-
+<script setup>
+import BaseConfirm from './components/BaseConfirm.vue';
 </script>

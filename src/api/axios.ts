@@ -2,6 +2,7 @@
 import axios, { AxiosError } from "axios";
 import type { AxiosResponse } from "axios";
 import { clearAuth } from "../utils/authUtils";
+import { useConfirmStore } from "../store/confirmStore";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
@@ -21,10 +22,17 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (res: AxiosResponse) => res,
-  (err: AxiosError) => {
+  async (err: AxiosError<any>) => {
     const status = err.response?.status;
+    const message =
+      err.response?.data?.detail ||
+      err.response?.data?.message ||
+      "Có lỗi xảy ra";
+
+    const confirm = useConfirmStore();
     const isLoginPage = window.location.pathname.startsWith("/login");
     if (status === 401 || status === 403) {
+      await confirm.open(message || "Phiên đăng nhập đã hết hạn.");
       clearAuth();
       if (!isLoginPage) {
         const current = window.location.pathname + window.location.search;

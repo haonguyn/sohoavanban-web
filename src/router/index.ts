@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { getToken, getRole } from "../utils/authUtils";
+import { useConfirmStore } from "../store/confirmStore";
 
 const routes = [
   {
@@ -51,7 +52,7 @@ const routes = [
   /* ================= ADMIN ================= */
 
   {
-    path: "/admin",
+    path: "/admin/dashboard",
     name: "dashboard",
     component: () => import("../views/admin/DashBoardView.vue"),
     meta: { requiresAuth: true, roles: ["admin"] },
@@ -92,18 +93,21 @@ const router = createRouter({
 
 /* ================= ROUTER GUARD ================= */
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const token = getToken();
   const role = getRole();
+  const confirm = useConfirmStore();
 
   //Nếu đã đăng nhập → không cho quay lại login / register
   if ((to.name === "login" || to.name === "register") && token) {
+    await confirm.open("Bạn đã đăng nhập rồi!");
     return next({ name: "home" });
   }
 
   //Route yêu cầu đăng nhập
   if (to.meta?.requiresAuth) {
     if (!token) {
+      await confirm.open("Vui lòng đăng nhập để tiếp tục!");
       return next({
         name: "login",
         query: { redirect: to.fullPath },
@@ -112,7 +116,8 @@ router.beforeEach((to, _from, next) => {
 
     const roles = (to.meta.roles as string[]) || [];
     if (roles.length && (!role || !roles.includes(role))) {
-      return next({ name: "home" }); // có thể đổi sang trang 403 sau
+      await confirm.open("Bạn không có quyền truy cập chức năng này!");
+      return next({ name: "home" });
     }
   }
 
