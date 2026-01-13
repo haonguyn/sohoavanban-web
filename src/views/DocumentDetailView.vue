@@ -78,20 +78,25 @@
                                             ký</span>
                                         <span class="font-medium text-gray-900">{{ document.signer }}</span>
                                     </div>
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <span class="block text-gray-500 text-xs uppercase font-semibold">Ngày ban
-                                                hành</span>
-                                            <span class="font-medium text-gray-900">{{ formatDate(document.issued_date)
-                                                }}</span>
-                                        </div>
-                                        <div>
-                                            <span class="block text-gray-500 text-xs uppercase font-semibold">Ngày hiệu
-                                                lực</span>
-                                            <span class="font-medium text-gray-900">{{
-                                                formatDate(document.effective_start_date)
-                                                }}</span>
-                                        </div>
+                                    <div>
+                                        <span class="block text-gray-500 text-xs uppercase font-semibold">Ngày ban
+                                            hành</span>
+                                        <span class="font-medium text-gray-900">{{ formatDate(document.issued_date)
+                                            }}</span>
+                                    </div>
+                                    <div v-if="document.effective_start_date">
+                                        <span class="block text-gray-500 text-xs uppercase font-semibold">Ngày bắt đầu
+                                            hiệu lực</span>
+                                        <span class="font-medium text-gray-900">{{
+                                            formatDate(document.effective_start_date)
+                                            }}</span>
+                                    </div>
+                                    <div v-if="document.effective_end_date">
+                                        <span class="block text-gray-500 text-xs uppercase font-semibold">Ngày hết
+                                            hiệu lực</span>
+                                        <span class="font-medium text-gray-900">{{
+                                            formatDate(document.effective_end_date)
+                                            }}</span>
                                     </div>
 
                                     <div>
@@ -131,7 +136,7 @@
                                 {{ document.title }}
                             </h1>
                             <p class="text-sm text-gray-600">
-                                {{ document.summary || document.abstract }}
+                                {{ document.abstract || document.summary}}
                             </p>
                         </div>
 

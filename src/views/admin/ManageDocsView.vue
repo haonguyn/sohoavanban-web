@@ -436,7 +436,7 @@ export default defineComponent({
         async getDocuments() {
             try {
                 const res = await fetchDocuments();
-                this.docs = res.data.data ?? res.data;
+                this.docs = res.data;
             } catch (error) {
                 console.error("Lỗi khi lấy danh sách văn bản:", error);
             }

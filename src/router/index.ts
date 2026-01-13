@@ -7,7 +7,7 @@ const routes = [
     name: "home",
     component: () => import("../views/HomeView.vue"),
   },
-    {
+  {
     path: "/home",
     name: "logo",
     component: () => import("../views/HomeView.vue"),
@@ -85,6 +85,9 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior() {
+    return { top: 0 };
+  },
 });
 
 /* ================= ROUTER GUARD ================= */
@@ -93,12 +96,12 @@ router.beforeEach((to, _from, next) => {
   const token = getToken();
   const role = getRole();
 
-  // ✅ Nếu đã đăng nhập → không cho quay lại login / register
+  //Nếu đã đăng nhập → không cho quay lại login / register
   if ((to.name === "login" || to.name === "register") && token) {
     return next({ name: "home" });
   }
 
-  // ✅ Route yêu cầu đăng nhập
+  //Route yêu cầu đăng nhập
   if (to.meta?.requiresAuth) {
     if (!token) {
       return next({

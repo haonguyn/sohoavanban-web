@@ -1,9 +1,10 @@
 import type { Doc } from '../types/DocumentTypes';
 import api from './axios'; // axios instance
 
-export const fetchDocuments = () => api.get('/documents/');
-export const getDocumentDetail = (id: number) => api.get<Doc>(`/documents/${id}/`);
-export const createDocument = (data: FormData) => api.post('/documents/create/', data);
-export const updateDocument = (id: number, data: any) => api.put(`/documents/${id}/update/`, data);
-export const deleteDocument = (id: number) => api.delete(`/documents/${id}/delete/`);
-export const filterDocuments = (params: any) => api.get('/documents/filter/', { params });
+export const fetchDocuments = async () => await api.get<Doc[]>('/documents/');
+export const fetchFeaturedDocs = async () => await api.get<Doc[]>('/documents/latest/')
+export const getDocumentDetail = async (id: number) => await api.get<Doc>(`/documents/${id}/`);
+export const createDocument = async (data: FormData) => await api.post('/documents/create/', data);
+export const updateDocument = async (id: number, data: any) => await api.put(`/documents/${id}/update/`, data);
+export const deleteDocument = async (id: number) => await api.delete(`/documents/${id}/delete/`);
+export const filterDocuments = async (params: any) => await api.get('/documents/filter/', { params });

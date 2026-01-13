@@ -1,8 +1,8 @@
 import type { Attach } from "../types/DocumentTypes";
 import api from "./axios";
 
-export const fetchAttachmentsByDoc = (docId: number) => {
-  return api.get<Attach[]>("/attachments/", {
+export const fetchAttachmentsByDoc = async (docId: number) => {
+  return await api.get<Attach[]>("/attachments/", {
     params: { doc_id: docId, include_file: 1 },
   });
 };

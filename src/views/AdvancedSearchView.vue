@@ -23,7 +23,7 @@
                             <button type="button" @click="resetFilters" class="text-xs px-3 py-1.5 rounded-full border border-blue-200
                                     text-blue-600 hover:bg-blue-50 hover:border-blue-300
                                     transition flex items-center gap-1">
-                                🔄 Đặt lại
+                                <i class="fas fa-sync"></i> Đặt lại
                             </button>
 
                         </div>
@@ -42,7 +42,7 @@
                                 <div>
                                     <label for="docType" class="block text-sm font-medium text-gray-700">Loại văn
                                         bản</label>
-                                    <select id="docType" v-model="filters.docType"
+                                    <select id="docType" v-model="filters.doc_type"
                                         class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                         <option value="">Tất cả</option>
                                         <option value="nghi-dinh">Nghị định</option>
@@ -57,7 +57,7 @@
                                 <div>
                                     <label for="issuer" class="block text-sm font-medium text-gray-700">Cơ quan ban
                                         hành</label>
-                                    <select id="issuer" v-model="filters.issuer"
+                                    <select id="issuer" v-model="filters.issued_by"
                                         class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                         <option value="">Tất cả</option>
                                         <option value="quoc-hoi">Quốc hội</option>
@@ -75,12 +75,12 @@
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
                                             <span class="text-xs text-gray-500">Từ ngày</span>
-                                            <input type="date" v-model="filters.releaseDateFrom"
+                                            <input type="date" v-model="filters.issued_from"
                                                 class="mt-1 block w-full px-2 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500" />
                                         </div>
                                         <div>
                                             <span class="text-xs text-gray-500">Đến ngày</span>
-                                            <input type="date" v-model="filters.releaseDateTo"
+                                            <input type="date" v-model="filters.issued_to"
                                                 class="mt-1 block w-full px-2 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500" />
                                         </div>
                                     </div>
@@ -88,17 +88,17 @@
 
                                 <!-- Lọc theo ngày hiệu lực -->
                                 <div class="border-t border-gray-100 pt-3">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Ngày bắt đầu có hiệu
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Ngày bắt đầu hiệu
                                         lực</label>
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
                                             <span class="text-xs text-gray-500">Từ ngày</span>
-                                            <input type="date" v-model="filters.effectiveDateFrom"
+                                            <input type="date" v-model="filters.effective_start_from"
                                                 class="mt-1 block w-full px-2 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500" />
                                         </div>
                                         <div>
                                             <span class="text-xs text-gray-500">Đến ngày</span>
-                                            <input type="date" v-model="filters.effectiveDateTo"
+                                            <input type="date" v-model="filters.effective_start_to"
                                                 class="mt-1 block w-full px-2 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500" />
                                         </div>
                                     </div>
@@ -111,12 +111,12 @@
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
                                             <span class="text-xs text-gray-500">Từ ngày</span>
-                                            <input type="date" v-model="filters.expirationDateFrom"
+                                            <input type="date" v-model="filters.effective_end_from"
                                                 class="mt-1 block w-full px-2 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500" />
                                         </div>
                                         <div>
                                             <span class="text-xs text-gray-500">Đến ngày</span>
-                                            <input type="date" v-model="filters.expirationDateTo"
+                                            <input type="date" v-model="filters.effective_end_to"
                                                 class="mt-1 block w-full px-2 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500" />
                                         </div>
                                     </div>
@@ -131,7 +131,7 @@
                                                 hover:from-blue-700 hover:to-blue-600
                                                 shadow-md hover:shadow-lg
                                                 transition-all duration-200">
-                                        🔍 Tìm kiếm
+                                        <i class="fas fa-search"></i>Tìm kiếm
                                     </button>
                                 </div>
                             </div>
@@ -154,7 +154,6 @@
                                 <label for="sort" class="text-sm text-gray-600 mr-2 whitespace-nowrap">Sắp xếp:</label>
                                 <select id="sort" v-model="sortBy"
                                     class="border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500 py-1.5">
-                                    <option value="relevance">Liên quan nhất</option>
                                     <option value="newest">Mới nhất</option>
                                     <option value="effective_asc">Hiệu lực (Cũ -> Mới)</option>
                                     <option value="effective_desc">Hiệu lực (Mới -> Cũ)</option>
@@ -164,41 +163,17 @@
 
                         <!-- DANH SÁCH / SKELETON / EMPTY STATE -->
                         <div class="space-y-4">
-
-                            <!-- 1️⃣ Skeleton loading -->
-                            <template v-if="loading">
-                                <div v-for="i in pageSize" :key="i"
-                                    class="animate-pulse bg-white border border-gray-200 rounded-lg p-4">
-                                    <div class="flex gap-4">
-                                        <div class="flex-1 space-y-3">
-                                            <div class="h-4 bg-gray-200 rounded w-1/4"></div>
-                                            <div class="h-5 bg-gray-200 rounded w-3/4"></div>
-                                            <div class="h-4 bg-gray-200 rounded w-full"></div>
-                                            <div class="flex gap-4">
-                                                <div class="h-3 bg-gray-200 rounded w-32"></div>
-                                                <div class="h-3 bg-gray-200 rounded w-32"></div>
-                                            </div>
-                                        </div>
-
-                                        <div class="w-28 space-y-2">
-                                            <div class="h-8 bg-gray-200 rounded"></div>
-                                            <div class="h-8 bg-gray-200 rounded"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </template>
-
                             <!-- 2️⃣ Có kết quả -->
-                            <template v-else-if="searchResults.length > 0">
+                            <template v-if="searchResults.length > 0">
                                 <div v-for="doc in searchResults" :key="doc.id"
                                     class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                     <!-- 👉 giữ nguyên UI item của bạn -->
                                     <div class="flex flex-col md:flex-row justify-between gap-4">
                                         <div class="flex-1">
                                             <div class="flex gap-2 mb-2">
-                                                <span :class="getStatusClass(doc.status)"
+                                                <span :class="getStatusClass(effectiveStatus(doc))"
                                                     class="text-xs font-bold px-2.5 py-1 rounded-full border">
-                                                    {{ doc.status }}
+                                                    {{ effectiveStatus(doc) }}
                                                 </span>
                                                 <span class="text-xs bg-gray-100 px-2 py-0.5 rounded">
                                                     {{ doc.doc_type }}
@@ -206,16 +181,18 @@
                                             </div>
 
                                             <h3 class="text-lg font-bold text-blue-700 mb-1">
-                                                {{ doc.title }}
+                                                {{ truncate(doc.title ?? '') }}
                                             </h3>
 
                                             <p class="text-sm text-gray-600 mb-3 line-clamp-2">
-                                                {{ doc.summary }}
+                                                {{ truncate(doc.abstract || doc.summary, 300) }}
                                             </p>
 
                                             <div class="flex gap-6 text-sm text-gray-500">
-                                                <span>📅 Ban hành: {{ doc.issued_date }}</span>
-                                                <span>✅ Hiệu lực: {{ doc.effective_start_date }}</span>
+                                                <span><i class="fas fa-calendar"></i> Ban hành: {{ doc.issued_date
+                                                    }}</span>
+                                                <span><i class="fas fa-calendar"></i> Bắt đầu hiệu lực: {{
+                                                    doc.effective_start_date }}</span>
                                             </div>
                                         </div>
 
@@ -242,7 +219,7 @@
                             <!-- 3️⃣ Không tìm thấy -->
                             <template v-else>
                                 <div class="text-center py-16">
-                                    <div class="text-6xl mb-4">📄</div>
+                                    <div class="text-6xl mb-4"><i class="fas fa-file-alt"></i></div>
                                     <h3 class="text-lg font-semibold text-gray-700 mb-2">
                                         Không tìm thấy văn bản
                                     </h3>
@@ -251,7 +228,7 @@
                                     </p>
                                     <button @click="resetFilters"
                                         class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">
-                                        🔄 Xóa bộ lọc
+                                        <i class="fas fa-sync"></i> Xóa bộ lọc
                                     </button>
                                 </div>
                             </template>
@@ -299,6 +276,7 @@
         </div>
     </div>
     <Footer />
+    <LoadingComponent ref="loadingRef" />
     <ToastNotification ref="myToast" />
 </template>
 
@@ -308,21 +286,17 @@
 import { defineComponent } from "vue";
 import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
-import axios from "axios";
-import { getStatusClass } from "../utils/textUtils";
-import { base64ToBlob, downloadFile, getDocumentEffectiveStatus } from "../utils/fileUtils";
 import ToastNotification from "../components/ToastNotification.vue";
+import LoadingComponent from "../components/LoadingComponent.vue";
+import { filterDocuments } from "../api/documentApi";
 import { fetchAttachmentsByDoc } from "../api/attachmentApi";
-interface SearchResult {
-    id: number;
-    title: string;
-    summary: string;
-    doc_type: string;
-    issued_date: string;
-    effective_start_date: string;
-    effective_end_date: string;
-    status: string;
-}
+import {
+    base64ToBlob,
+    downloadFile,
+    getDocumentEffectiveStatus,
+} from "../utils/fileUtils";
+import { getStatusClass, truncate } from "../utils/textUtils";
+import type { Doc } from "../types/DocumentTypes";
 
 export default defineComponent({
     name: "SearchFilter",
@@ -330,304 +304,189 @@ export default defineComponent({
         Header,
         Footer,
         ToastNotification,
+        LoadingComponent,
     },
     data() {
         return {
-            keyword: "",
-            documents: [],
-            loading: false,
-            hasSearched: false,
-
             currentPage: 1,
-            pageSize: 5,
+            pageSize: 10,
             totalItems: 0,
             totalPages: 1,
 
             filters: {
                 keyword: "",
-                docType: "",
-                issuer: "",
-                releaseDateFrom: "",
-                releaseDateTo: "",
-                effectiveDateFrom: "",
-                effectiveDateTo: "",
-                expirationDateFrom: "",
-                expirationDateTo: "",
+                doc_type: "",
+                issued_by: "",
+                issued_from: "",
+                issued_to: "",
+                effective_start_from: "",
+                effective_start_to: "",
+                effective_end_from: "",
+                effective_end_to: "",
             },
 
-            sortBy: "relevance",
-            searchResults: [] as SearchResult[],
-            searchTimeout: null as ReturnType<typeof setTimeout> | null,
+            searchResults: [] as Doc[],
+            sortBy: "newest",
+            debounceTimer: null as ReturnType<typeof setTimeout> | null,
         };
     },
 
+    created() {
+        const keyword = this.$route.query.keyword as string;
+        if (keyword?.trim()) {
+            this.filters.keyword = keyword;
+            this.loadDocuments(true);
+            return;
+        }
+        this.loadDocuments(true);
+    },
 
     methods: {
+        buildParams() {
+            return {
+                ...this.filters,
+                page: this.currentPage,
+                page_size: this.pageSize,
+            };
+        },
+
+        async loadDocuments(resetPage = false) {
+            if (resetPage) this.currentPage = 1;
+            (this.$refs.loadingRef as any)?.show();
+            try {
+                const res = await filterDocuments(this.buildParams());
+
+                this.searchResults = res.data.results;
+                this.totalItems = res.data.pagination.total_items;
+                this.totalPages = res.data.pagination.total_pages;
+
+                this.sortLocalResults();
+            } catch (err) {
+                console.error("Lỗi load văn bản", err);
+            } finally {
+                (this.$refs.loadingRef as any)?.hide();
+            }
+        },
+
+        applyFilters() {
+            this.loadDocuments(true);
+        },
+
         resetFilters() {
-            this.filters = {
+            Object.assign(this.filters, {
                 keyword: "",
-                docType: "",
-                issuer: "",
-                releaseDateFrom: "",
-                releaseDateTo: "",
-                effectiveDateFrom: "",
-                effectiveDateTo: "",
-                expirationDateFrom: "",
-                expirationDateTo: "",
+                doc_type: "",
+                issued_by: "",
+                issued_from: "",
+                issued_to: "",
+                effective_start_from: "",
+                effective_start_to: "",
+                effective_end_from: "",
+                effective_end_to: "",
+            });
+
+            this.loadDocuments(true);
+        },
+        changePage(page: number) {
+            if (page < 1 || page > this.totalPages) return;
+            this.currentPage = page;
+            this.loadDocuments();
+        },
+        sortLocalResults() {
+            if (!this.searchResults.length) return;
+
+            const sortMap: Record<string, () => void> = {
+                newest: () =>
+                    this.searchResults.sort(
+                        (a, b) =>
+                            new Date(b.issued_date).getTime() -
+                            new Date(a.issued_date).getTime()
+                    ),
+
+                effective_asc: () =>
+                    this.searchResults.sort(
+                        (a, b) =>
+                            new Date(a.effective_start_date).getTime() -
+                            new Date(b.effective_start_date).getTime()
+                    ),
+
+                effective_desc: () =>
+                    this.searchResults.sort(
+                        (a, b) =>
+                            new Date(b.effective_start_date).getTime() -
+                            new Date(a.effective_start_date).getTime()
+                    ),
             };
 
-            this.hasSearched = false;
-            this.currentPage = 1;
-
-            this.fetchAllDocuments();
-        },
-
-        async applyFilters() {
-            this.hasSearched = true;
-            this.currentPage = 1;
-
-            try {
-                this.loading = true;
-                this.loading = false;
-                const params = {
-                    keyword: this.filters.keyword || undefined,
-                    doc_type: this.filters.docType || undefined,
-                    issued_by: this.filters.issuer || undefined,
-                    issued_from: this.filters.releaseDateFrom || undefined,
-                    issued_to: this.filters.releaseDateTo || undefined,
-                    effective_from: this.filters.effectiveDateFrom || undefined,
-                    effective_to: this.filters.effectiveDateTo || undefined,
-                    page: this.currentPage,
-                    page_size: this.pageSize,
-                };
-                const response = await axios.get(
-                    "http://127.0.0.1:8000/api/documents/filter/",
-                    {
-                        params,
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-                        },
-                    }
-                );
-
-                this.searchResults = response.data.results || [];
-                this.totalItems = response.data.pagination.total_items || 0;
-                this.totalPages = response.data.pagination.total_pages || 1;
-
-                this.applySort();
-
-
-            } catch (error) {
-                console.error("Lỗi khi filter văn bản", error);
-            } finally {
-                this.loading = false;
-            }
+            sortMap[this.sortBy]?.();
         },
         goDetail(id: number) {
-            this.$router.push({
-                name: "document-detail",
-                params: { id }
-            });
-        },
-        async fetchAllDocuments() {
-            try {
-                this.loading = true;
-                this.loading = false;
-                const response = await axios.get(
-                    "http://127.0.0.1:8000/api/documents/",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-                        },
-                    }
-                );
-
-                const allDocs = response.data || [];
-
-                this.totalItems = allDocs.length;
-                this.totalPages = Math.max(1, Math.ceil(this.totalItems / this.pageSize));
-
-                const start = (this.currentPage - 1) * this.pageSize;
-                const end = start + this.pageSize;
-
-                this.searchResults = allDocs.slice(start, end);
-                this.applySort();
-
-            } catch (error) {
-                console.error("Lỗi load toàn bộ văn bản", error);
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        changePage(page: number) {
-            if (!Number.isInteger(page)) return;
-            if (page < 1 || page > this.totalPages) return;
-
-            this.currentPage = page;
-
-            if (this.hasSearched) {
-                this.applyFilters();
-            } else {
-                this.fetchAllDocuments();
-            }
-        },
-        applySort() {
-            if (!this.searchResults || this.searchResults.length === 0) return;
-
-            const sorted = [...this.searchResults];
-
-            switch (this.sortBy) {
-                case "newest":
-                    sorted.sort((a, b) =>
-                        new Date(b.issued_date).getTime() -
-                        new Date(a.issued_date).getTime()
-                    );
-                    break;
-
-                case "effective_asc":
-                    sorted.sort((a, b) =>
-                        new Date(a.effective_start_date).getTime() -
-                        new Date(b.effective_start_date).getTime()
-                    );
-                    break;
-
-                case "effective_desc":
-                    sorted.sort((a, b) =>
-                        new Date(b.effective_start_date).getTime() -
-                        new Date(a.effective_start_date).getTime()
-                    );
-                    break;
-
-                case "relevance":
-                default:
-                    // Không làm gì – giữ nguyên thứ tự backend
-                    return;
-            }
-
-            this.searchResults = sorted;
+            this.$router.push({ name: "document-detail", params: { id } });
         },
         async doDownloadFile(document_id: number) {
-            const attachRes = await fetchAttachmentsByDoc(document_id)
+            const attachRes = await fetchAttachmentsByDoc(document_id);
             const att = attachRes.data.length > 0 ? attachRes.data[attachRes.data.length - 1] : null;
             if (!att || !att.file_base64) {
-                (this.$refs.myToast as any).error(
-                    "Lỗi",
-                    `Xảy ra lỗi khi yêu cầu tải file xuống`
-                );
+                (this.$refs.myToast as any).error("Lỗi", "Không thể tải file");
                 return;
             }
             const blob = base64ToBlob(att.file_base64);
             downloadFile(blob, att.filename);
         },
-        getStatusClass
+        getStatusClass,
+        truncate,
+    },
 
-    },
-    mounted() {
-        this.fetchAllDocuments();
-        const keyword = this.$route.query.keyword as string;
-        if (keyword && keyword.trim()) {
-            this.filters.keyword = keyword;
-            this.hasSearched = true;
-            this.currentPage = 1;
-            this.applyFilters();
-        }
-    },
     watch: {
-        // 🔹 Watch sắp xếp
         sortBy() {
-            if (this.hasSearched) {
-                this.applyFilters();
-            } else {
-                this.fetchAllDocuments();
-            }
+            this.sortLocalResults();
         },
-
-        // 🔹 Watch từ khóa (search realtime)
-        "filters.keyword"(newVal: string) {
-            // Nếu rỗng → load lại toàn bộ
-            if (!newVal || newVal.trim() === "") {
-                this.hasSearched = false;
-                this.currentPage = 1;
-                this.fetchAllDocuments();
-                return;
-            }
-
-            // Debounce
-            if (this.searchTimeout) {
-                clearTimeout(this.searchTimeout);
-            }
-
-            this.searchTimeout = setTimeout(() => {
-                this.hasSearched = true;
-                this.currentPage = 1;
-                this.applyFilters();
-            }, 400);
-
-
+        "filters.keyword"() {
+            if (this.debounceTimer) clearTimeout(this.debounceTimer);
+            this.debounceTimer = setTimeout(() => {
+                this.loadDocuments(true);
+            }, 500);
         },
-        "$route.query.keyword"(newVal: string) {
-            if (newVal && newVal.trim()) {
-                this.filters.keyword = newVal;
-                this.hasSearched = true;
-                this.currentPage = 1;
-                this.applyFilters();
-            }
+        "$route.query.keyword"(val: string) {
+            if (!val?.trim()) return;
+            this.filters.keyword = val;
+            this.loadDocuments(true);
         },
     },
-
-
 
     computed: {
         visiblePages(): (number | string)[] {
             const pages: (number | string)[] = [];
+            const { totalPages, currentPage } = this;
 
-            const total = Number(this.totalPages);
-            const current = Number(this.currentPage);
-
-            // 🚫 Chặn NaN tuyệt đối
-            if (!Number.isInteger(total) || total < 1) {
-                return [1];
-            }
-
-            if (!Number.isInteger(current) || current < 1) {
-                return [1];
-            }
-
-            if (total <= 7) {
-                for (let i = 1; i <= total; i++) pages.push(i);
-                return pages;
+            if (totalPages <= 7) {
+                return Array.from({ length: totalPages }, (_, i) => i + 1);
             }
 
             pages.push(1);
+            if (currentPage > 4) pages.push("...");
 
-            if (current > 4) {
-                pages.push("...");
+            for (
+                let i = Math.max(2, currentPage - 1);
+                i <= Math.min(totalPages - 1, currentPage + 1);
+                i++
+            ) {
+                pages.push(i);
             }
 
-            const start = Math.max(2, current - 1);
-            const end = Math.min(total - 1, current + 1);
-
-            for (let i = start; i <= end; i++) {
-                if (Number.isInteger(i)) pages.push(i);
-            }
-
-            if (current < total - 3) {
-                pages.push("...");
-            }
-
-            pages.push(total);
+            if (currentPage < totalPages - 3) pages.push("...");
+            pages.push(totalPages);
 
             return pages;
         },
-        effectiveStatus(doc: any) {
-            return getDocumentEffectiveStatus({
-                effective_start_date: doc.effective_start_date,
-                effective_end_date: doc.effective_end_date,
-            });
+
+        effectiveStatus() {
+            return (doc: Doc) =>
+                getDocumentEffectiveStatus({
+                    effective_start_date: doc.effective_start_date,
+                    effective_end_date: doc.effective_end_date,
+                });
         },
-
     },
-
 });
 </script>

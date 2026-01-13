@@ -33,19 +33,20 @@
         <div class="flex items-center gap-3">
           <!-- Authenticated -->
           <template v-if="username">
-            <div class="relative group">
-              <button class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition">
+            <div class="relative">
+              <button
+                class="peer flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition">
                 <div class="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
                   {{ username.charAt(0).toUpperCase() }}
                 </div>
                 <span class="text-sm font-medium text-gray-700 hidden sm:block">
-                  {{ username }}
+                  {{ fullName || username }}
                 </span>
               </button>
 
-              <!-- Dropdown -->
-              <div
-                class="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition origin-top-right">
+              <div class="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border origin-top-right transition-all duration-200
+                opacity-0 scale-95 invisible peer-hover:opacity-100 peer-hover:scale-100 peer-hover:visible
+                hover:opacity-100 hover:scale-100 hover:visible">
                 <RouterLink v-if="isAdmin" to="/admin" class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
                   Admin
                 </RouterLink>
@@ -116,6 +117,9 @@ export default defineComponent({
   computed: {
     username(): string | null {
       return this.user?.username ?? null;
+    },
+    fullName(): string | null {
+      return this.user?.full_name ?? null;
     },
 
     isAdmin(): boolean {
