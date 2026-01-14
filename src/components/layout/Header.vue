@@ -21,6 +21,7 @@
         <!-- Desktop Menu -->
         <div class="hidden md:flex items-center gap-6">
           <RouterLink v-for="item in menu" :key="item.to" :to="item.to" class="relative text-sm font-medium transition"
+            v-show="!item.roles || hasRole(item.roles)"
             :class="isActive(item.to)
               ? 'text-blue-600'
               : 'text-gray-600 hover:text-blue-600'">
@@ -47,7 +48,8 @@
               <div class="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border origin-top-right transition-all duration-200
                 opacity-0 scale-95 invisible peer-hover:opacity-100 peer-hover:scale-100 peer-hover:visible
                 hover:opacity-100 hover:scale-100 hover:visible">
-                <RouterLink v-if="isAdmin" to="/admin/dashboard" class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                <RouterLink v-if="hasRole(['admin'])" to="/admin/dashboard"
+                  class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
                   Admin
                 </RouterLink>
                 <button @click="logout" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
@@ -86,7 +88,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { useRoute } from "vue-router";
-import { doLogout, getRole } from "../../utils/authUtils";
+import { doLogout, hasRole } from "../../utils/authUtils";
 import type { User } from "../../types/UserTypes";
 
 export default defineComponent({
@@ -99,7 +101,7 @@ export default defineComponent({
       menu: [
         { to: "/", label: "Trang chủ" },
         { to: "/tra-cuu", label: "Tra cứu" },
-        { to: "/quan-ly", label: "Quản lý" },
+        { to: "/quan-ly", label: "Quản lý", roles: ["employee", "admin"] },
         { to: "/ocr-vanban", label: "OCR Văn bản" },
       ],
       user: userInfo ? (JSON.parse(userInfo) as User) : null,
@@ -112,6 +114,7 @@ export default defineComponent({
       return route.path === path;
     },
 
+    hasRole,
     async logout() { await doLogout(); }
   },
   computed: {
@@ -120,10 +123,6 @@ export default defineComponent({
     },
     fullName(): string | null {
       return this.user?.full_name ?? null;
-    },
-
-    isAdmin(): boolean {
-      return getRole() === "admin";
     },
   },
 });

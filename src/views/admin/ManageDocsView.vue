@@ -55,12 +55,20 @@
                                     <td class="px-6 py-4">
                                         <span
                                             :class="`px-2.5 py-1 rounded-full text-xs font-bold ${getStatusColor(doc.status)}`">{{
-                                                doc.status }}</span>
+                                                convertStatus(doc.status) }}</span>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-slate-500">{{ doc.signer }}</td>
                                     <td class="px-6 py-4 text-sm text-slate-500">{{ doc.doc_type }}</td>
                                     <td class="px-6 py-4 text-sm text-slate-500">{{ doc.summary }}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-500">{{ doc.visibility }}</td>
+                                    <td class="px-6 py-4 text-sm text-slate-500">
+                                        <span
+                                            :class="doc.visibility === 'public' ? 'text-green-700 bg-green-100' : 'text-rose-700 bg-rose-100'"
+                                            class="inline-flex items-center gap-1 text-xs font-bold  px-2 py-1 rounded-full">
+                                            <i
+                                                :class="doc.visibility === 'public' ? 'fas fa-globe' : 'fas fa-lock'"></i>
+                                            {{ doc.visibility }}
+                                        </span>
+                                    </td>
                                     <td class="px-6 py-4 text-right flex justify-end gap-2">
                                         <button @click="viewDetail(doc)"
                                             class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-100 rounded-full transition"
@@ -93,7 +101,7 @@
                 </div>
 
                 <!-- DETAIL TAB -->
-                <div v-if="selectedDoc" class="p-4 h-full flex flex-col bg-slate-50">
+                <div v-if="selectedDoc" class="p-4 overflow-auto h-full flex flex-col bg-slate-50">
                     <div class="flex justify-between items-center mb-4">
                         <button @click="goBack"
                             class="flex items-center text-slate-500 hover:text-blue-600 font-medium">
@@ -103,19 +111,38 @@
                         </button>
 
                         <div class="flex gap-3">
+                            <template @click="toggleCard" class="bg-white px-4 rounded-2xl flex items-center gap-4">
+                                <span
+                                    class="font-bold text-sm text-right transition-colors duration-300 cursor-pointer select-none"
+                                    :class="isPublic ? 'text-green-600' : 'text-slate-500'">
+                                    {{ isPublic ? 'Công khai' : 'Riêng tư' }}
+                                </span>
+                                <div class="relative inline-flex items-center cursor-pointer select-none">
+                                    <div class="w-14 h-7 rounded-full transition-colors duration-300"
+                                        :class="isPublic ? 'bg-green-500' : 'bg-slate-300'">
+                                    </div>
+                                    <div class="absolute top-0.5 left-0.5 bg-white w-6 h-6 rounded-full shadow-md transition-transform duration-300 flex items-center justify-center"
+                                        :class="isPublic ? 'translate-x-7' : 'translate-x-0'">
+                                        <i class="fas fa-globe-asia text-[10px] text-green-600 transition-all"
+                                            v-show="isPublic"></i>
+                                        <i class="fas fa-lock text-[10px] text-slate-500 transition-all"
+                                            v-show="!isPublic"></i>
+                                    </div>
+                                </div>
+                            </template>
                             <template v-if="isEditing">
                                 <button @click="cancelEditing"
                                     class="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded">Hủy</button>
                                 <button @click="saveDocChanges"
                                     class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 shadow-sm">
-                                    <i data-lucide="save" class="w-4 h-4"></i> Lưu thay đổi
+                                    <i class="fas fa-save"></i> Lưu thay đổi
                                 </button>
                             </template>
 
                             <template v-else>
                                 <button @click="startEditing"
                                     class="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded hover:bg-slate-50">
-                                    <i data-lucide="edit" class="w-4 h-4"></i> Chỉnh sửa
+                                    <i class="fas fa-pen"></i> Chỉnh sửa
                                 </button>
                                 <template v-if="selectedDoc.status === 'pending'">
                                     <button @click="updateStatus('rejected')"
@@ -134,7 +161,7 @@
                     </div>
 
 
-                    <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 overflow-y-auto">
+                    <div class="flex-1 grid grid-cols-1 lg:grid-cols-[4fr_3fr] gap-4 overflow-y-auto">
                         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-y-auto">
                             <div class="flex justify-between items-start mb-6 pb-4 border-b border-slate-100">
                                 <div>
@@ -293,6 +320,7 @@ export default defineComponent({
             itemsPerPage: 8,
             selectedDoc: null as Doc | null,
             isEditing: false,
+            isPublic: false,
             editForm: {} as Partial<Doc>,
             docs: [] as Doc[],
         };
@@ -322,7 +350,15 @@ export default defineComponent({
     watch: {
         listFilter() {
             this.currentPage = 1; // reset page khi filter thay đổi
-        }
+        },
+        selectedDoc: {
+            immediate: true,
+            handler(doc) {
+                if (doc?.visibility) {
+                    this.isPublic = doc.visibility === "public";
+                }
+            },
+        },
     },
     methods: {
         getStatusColor(status: string) {
@@ -331,6 +367,36 @@ export default defineComponent({
                 case "pending": return "bg-amber-100 text-amber-700";
                 case "rejected": return "bg-rose-100 text-rose-700";
                 default: return "bg-slate-100 text-slate-600";
+            }
+        },
+        convertStatus(status: string) {
+            switch (status) {
+                case "approved": return "Đã duyệt";
+                case "pending": return "Chờ duyệt";
+                case "rejected": return "Từ chối";
+                default: return "";
+            }
+        },
+        async toggleCard() {
+            if (!this.selectedDoc) return;
+
+            const newVisibility = this.isPublic ? "private" : "public";
+            try {
+                await updateDocument(
+                    Number(this.selectedDoc.id),
+                    { visibility: newVisibility }
+                );
+                this.isPublic = newVisibility === "public";
+                (this.$refs.myToast as any).success(
+                    "Cập nhật",
+                    `Đã chuyển văn bản ID: ${this.selectedDoc.id} sang ${newVisibility}`
+                );
+            } catch (e: any) {
+                (this.$refs.myToast as any).error(
+                    "Lỗi",
+                    `${e.response?.data || e.detail}`
+                );
+                console.error("Lỗi cập nhật văn bản:", e);
             }
         },
         prevPage() { if (this.currentPage > 1) this.currentPage--; },
@@ -354,7 +420,7 @@ export default defineComponent({
         },
         startEditing() { if (!this.selectedDoc) return; this.isEditing = true; this.editForm = { ...this.selectedDoc }; },
         cancelEditing() { this.isEditing = false; this.editForm = {}; },
-        goBack(){
+        goBack() {
             this.selectedDoc = null;
             this.getDocuments();
         },
