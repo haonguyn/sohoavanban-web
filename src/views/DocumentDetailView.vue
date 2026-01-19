@@ -136,7 +136,7 @@
                                 {{ document.title }}
                             </h1>
                             <p class="text-sm text-gray-600">
-                                {{ document.abstract || document.summary}}
+                                {{ document.summary || document.note}}
                             </p>
                         </div>
 

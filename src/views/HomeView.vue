@@ -173,7 +173,7 @@
                                     {{ truncate(doc.title ?? '') }}
                                 </h3>
                                 <p class="text-sm text-gray-600 mt-1 line-clamp-2">
-                                    {{ truncate(doc.abstract ?? '', 110) }}
+                                    {{ truncate(doc.summary ?? '', 110) }}
                                 </p>
                             </div>
 

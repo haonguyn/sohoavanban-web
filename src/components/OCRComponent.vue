@@ -16,15 +16,20 @@
                 <div class="lg:col-span-5 space-y-6">
                     <!-- Khu vực Tải lên -->
                     <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-                        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                            </svg>
-                            1. Tải lên tệp nguồn
-                        </h2>
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                1. Tải lên tệp nguồn
+                            </h2>
 
+                            <p v-if="isOcrDone" class="text-sm text-gray-500 font-medium">
+                                Độ chính xác: {{ accuracy }}%
+                            </p>
+                        </div>
                         <!-- Vùng kéo thả -->
                         <div @dragover.prevent="onDragOver" @dragleave.prevent="onDragLeave" @drop.prevent="onDrop"
                             :class="{ 'border-blue-600 bg-blue-50': isDragging, 'border-gray-300 bg-gray-50 hover:bg-gray-100': !isDragging }"
@@ -53,7 +58,7 @@
                                     <span class="text-xs font-semibold text-blue-800 uppercase">{{ fileType }}</span>
                                 </div>
                                 <p class="text-sm font-medium text-gray-900 truncate max-w-[90%]">{{ selectedFile.name
-                                }}</p>
+                                    }}</p>
                                 <button @click="clearFile"
                                     class="mt-2 text-xs text-red-500 hover:text-red-700 underline">
                                     Xóa và chọn lại
@@ -116,9 +121,16 @@
                         <form @submit.prevent="saveDocument" class="space-y-4">
                             <!-- Hàng 1: Tên văn bản (Full width) -->
                             <div>
+                                <label class="block text-sm font-medium text-gray-700">Tên văn bản<span
+                                        class="text-red-500">*</span></label>
+                                <textarea v-model="form.title" rows="1"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                            </div>
+                            <!-- Hàng 1: Tên văn bản (Full width) -->
+                            <div>
                                 <label class="block text-sm font-medium text-gray-700">Trích yếu<span
                                         class="text-red-500">*</span></label>
-                                <textarea v-model="form.title" rows="2"
+                                <textarea v-model="form.summary" rows="3"
                                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                     placeholder="VD: Quyết định về việc..."></textarea>
                             </div>
@@ -143,7 +155,7 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Cơ quan ban hành</label>
-                                    <input type="text" v-model="form.summary"
+                                    <input type="text" v-model="form.issued_by"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                                 </div>
                                 <div>
@@ -190,7 +202,7 @@
                             <!-- Hàng cuối: Link & Submit -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Ghi chú thêm</label>
-                                <input type="text" v-model="form.summary"
+                                <input type="text" v-model="form.note"
                                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                             </div>
 
@@ -273,6 +285,7 @@
             </div>
         </div>
     </div>
+    <ToastNotification ref="myToast" />
 </template>
 <script lang="ts">
 
@@ -280,9 +293,15 @@ import { defineComponent } from "vue";
 import { processOCR } from "../api/ocrApi";
 import { createDocument } from "../api/documentApi";
 import { uploadAttachment } from "../api/attachmentApi";
+import type { Doc } from "../types/DocumentTypes";
+import { normalizeDocType } from "../utils/textUtils";
+import ToastNotification from "./ToastNotification.vue";
 
 export default defineComponent({
     name: "OCRComponent",
+    components: {
+        ToastNotification
+    },
     data() {
         return {
             isDragging: false,
@@ -291,24 +310,9 @@ export default defineComponent({
             isOcrDone: false, // Để hiển thị trạng thái đã fill xong
             extractedText: "",
             filePreviewUrl: null as string | null,
-
+            accuracy: '',
             // FORM DATA MODEL (Để OCR tự fill vào đây)
-            form: {
-                doc_number: "",
-                title: "",
-                doc_type: "",
-                issued_date: "",
-                issued_by: "",
-                signer: "",
-                summary: "",
-                full_text: "",
-                status: "pending",
-                effective_start_date: "",
-                effective_end_date: "",
-                // chỉ dùng nội bộ UI
-                page_count: null as number | null,
-                field: "",
-            }
+            form: {} as Partial<Doc>
 
         };
     },
@@ -357,11 +361,17 @@ export default defineComponent({
             const allowedTypes = ["image/png", "image/jpeg", "application/pdf"];
             const maxSize = 10 * 1024 * 1024; // 10MB
             if (!allowedTypes.includes(file.type)) {
-                alert(`❌ File không hợp lệ. Chỉ chấp nhận PNG, JPG hoặc PDF.`);
+                (this.$refs.myToast as any).warning(
+                    "Cảnh báo",
+                    `File không hợp lệ. Chỉ chấp nhận PNG, JPG hoặc PDF.`
+                );
                 return false;
             }
             if (file.size > maxSize) {
-                alert(`⚠️ File vượt quá 10MB.`);
+                (this.$refs.myToast as any).warning(
+                    "Cảnh báo",
+                    `File vượt quá 10MB.`
+                );
                 return false;
             }
             return true;
@@ -382,10 +392,8 @@ export default defineComponent({
                 signer: "",
                 summary: "",
                 full_text: "",
-                status: "pending",
                 effective_start_date: "",
                 effective_end_date: "",
-                // chỉ dùng nội bộ UI
                 page_count: null as number | null,
                 field: "",
             };
@@ -401,32 +409,26 @@ export default defineComponent({
 
             try {
                 const res = await processOCR(this.selectedFile);
-
-                // dữ liệu trả về theo JSON bạn mô tả
-                const { text, data } = res.data;
-
-                // 1. Văn bản trích xuất
+                const { text, data, accuracy } = res.data;
                 this.extractedText = text;
-                console.log(this.convertToISODate(data.ngayBanHanh))
                 // 2. Điền form từ data
                 this.form = {
-                    doc_number: data.soVanBan,
-                    title: data.trichYeu,
-                    doc_type: data.loaiVanBan,
-                    issued_by: data.coQuanBanHanh,
-                    signer: data.nguoiKy,
-                    summary: "Văn bản được trích xuất từ tệp " + (this.selectedFile?.name || ""),
+                    doc_number: data.doc_number,
+                    title: data.title,
+                    doc_type: normalizeDocType(data.doc_type),
+                    issued_by: data.issued_by,
+                    signer: data.signer,
+                    summary: data.summary,
                     full_text: text,
-                    issued_date: this.convertToISODate(data.ngayBanHanh),
-                    effective_start_date: data.ngayHieuLuc || "",
-                    effective_end_date: data.ngayHetHieuLuc || "",
-                    status: "pending",
-                    page_count: Number(data.pageCount) || null,   // thêm vào
-                    //field: this.checkTag(data.linhVuc), 
-                    field: data.linhVuc || null                 // thêm vào
+                    issued_date: data.issued_date || "",
+                    note: "Văn bản được trích xuất từ tệp " + (this.selectedFile?.name || ""),
+                    effective_start_date: data.effective_start_date || data.issued_date || "",
+                    effective_end_date: data.effective_end_date || "",
+                    page_count: Number(data.page_count) || 0,
+                    field: data.field,
                 };
 
-
+                this.accuracy = accuracy;
                 this.isOcrDone = true;
             } catch (err: any) {
                 console.error("OCR error:", err.response?.data || err.message);
@@ -437,7 +439,10 @@ export default defineComponent({
         },
         async saveDocument() {
             if (!this.selectedFile) {
-                alert("❌ Chưa có file để upload");
+                (this.$refs.myToast as any).warning(
+                    "Cảnh báo",
+                    `Chưa có file để upload`
+                );
                 return;
             }
 
@@ -456,52 +461,31 @@ export default defineComponent({
                 }
                 await uploadAttachment(documentId, this.selectedFile);
 
-                alert("✅ Lưu văn bản & đính kèm file thành công!");
-                console.log("Document ID:", documentId);
-
+                (this.$refs.myToast as any).success(
+                    "Thành công",
+                    `Lưu văn bản & đính kèm file thành công!`
+                );
                 this.clearFile();
 
             } catch (err: any) {
                 console.error("Lỗi khi lưu:", err.response?.data || err.message);
-                alert("❌ Lưu văn bản hoặc upload file thất bại!");
+                (this.$refs.myToast as any).error(
+                    "Lỗi",
+                    `Lưu văn bản hoặc upload file thất bại!`
+                );
             }
         },
         copyText(text: string) {
             if (!text) return;
             navigator.clipboard.writeText(text).then(() => {
-                alert("Đã sao chép!");
+                (this.$refs.myToast as any).success(
+                    "Thành công",
+                    `Đã sao chép!`
+                );
             }).catch(err => {
                 console.error("Lỗi copy:", err);
             });
         },
-        convertToISODate(vietnameseDateString: string): string {
-            try {
-                // Lấy 3 nhóm số theo thứ tự: ngày - tháng - năm
-                const parts = vietnameseDateString.match(/(\d+)[^\d]+(\d+)[^\d]+(\d+)/);
-
-                if (parts && parts[1] && parts[2] && parts[3]) {
-                    const day = parts[1].padStart(2, '0');
-                    const month = parts[2].padStart(2, '0');
-                    const year = parts[3];
-                    return `${year}-${month}-${day}`;
-                }
-
-                return "";
-            } catch (error) {
-                console.error("convertToISODate error:", error);
-                return "";
-            }
-        }
-        ,
-
-        checkTag(tag: string): string {
-
-            if (tag == " ") {
-                tag = "khác"
-            }
-
-            return tag;
-        }
     },
 });
 </script>

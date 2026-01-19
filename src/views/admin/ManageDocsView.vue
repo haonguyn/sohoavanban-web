@@ -50,7 +50,7 @@
                                     class="hover:bg-blue-50 transition-colors">
                                     <td class="px-6 py-4 font-bold text-blue-600">{{ doc.doc_number }}</td>
                                     <td class="px-6 py-4 text-sm text-slate-600 max-w-md truncate"
-                                        :title="doc.abstract">{{ doc.title }}</td>
+                                        :title="doc.summary">{{ doc.title }}</td>
                                     <td class="px-6 py-4 text-sm text-slate-500">{{ doc.issued_date }}</td>
                                     <td class="px-6 py-4">
                                         <span
@@ -59,7 +59,7 @@
                                     </td>
                                     <td class="px-6 py-4 text-sm text-slate-500">{{ doc.signer }}</td>
                                     <td class="px-6 py-4 text-sm text-slate-500">{{ doc.doc_type }}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-500">{{ doc.summary }}</td>
+                                    <td class="px-6 py-4 text-sm text-slate-500">{{ doc.note }}</td>
                                     <td class="px-6 py-4 text-sm text-slate-500">
                                         <span
                                             :class="doc.visibility === 'public' ? 'text-green-700 bg-green-100' : 'text-rose-700 bg-rose-100'"
@@ -201,7 +201,7 @@
                                 </div>
                                 <div class="col-span-2">
                                     <label class="text-xs font-bold text-slate-500">Trích yếu</label>
-                                    <textarea v-model="editForm.abstract"
+                                    <textarea v-model="editForm.summary"
                                         class="w-full border p-2 rounded h-24"></textarea>
                                 </div>
                                 <div class="col-span-2">
@@ -240,7 +240,7 @@
                                     <div class="col-span-2 pt-2 border-t border-slate-200"><span
                                             class="text-slate-400 text-xs uppercase font-bold tracking-wider">Trích
                                             yếu</span>
-                                        <p class="font-medium text-slate-700 mt-1">{{ selectedDoc.abstract }}</p>
+                                        <p class="font-medium text-slate-700 mt-1">{{ selectedDoc.summary }}</p>
                                     </div>
                                 </div>
                                 <div>

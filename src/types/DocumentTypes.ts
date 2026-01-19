@@ -21,10 +21,11 @@ export interface Doc {
   doc_type?: string;
   summary: string;
   visibility?: string;
-  abstract?: string;
+  note?: string;
   issued_by?: string;
   full_text?: string;
-  page_count?: number;
+  field?: string;
+  page_count?: number | null;
   attachments?: Attach | null;
   history?: Array<{ action: string; date: string; user: string }>;
 }

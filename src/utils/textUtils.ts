@@ -8,6 +8,14 @@ export function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+export function normalizeDocType(text: string): string {
+  if (!text) return "";
+  text = text.normalize("NFC");
+  text = text.toLowerCase();
+  text = text.replace(/\s+/g, " ").trim();
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 export function getStatusClass(status: string): string {
   switch (status) {
     case "Còn hiệu lực":

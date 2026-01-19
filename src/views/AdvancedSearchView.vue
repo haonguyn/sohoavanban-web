@@ -45,11 +45,11 @@
                                     <select id="docType" v-model="filters.doc_type"
                                         class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                         <option value="">Tất cả</option>
-                                        <option value="nghi-dinh">Nghị định</option>
-                                        <option value="thong-tu">Thông tư</option>
-                                        <option value="luat">Luật</option>
-                                        <option value="quyet-dinh">Quyết định</option>
-                                        <option value="chi-thi">Chỉ thị</option>
+                                        <option value="Nghị định">Nghị định</option>
+                                        <option value="Thông tư">Thông tư</option>
+                                        <option value="Luật">Luật</option>
+                                        <option value="Quyết định">Quyết định</option>
+                                        <option value="Chỉ thị">Chỉ thị</option>
                                     </select>
                                 </div>
 
@@ -185,7 +185,7 @@
                                             </h3>
 
                                             <p class="text-sm text-gray-600 mb-3 line-clamp-2">
-                                                {{ truncate(doc.abstract || doc.summary, 300) }}
+                                                {{ truncate(doc.summary || doc.note || '', 300) }}
                                             </p>
 
                                             <div class="flex gap-6 text-sm text-gray-500">
