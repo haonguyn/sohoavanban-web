@@ -54,14 +54,16 @@ export function getDocumentEffectiveStatus(
     effective_start_date?: string;
     effective_end_date?: string;
   },
-  now: Date = new Date()
-) {
-  const start = effective_start_date && new Date(effective_start_date);
-  const end = effective_end_date && new Date(effective_end_date);
+  now: Date = new Date(),
+): "Sắp có hiệu lực" | "Còn hiệu lực" | "Hết hiệu lực" {
+  const start = effective_start_date ? new Date(effective_start_date) : null;
+  const end = effective_end_date ? new Date(effective_end_date) : null;
 
-  if (start && now < start) return "Sắp có hiệu lực";
-  if (end && now > end) return "Hết hiệu lực";
-  if (start && end) return "Hết hiệu lực một phần";
+  if (start && now < start) {
+    return "Sắp có hiệu lực";
+  }
+  if (end && now > end) {
+    return "Hết hiệu lực";
+  }
   return "Còn hiệu lực";
 }
-

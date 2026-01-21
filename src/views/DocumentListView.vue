@@ -2,7 +2,8 @@
     <Header />
     <div class="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-800">
         <main class="flex-grow py-8">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <LoadingComponent v-if="isLoading" />
+            <div v-else class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Toolbar: Stats & Filter -->
                 <div class="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div>
@@ -564,6 +565,7 @@ export default defineComponent({
         return {
             searchQuery: '',
             filterStatus: '',
+            isLoading: false,
 
             selectedDoc: null as Doc | null,
             tempDoc: {} as Doc,
@@ -620,10 +622,14 @@ export default defineComponent({
     methods: {
         async getDocuments() {
             try {
+                this.isLoading = true;
                 const res = await fetchDocuments();
                 this.documents = res.data;
             } catch (error) {
                 console.error("Lỗi khi lấy danh sách văn bản:", error);
+            }
+            finally {
+                this.isLoading = false;
             }
         },
 

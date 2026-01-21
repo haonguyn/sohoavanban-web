@@ -170,10 +170,10 @@
 
                                 <h3 @click="goDetail(doc.id)"
                                     class="text-lg font-semibold text-indigo-700 hover:underline cursor-pointer">
-                                    {{ truncate(doc.title ?? '') }}
+                                    {{ truncate(doc.title ?? '',120) }}
                                 </h3>
                                 <p class="text-sm text-gray-600 mt-1 line-clamp-2">
-                                    {{ truncate(doc.summary ?? '', 110) }}
+                                    {{ truncate(doc.summary ?? '', 160) }}
                                 </p>
                             </div>
 
