@@ -28,7 +28,42 @@
                         </select>
                     </div>
                 </div>
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Tổng số văn bản</dt>
+                            <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ documents.length }}</dd>
+                        </div>
+                    </div>
 
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Riêng tư</dt>
+                            <dd class="mt-1 text-3xl font-semibold text-gray-900">{{documents.filter(d =>
+                                d.visibility === 'private').length}}</dd>
+                        </div>
+
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Công khai</dt>
+                            <dd class="mt-1 text-3xl font-semibold text-green-600">{{documents.filter(d =>
+                                d.visibility === 'public').length}}</dd>
+                        </div>
+
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Chờ duyệt</dt>
+                            <dd class="mt-1 text-3xl font-semibold text-yellow-600">{{documents.filter(d => d.status ===
+                                'pending').length}}</dd>
+                        </div>
+
+                    </div>
+
+                </div>
                 <!-- Main Data Table -->
                 <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
                     <div class="overflow-x-auto">
@@ -62,7 +97,7 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-for="doc in filteredDocuments" :key="doc.id"
+                                <tr v-for="doc in paginatedDocuments" :key="doc.id"
                                     class="hover:bg-blue-50 transition-colors duration-150">
                                     <!-- Số hiệu (doc_number) -->
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -138,6 +173,32 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t bg-gray-50">
+                        <div class="text-sm text-gray-600">
+                            Hiển thị
+                            <b>{{ (currentPage - 1) * pageSize + 1 }}</b>
+                            –
+                            <b>{{ Math.min(currentPage * pageSize, filteredDocuments.length) }}</b>
+                            trong tổng số
+                            <b>{{ filteredDocuments.length }}</b> văn bản
+                        </div>
+
+                        <div class="flex items-center space-x-2 mt-3 sm:mt-0">
+                            <button @click="currentPage--" :disabled="currentPage === 1"
+                                class="px-3 py-1 border rounded text-sm disabled:opacity-50 hover:bg-gray-100">
+                                ‹ Trước
+                            </button>
+
+                            <span class="text-sm text-gray-700">
+                                Trang {{ currentPage }} / {{ totalPages }}
+                            </span>
+
+                            <button @click="currentPage++" :disabled="currentPage === totalPages"
+                                class="px-3 py-1 border rounded text-sm disabled:opacity-50 hover:bg-gray-100">
+                                Sau ›
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -508,12 +569,24 @@ export default defineComponent({
             tempDoc: {} as Doc,
             isEditing: false,
             docToDelete: null as Doc | null,
-            documents: [] as Doc[]
+            documents: [] as Doc[],
+
+            currentPage: 1,
+            pageSize: 10,
         };
     },
 
     mounted() {
         this.getDocuments();
+    },
+
+    watch: {
+        searchQuery() {
+            this.currentPage = 1;
+        },
+        filterStatus() {
+            this.currentPage = 1;
+        }
     },
 
     computed: {
@@ -532,6 +605,16 @@ export default defineComponent({
 
                 return matchesSearch && matchesStatus;
             });
+        },
+
+        totalPages(): number {
+            return Math.ceil(this.filteredDocuments.length / this.pageSize);
+        },
+
+        paginatedDocuments(): Doc[] {
+            const start = (this.currentPage - 1) * this.pageSize;
+            const end = start + this.pageSize;
+            return this.filteredDocuments.slice(start, end);
         }
     },
     methods: {
