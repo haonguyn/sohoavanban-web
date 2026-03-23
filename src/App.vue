@@ -1,5 +1,6 @@
 <template>
     <RouterView></RouterView>
+    <FloatingChat/>
     <BaseConfirm />
 </template>
 
@@ -7,4 +8,5 @@
 
 <script setup>
 import BaseConfirm from './components/BaseConfirm.vue';
+import FloatingChat from './components/FloatingChat.vue';
 </script>
