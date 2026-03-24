@@ -449,6 +449,58 @@
                                     </button>
                                 </div>
 
+                                <!-- Card Liên kết văn bản -->
+                                <div class="bg-white rounded-lg p-5 border border-gray-200 shadow-sm">
+                                    <h4 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 border-b pb-2">Liên kết văn bản</h4>
+                                    
+                                    <div v-if="relatedDocs.length > 0" class="space-y-3 mb-4">
+                                        <div v-for="(link, idx) in relatedDocs" :key="idx" class="bg-gray-50 border border-gray-200 rounded p-3 relative">
+                                            <div class="flex justify-between items-start mb-1">
+                                                <span class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-200 uppercase tracking-wide">{{ formatLinkType(link.link_type) }}</span>
+                                                <button v-if="isEditing" @click="handleDeleteLink(link.id)" class="text-red-500 hover:text-red-700 p-1" title="Xóa liên kết">
+                                                    <i class="fa-solid fa-trash-can text-sm"></i>
+                                                </button>
+                                            </div>
+                                            <a :href="'/document-detail/' + link.target_doc_id" target="_blank" class="font-bold text-sm text-blue-700 hover:underline block mb-1">
+                                                {{ link.target_doc_number }}
+                                            </a>
+                                            <p class="text-xs text-gray-600 line-clamp-2" :title="link.target_title">{{ link.target_title }}</p>
+                                        </div>
+                                    </div>
+                                    <div v-else class="text-center py-4 text-gray-500 text-sm italic">
+                                        Không có liên kết nào.
+                                    </div>
+
+                                    <!-- Form Thêm Liên Kết (Khi Đang Edit) -->
+                                    <div v-if="isEditing" class="mt-4 border-t pt-4">
+                                        <h5 class="text-xs font-bold text-gray-700 mb-2">Thêm liên kết mới:</h5>
+                                        <div class="space-y-3 bg-gray-50 p-3 rounded border border-gray-200">
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-500 mb-1">Số hiệu VB liên kết</label>
+                                                <input v-model="linkForm.target_doc_number" list="docNumbersListModal" placeholder="Tìm số hiệu..." autocomplete="off" class="w-full border-gray-300 rounded border p-2 text-sm">
+                                                <datalist id="docNumbersListModal">
+                                                    <option v-for="d in documents" :key="d.id" :value="d.doc_number">{{ d.title }}</option>
+                                                </datalist>
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-500 mb-1">Loại liên kết</label>
+                                                <select v-model="linkForm.link_type" class="w-full border-gray-300 rounded border p-2 text-sm">
+                                                    <option value="">-- Chọn loại --</option>
+                                                    <option value="thay_the_1_phan">Thay thế 1 phần</option>
+                                                    <option value="thay_the_toan_phan">Thay thế toàn phần</option>
+                                                    <option value="bai_bo_1_phan">Bãi bỏ 1 phần</option>
+                                                    <option value="bai_bo_toan_phan">Bãi bỏ toàn phần</option>
+                                                    <option value="huy_bo">Hủy bỏ</option>
+                                                    <option value="dinh_chinh">Đính chính</option>
+                                                </select>
+                                            </div>
+                                            <button @click="handleAddLink" type="button" :disabled="!linkForm.target_doc_number || !linkForm.link_type" class="w-full bg-blue-600 text-white rounded text-sm font-medium py-2 hover:bg-blue-700 disabled:bg-gray-400">
+                                                <i class="fa-solid fa-plus mr-1"></i> Thêm nhanh
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="text-xs text-gray-400 text-center">
                                     Cập nhật lần cuối:
                                     {{
@@ -547,7 +599,7 @@ import { defineComponent } from 'vue';
 import type { Doc } from '../types/DocumentTypes';
 import Header from '../components/layout/Header.vue';
 import Footer from '../components/layout/Footer.vue';
-import { deleteDocument, fetchDocuments, updateDocument } from '../api/documentApi';
+import { deleteDocument, fetchDocuments, updateDocument, getDocumentLinks, createDocumentLink, deleteDocumentLink } from '../api/documentApi';
 import { base64ToBlob, downloadFile, formatDate, formatFileSize } from '../utils/fileUtils';
 import ToastNotification from '../components/ToastNotification.vue';
 import { fetchAttachmentsByDoc } from '../api/attachmentApi';
@@ -572,6 +624,8 @@ export default defineComponent({
             isEditing: false,
             docToDelete: null as Doc | null,
             documents: [] as Doc[],
+            relatedDocs: [] as any[],
+            linkForm: { target_doc_number: "", link_type: "" },
 
             currentPage: 1,
             pageSize: 10,
@@ -657,12 +711,25 @@ export default defineComponent({
         async openDetailModal(doc: Doc) {
             try {
                 this.isEditing = false;
-                const res = await fetchAttachmentsByDoc(doc.id);
-                const lastAttachment = res.data.length > 0 ? res.data[res.data.length - 1] : null;
+                const [attachRes, linksRes] = await Promise.all([
+                    fetchAttachmentsByDoc(doc.id),
+                    getDocumentLinks(doc.id).catch(() => ({ data: [] }))
+                ]);
+                const lastAttachment = attachRes.data.length > 0 ? attachRes.data[attachRes.data.length - 1] : null;
                 this.selectedDoc = {
                     ...doc,
                     attachments: lastAttachment,
                 };
+                
+                const flatLinks = Array.isArray(linksRes.data) ? linksRes.data : [];
+                this.relatedDocs = flatLinks.map((l: any) => {
+                    const isOutgoing = (l.source_document === doc.id);
+                    if (isOutgoing) {
+                        return { id: l.id, target_doc_id: l.target_document, target_doc_number: l.target_document_number, target_title: l.target_document_title, link_type: l.link_type };
+                    } else {
+                        return { id: l.id, target_doc_id: l.source_document, target_doc_number: l.source_document_number, target_title: l.source_document_title, link_type: l.link_type + " (Nhận)" };
+                    }
+                });
             } catch (e: any) {
                 console.error("Lỗi lấy thông tin văn bản", e);
             }
@@ -768,6 +835,65 @@ export default defineComponent({
             }
             const blob = base64ToBlob(att.file_base64);
             downloadFile(blob, att.filename);
+        },
+        formatLinkType(type: string) {
+            if (!type) return '';
+            const raw = type.replace(" (Nhận)", "");
+            const mapping: Record<string, string> = {
+                'thay_the_1_phan': 'Thay thế 1 phần',
+                'thay_the_toan_phan': 'Thay thế toàn phần',
+                'bai_bo_1_phan': 'Bãi bỏ 1 phần',
+                'bai_bo_toan_phan': 'Bãi bỏ toàn phần',
+                'huy_bo': 'Hủy bỏ',
+                'dinh_chinh': 'Đính chính',
+            };
+            const label = mapping[raw] || raw;
+            return type.includes("(Nhận)") ? label + " (Tới)" : label;
+        },
+        async handleAddLink() {
+            if (!this.selectedDoc || !this.linkForm.target_doc_number || !this.linkForm.link_type) return;
+            (this.$refs.loadingRef as any).show();
+            try {
+                await createDocumentLink({
+                    source_doc_id: Number(this.selectedDoc.id),
+                    target_doc_number: this.linkForm.target_doc_number,
+                    link_type: this.linkForm.link_type
+                });
+                (this.$refs.myToast as any).success("Thành công", "Đã thêm liên kết.");
+                this.linkForm = { target_doc_number: "", link_type: "" };
+                await this.refreshLinks(Number(this.selectedDoc.id));
+            } catch (e: any) {
+                (this.$refs.myToast as any).error("Lỗi", e.response?.data?.detail || "Không thể tạo liên kết.");
+            } finally {
+                (this.$refs.loadingRef as any).hide();
+            }
+        },
+        async handleDeleteLink(linkId: number) {
+            if (!confirm("Bạn có chắc muốn xoá liên kết này?")) return;
+            (this.$refs.loadingRef as any).show();
+            try {
+                await deleteDocumentLink(linkId);
+                (this.$refs.myToast as any).success("Thành công", "Đã xoá liên kết.");
+                await this.refreshLinks(Number(this.selectedDoc!.id));
+            } catch (e: any) {
+                (this.$refs.myToast as any).error("Lỗi", e.response?.data?.detail || "Không thể xoá liên kết.");
+            } finally {
+                (this.$refs.loadingRef as any).hide();
+            }
+        },
+        async refreshLinks(docId: number) {
+            try {
+                const linksRes = await getDocumentLinks(docId).catch(() => ({ data: [] }));
+                const flatLinks = Array.isArray(linksRes.data) ? linksRes.data : [];
+                this.relatedDocs = flatLinks.map((l: any) => {
+                    const isOutgoing = (l.source_document === docId);
+                    if (isOutgoing) {
+                        return { id: l.id, target_doc_id: l.target_document, target_doc_number: l.target_document_number, target_title: l.target_document_title, link_type: l.link_type };
+                    } else {
+                        return { id: l.id, target_doc_id: l.source_document, target_doc_number: l.source_document_number, target_title: l.source_document_title, link_type: l.link_type + " (Nhận)" };
+                    }
+                });
+            } catch (e) { console.error("Refresh links error", e); }
         }
     }
 });

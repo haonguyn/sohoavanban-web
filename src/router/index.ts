@@ -115,7 +115,7 @@ router.beforeEach(async (to, _from, next) => {
     }
 
     const roles = (to.meta.roles as string[]) || [];
-    if (roles.length && (!role || !roles.includes(role))) {
+    if (roles.length && (!role || !roles.map(r => r.toLowerCase()).includes(role.toLowerCase()))) {
       await confirm.open("Bạn không có quyền truy cập chức năng này!");
       return next({ name: "home" });
     }

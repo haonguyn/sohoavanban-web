@@ -34,8 +34,8 @@ export function getRole() {
 }
 
 export function hasRole(required: string[] = []) {
-  const role = getRole();
-  return role ? required.includes(role) : false;
+  const role = getRole()?.toLowerCase();
+  return role ? required.map(r => r.toLowerCase()).includes(role) : false;
 }
 
 export function getRedirectQuery(routeQuery: Record<string, any>) {

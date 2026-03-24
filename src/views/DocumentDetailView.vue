@@ -45,7 +45,7 @@
 
         <!-- Main Content -->
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
                 <!-- LEFT SIDEBAR (Metadata) -->
                 <aside class="lg:col-span-3 order-2 lg:order-1">
@@ -115,20 +115,19 @@
                         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden p-4">
                             <p class="text-xs text-gray-500 uppercase font-semibold mb-3">Chia sẻ văn bản</p>
                             <div class="flex space-x-2">
-                                <button
-                                    class="flex-1 bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-700 transition">Facebook</button>
-                                <button
-                                    class="flex-1 bg-sky-500 text-white text-xs py-2 rounded hover:bg-sky-600 transition">Zalo</button>
-                                <button
-                                    class="flex-1 bg-gray-100 text-gray-600 text-xs py-2 rounded hover:bg-gray-200 transition">Copy
-                                    Link</button>
+                                <button @click="shareFacebook"
+                                    class="flex-1 bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-700 transition flex items-center justify-center gap-1"><i class="fa-brands fa-facebook"></i>Facebook</button>
+                                <button @click="shareZalo"
+                                    class="flex-1 bg-sky-500 text-white text-xs py-2 rounded hover:bg-sky-600 transition flex items-center justify-center gap-1"><i class="fa-solid fa-comment-dots"></i>Zalo</button>
+                                <button @click="copyPageLink"
+                                    class="flex-1 bg-gray-100 text-gray-600 text-xs py-2 rounded hover:bg-gray-200 transition flex items-center justify-center gap-1"><i class="fa-solid fa-link"></i>Copy Link</button>
                             </div>
                         </div>
                     </div>
                 </aside>
 
                 <!-- CENTER CONTENT (PDF & Tabs) -->
-                <main class="lg:col-span-9 order-1 lg:order-2">
+                <main class="lg:col-span-6 order-1 lg:order-2">
                     <div class="bg-white rounded-lg shadow-md min-h-screen overflow-hidden flex flex-col">
                         <!-- Header -->
                         <div class="p-6 sm:p-8 border-b border-gray-200 bg-gray-50">
@@ -173,10 +172,6 @@
                         <div class="border-t border-gray-200">
                             <!-- Tab Headers -->
                             <div class="flex border-b border-gray-200 bg-gray-50">
-                                <button @click="activeTab = 'related'"
-                                    :class="['px-6 py-3 text-sm font-medium focus:outline-none transition-colors border-b-2', activeTab === 'related' ? 'border-blue-600 text-blue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100']">
-                                    Văn bản liên quan ({{ relatedDocs.length }})
-                                </button>
                                 <button @click="activeTab = 'history'"
                                     :class="['px-6 py-3 text-sm font-medium focus:outline-none transition-colors border-b-2', activeTab === 'history' ? 'border-blue-600 text-blue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100']">
                                     Lịch sử xử lý
@@ -189,38 +184,6 @@
 
                             <!-- Tab Contents -->
                             <div class="p-6 bg-white min-h-[200px]">
-                                <!-- Tab: Văn bản liên quan -->
-                                <div v-if="activeTab === 'related'">
-                                    <div v-if="relatedDocs.length > 0" class="overflow-x-auto">
-                                        <table class="min-w-full text-sm text-left text-gray-500">
-                                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                                                <tr>
-                                                    <th class="px-4 py-3">Số hiệu</th>
-                                                    <th class="px-4 py-3">Trích yếu</th>
-                                                    <th class="px-4 py-3">Ngày BH</th>
-                                                    <th class="px-4 py-3">Mối quan hệ</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr v-for="(doc, idx) in relatedDocs" :key="idx"
-                                                    class="bg-white border-b hover:bg-gray-50">
-                                                    <td class="px-4 py-3 font-medium text-blue-600 whitespace-nowrap">
-                                                        <a href="#">{{ doc.number }}</a>
-                                                    </td>
-                                                    <td class="px-4 py-3">{{ doc.title }}</td>
-                                                    <td class="px-4 py-3 whitespace-nowrap">{{ doc.date }}</td>
-                                                    <td class="px-4 py-3">
-                                                        <span
-                                                            class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">{{
-                                                                doc.relation }}</span>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <p v-else class="text-gray-500 italic">Không có văn bản liên quan nào.</p>
-                                </div>
-
                                 <!-- Tab: Lịch sử -->
                                 <div v-if="activeTab === 'history'">
                                     <ol class="relative border-l border-gray-200 ml-3">
@@ -257,6 +220,41 @@
                         </div>
                     </div>
                 </main>
+
+                <!-- RIGHT SIDEBAR (Related Docs) -->
+                <aside class="lg:col-span-3 order-3 sticky top-36 h-fit max-h-[calc(100vh-160px)] overflow-y-auto">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+                            <h3 class="text-sm font-bold text-gray-800 uppercase">Văn bản liên quan</h3>
+                            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">{{ relatedDocs.length }}</span>
+                        </div>
+                        <div class="p-4 text-sm bg-gray-50/50">
+                            <div v-if="relatedDocs.length > 0" class="space-y-4">
+                                <div v-for="(link, idx) in relatedDocs" :key="idx" class="bg-white border border-blue-100/60 rounded p-3 shadow-sm hover:border-blue-300 transition-colors">
+                                    <div class="mb-2">
+                                        <span class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-200 uppercase tracking-wide">{{ formatLinkType(link.link_type) }}</span>
+                                    </div>
+                                    <a :href="'/document-detail/' + link.target_doc_id" class="font-bold text-sm text-blue-700 hover:text-blue-800 hover:underline block mb-1">
+                                        {{ link.target_doc_number }}
+                                    </a>
+                                    <p class="text-xs text-gray-600 line-clamp-2 mb-3" :title="link.target_title">{{ link.target_title }}</p>
+                                    
+                                    <!-- AI Comparison mini box -->
+                                    <div v-if="link.ai_comparison" class="bg-gradient-to-b from-indigo-50 to-white p-3 rounded border border-indigo-100 relative">
+                                        <div class="flex items-center gap-1.5 text-indigo-700 text-[10px] font-bold mb-1.5 uppercase">
+                                            <i class="fas fa-robot"></i> Điểm thay đổi chính
+                                        </div>
+                                        <div class="text-xs text-gray-700 format-ai leading-relaxed" v-html="formatAiText(link.ai_comparison)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="text-center py-6">
+                                <i class="fas fa-link text-gray-300 text-2xl mb-2"></i>
+                                <p class="text-gray-500 text-xs italic">Không có liên kết nào</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
             </div>
         </div>
     </div>
@@ -270,7 +268,7 @@ import { defineComponent } from "vue";
 import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
 import type { Doc } from "../types/DocumentTypes";
-import { getDocumentDetail } from "../api/documentApi";
+import { getDocumentDetail, getDocumentLinks } from "../api/documentApi";
 import { fetchAttachmentsByDoc } from "../api/attachmentApi";
 import { base64ToBlob, downloadFile, formatDate, formatFileSize, getDocumentEffectiveStatus } from "../utils/fileUtils";
 import ToastNotification from "../components/ToastNotification.vue";
@@ -287,15 +285,10 @@ export default defineComponent({
     },
     data() {
         return {
-            activeTab: 'related' as 'related' | 'history' | 'feedback',
+            activeTab: 'history' as 'history' | 'feedback',
             loadingPdf: true,
             document: {} as Doc,
-
-            relatedDocs: [
-                { number: "79/2011/NĐ-CP", title: "Nghị định sửa đổi một số điều...", date: "05/09/2011", relation: "Căn cứ" },
-                { number: "36/2008/QĐ-BQP", title: "Quy định về cấp phép bay...", date: "20/12/2008", relation: "Liên quan" },
-                { number: "Luật Hàng không 2006", title: "Luật Hàng không dân dụng Việt Nam", date: "29/06/2006", relation: "Căn cứ pháp lý" },
-            ]
+            relatedDocs: [] as any[]
         };
     },
     computed: {
@@ -314,15 +307,42 @@ export default defineComponent({
         async loadDocument(id: number) {
             (this.$refs.loadingRef as any).show();
             try {
-                const [docRes, attachRes] = await Promise.all([
+                const [docRes, attachRes, linksRes] = await Promise.all([
                     getDocumentDetail(id),
                     fetchAttachmentsByDoc(id),
+                    getDocumentLinks(id).catch(() => ({ data: [] }))
                 ]);
                 const lastAttachment = attachRes.data.length > 0 ? attachRes.data[attachRes.data.length - 1] : null;
                 this.document = {
                     ...docRes.data,
                     attachments: lastAttachment,
                 };
+
+                const flatLinks = Array.isArray(linksRes.data) ? linksRes.data : [];
+                this.relatedDocs = flatLinks.map((l: any) => {
+                    const isOutgoing = (l.source_document === id);
+                    if (isOutgoing) {
+                        return {
+                            target_doc_id: l.target_document,
+                            target_doc_number: l.target_document_number,
+                            target_title: l.target_document_title,
+                            link_type: l.link_type,
+                            ai_comparison: l.ai_comparison,
+                            created_at: l.created_at,
+                            direction: 'outgoing'
+                        };
+                    } else {
+                        return {
+                            target_doc_id: l.source_document,
+                            target_doc_number: l.source_document_number,
+                            target_title: l.source_document_title,
+                            link_type: l.link_type + " (Nhận)",
+                            ai_comparison: l.ai_comparison,
+                            created_at: l.created_at,
+                            direction: 'incoming'
+                        };
+                    }
+                });
             } finally {
                 (this.$refs.loadingRef as any).hide();
             }
@@ -338,6 +358,42 @@ export default defineComponent({
             }
             const blob = base64ToBlob(att.file_base64);
             downloadFile(blob, att.filename);
+        },
+        formatAiText(text: string) {
+            if (!text) return '';
+            let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/\n\s*-\s/g, '<br/>• ');
+            html = html.replace(/\n/g, '<br/>');
+            return html;
+        },
+        formatLinkType(type: string) {
+            const raw = type.replace(" (Nhận)", "");
+            const mapping: Record<string, string> = {
+                'thay_the_1_phan': 'Thay thế 1 phần',
+                'thay_the_toan_phan': 'Thay thế toàn phần',
+                'bai_bo_1_phan': 'Bãi bỏ 1 phần',
+                'bai_bo_toan_phan': 'Bãi bỏ toàn phần',
+                'huy_bo': 'Hủy bỏ',
+                'dinh_chinh': 'Đính chính',
+            };
+            const label = mapping[raw] || raw;
+            return type.includes("(Nhận)") ? label + " (Tới)" : label;
+        },
+        shareFacebook() {
+            const url = encodeURIComponent(window.location.href);
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=400');
+        },
+        shareZalo() {
+            const url = encodeURIComponent(window.location.href);
+            window.open(`https://zalo.me/share?url=${url}`, '_blank', 'width=600,height=400');
+        },
+        copyPageLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                (this.$refs.myToast as any).success("Thành công", "Đã sao chép đường dẫn văn bản!");
+            }).catch(() => {
+                (this.$refs.myToast as any).error("Lỗi", "Không thể sao chép đường dẫn!");
+            });
         },
         formatFileSize,
         formatDate,
