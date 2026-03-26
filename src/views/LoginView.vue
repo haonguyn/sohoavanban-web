@@ -107,7 +107,7 @@ export default defineComponent({
 
                 // Nếu có redirect trong query, quay lại trang đó; nếu không, về home
                 const redirect = this.$route.query.redirect as string | undefined;
-                this.$router.push(redirect || "/");
+                window.location.href = redirect || "/";
             } catch (e: any) {
                 // Lấy thông báo lỗi từ backend: detail
                 this.errorMessage = e?.response?.data?.detail || "Đăng nhập thất bại";

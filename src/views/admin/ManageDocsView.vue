@@ -209,6 +209,31 @@
                                     <textarea v-model="editForm.full_text"
                                         class="w-full border p-2 rounded h-64 font-mono text-sm"></textarea>
                                 </div>
+                                <!-- Thêm phần Liên kết văn bản -->
+                                <div class="col-span-2 border-t border-slate-200 mt-4 pt-4">
+                                    <h4 class="text-sm font-bold text-slate-700 mb-3">Tạo liên kết văn bản (Tuỳ chọn)</h4>
+                                    <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                        <div>
+                                            <label class="text-xs font-bold text-slate-500">Số ký hiệu văn bản bị liên kết</label>
+                                            <input v-model="linkForm.target_doc_number" list="docNumbersList" placeholder="Nhập chữ/số để tìm kiếm..." autocomplete="off" class="w-full border p-2 rounded mt-1" />
+                                            <datalist id="docNumbersList">
+                                                <option v-for="d in docs" :key="d.id" :value="d.doc_number">{{ d.title }}</option>
+                                            </datalist>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs font-bold text-slate-500">Loại liên kết</label>
+                                            <select v-model="linkForm.link_type" class="w-full border p-2 rounded mt-1">
+                                                <option value="">-- Chọn loại --</option>
+                                                <option value="thay_the_1_phan">Thay thế 1 phần</option>
+                                                <option value="thay_the_toan_phan">Thay thế toàn phần</option>
+                                                <option value="bai_bo_1_phan">Bãi bỏ 1 phần</option>
+                                                <option value="bai_bo_toan_phan">Bãi bỏ toàn phần</option>
+                                                <option value="huy_bo">Hủy bỏ</option>
+                                                <option value="dinh_chinh">Đính chính</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div v-else class="space-y-6">
@@ -304,7 +329,7 @@
 import { defineComponent } from "vue";
 import Navbar from "../../components/admin/Navbar.vue";
 import type { Doc } from "../../types/DocumentTypes";
-import { deleteDocument, fetchDocuments, updateDocument } from "../../api/documentApi";
+import { deleteDocument, fetchDocuments, updateDocument, createDocumentLink } from "../../api/documentApi";
 import LoadingComponent from "../../components/LoadingComponent.vue";
 import ToastNotification from "../../components/ToastNotification.vue";
 import { fetchAttachmentsByDoc } from "../../api/attachmentApi";
@@ -323,6 +348,7 @@ export default defineComponent({
             isPublic: false,
             editForm: {} as Partial<Doc>,
             docs: [] as Doc[],
+            linkForm: { target_doc_number: "", link_type: "" }
         };
     },
     mounted() {
@@ -418,8 +444,8 @@ export default defineComponent({
                 console.error("Lỗi lấy thông tin văn bản", e);
             }
         },
-        startEditing() { if (!this.selectedDoc) return; this.isEditing = true; this.editForm = { ...this.selectedDoc }; },
-        cancelEditing() { this.isEditing = false; this.editForm = {}; },
+        startEditing() { if (!this.selectedDoc) return; this.isEditing = true; this.editForm = { ...this.selectedDoc }; this.linkForm = { target_doc_number: "", link_type: "" }; },
+        cancelEditing() { this.isEditing = false; this.editForm = {}; this.linkForm = { target_doc_number: "", link_type: "" }; },
         goBack() {
             this.selectedDoc = null;
             this.getDocuments();
@@ -442,6 +468,19 @@ export default defineComponent({
                     this.docs.splice(index, 1, updatedDoc);
                 }
                 this.selectedDoc = updatedDoc;
+
+                if (this.linkForm.target_doc_number && this.linkForm.link_type) {
+                    try {
+                        await createDocumentLink({
+                            source_doc_id: Number(this.selectedDoc.id),
+                            target_doc_number: this.linkForm.target_doc_number,
+                            link_type: this.linkForm.link_type
+                        });
+                    } catch (e: any) {
+                        (this.$refs.myToast as any).error("Lỗi liên kết", e.response?.data?.detail || "Không thể tạo liên kết.");
+                    }
+                }
+
                 (this.$refs.myToast as any).success(
                     "Cập nhật",
                     `${res.data?.message} ${this.selectedDoc.doc_number}`
@@ -454,6 +493,7 @@ export default defineComponent({
                 console.error("Lỗi cập nhật văn bản:", e);
             } finally {
                 this.isEditing = false;
+                this.linkForm = { target_doc_number: "", link_type: "" };
                 (this.$refs.loadingRef as any).hide();
             }
         },

@@ -206,6 +206,32 @@
                                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                             </div>
 
+                            <!-- Thêm phần Liên kết văn bản -->
+                            <div class="border-t border-gray-200 mt-4 pt-4">
+                                <h4 class="text-sm font-bold text-gray-700 mb-3">Tạo liên kết văn bản (Tuỳ chọn)</h4>
+                                <div class="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-600 mb-1">Số hiệu VB bị liên kết</label>
+                                        <input v-model="linkForm.target_doc_number" list="docNumbersListOCR" placeholder="Nhập chữ/số để tìm kiếm..." autocomplete="off" class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                                        <datalist id="docNumbersListOCR">
+                                            <option v-for="d in availableDocs" :key="d.id" :value="d.doc_number">{{ d.title }}</option>
+                                        </datalist>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-600 mb-1">Loại liên kết</label>
+                                        <select v-model="linkForm.link_type" class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
+                                            <option value="">-- Chọn loại --</option>
+                                            <option value="thay_the_1_phan">Thay thế 1 phần</option>
+                                            <option value="thay_the_toan_phan">Thay thế toàn phần</option>
+                                            <option value="bai_bo_1_phan">Bãi bỏ 1 phần</option>
+                                            <option value="bai_bo_toan_phan">Bãi bỏ toàn phần</option>
+                                            <option value="huy_bo">Hủy bỏ</option>
+                                            <option value="dinh_chinh">Đính chính</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
                             <button type="submit"
                                 class="w-full inline-flex justify-center py-2.5 px-4 border border-transparent font-bold rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors shadow-md mt-4">
                                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -291,7 +317,7 @@
 
 import { defineComponent } from "vue";
 import { processOCR } from "../api/ocrApi";
-import { createDocument } from "../api/documentApi";
+import { createDocument, createDocumentLink, fetchDocuments } from "../api/documentApi";
 import { uploadAttachment } from "../api/attachmentApi";
 import type { Doc } from "../types/DocumentTypes";
 import { normalizeDocType } from "../utils/textUtils";
@@ -312,9 +338,13 @@ export default defineComponent({
             filePreviewUrl: null as string | null,
             accuracy: '',
             // FORM DATA MODEL (Để OCR tự fill vào đây)
-            form: {} as Partial<Doc>
-
+            form: {} as Partial<Doc>,
+            linkForm: { target_doc_number: "", link_type: "" },
+            availableDocs: [] as Doc[]
         };
+    },
+    mounted() {
+        this.getDocuments();
     },
     computed: {
         fileType(): 'image' | 'pdf' | 'other' | null {
@@ -340,6 +370,14 @@ export default defineComponent({
         },
     },
     methods: {
+        async getDocuments() {
+            try {
+                const res = await fetchDocuments();
+                this.availableDocs = res.data;
+            } catch (err) {
+                console.error("Lỗi khi tải danh sách văn bản gợi ý:", err);
+            }
+        },
         onDragOver() { this.isDragging = true; },
         onDragLeave() { this.isDragging = false; },
         onDrop(event: DragEvent) {
@@ -397,7 +435,7 @@ export default defineComponent({
                 page_count: null as number | null,
                 field: "",
             };
-
+            this.linkForm = { target_doc_number: "", link_type: "" };
         },
 
         async startOCR() {
@@ -460,6 +498,25 @@ export default defineComponent({
                     throw new Error("Không nhận được document_id từ server");
                 }
                 await uploadAttachment(documentId, this.selectedFile);
+
+                if (this.linkForm.target_doc_number && this.linkForm.link_type) {
+                    try {
+                        await createDocumentLink({
+                            source_doc_id: documentId,
+                            target_doc_number: this.linkForm.target_doc_number,
+                            link_type: this.linkForm.link_type
+                        });
+                        (this.$refs.myToast as any).success(
+                            "Thành công",
+                            "Tạo liên kết văn bản thành công."
+                        );
+                    } catch (e: any) {
+                        (this.$refs.myToast as any).error(
+                            "Lỗi liên kết",
+                            e.response?.data?.detail || "Không thể tạo liên kết."
+                        );
+                    }
+                }
 
                 (this.$refs.myToast as any).success(
                     "Thành công",
