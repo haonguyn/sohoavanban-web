@@ -37,7 +37,7 @@
                                 <tr v-for="doc in paginatedDocs" :key="doc.id" class="hover:bg-blue-50 transition-colors">
                                     <td class="px-4 py-3 font-bold text-blue-600 whitespace-nowrap" :title="doc.doc_number">{{ doc.doc_number }}</td>
                                     <td class="px-4 py-3 text-sm text-slate-600 max-w-[280px]" :title="doc.summary"><div class="line-clamp-2" style="white-space: normal;">{{ doc.title }}</div></td>
-                                    <td class="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{{ doc.issued_date }}</td>
+                                    <td class="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{{ formatDate(doc.issued_date) }}</td>
                                     <td class="px-4 py-3">
                                         <span :class="`px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap ${getStatusColor(doc.status)}`">
                                             {{ convertStatus(doc.status) }}
@@ -164,8 +164,7 @@
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-500">Ngày BH</label>
-                                    <input type="date" v-model="editForm.issued_date"
-                                        class="w-full border p-2 rounded" />
+                                    <AppDatePicker v-model="editForm.issued_date" />
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-500">Loại văn bản</label>
@@ -228,7 +227,7 @@
                                     </div>
                                     <div><span class="text-slate-400 text-xs uppercase font-bold tracking-wider">Ngày
                                             BH</span>
-                                        <p class="font-semibold text-slate-800">{{ selectedDoc.issued_date }}</p>
+                                        <p class="font-semibold text-slate-800">{{ formatDate(selectedDoc.issued_date) }}</p>
                                     </div>
                                     <div><span class="text-slate-400 text-xs uppercase font-bold tracking-wider">Loại
                                             VB</span>
@@ -316,12 +315,13 @@ import type { Doc } from "../../types/DocumentTypes";
 import { deleteDocument, fetchDocuments, updateDocument, createDocumentLink } from "../../api/documentApi";
 import LoadingComponent from "../../components/LoadingComponent.vue";
 import ToastNotification from "../../components/ToastNotification.vue";
+import AppDatePicker from "../../components/AppDatePicker.vue";
 import { fetchAttachmentsByDoc } from "../../api/attachmentApi";
-import { base64ToBlob, downloadFile } from "../../utils/fileUtils";
+import { base64ToBlob, downloadFile, formatDate } from "../../utils/fileUtils";
 
 export default defineComponent({
     name: "DocumentList",
-    components: { Navbar, LoadingComponent, ToastNotification },
+    components: { Navbar, LoadingComponent, ToastNotification, AppDatePicker },
     data() {
         return {
             listFilter: "",
@@ -371,6 +371,7 @@ export default defineComponent({
         },
     },
     methods: {
+        formatDate,
         getStatusColor(status: string) {
             switch (status) {
                 case "approved": return "bg-emerald-100 text-emerald-700";
