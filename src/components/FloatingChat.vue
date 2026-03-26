@@ -53,51 +53,47 @@
                 <div v-for="msg in messages" :key="msg.id" class="flex"
                     :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
 
-                    <div class="max-w-[80%] p-3 rounded-2xl text-sm shadow-sm"
-                        style="white-space: pre-wrap;"
+                    <div class="max-w-[85%] p-4 rounded-2xl text-sm shadow-sm leading-relaxed"
                         :class="msg.role === 'user' ? 'bg-purple-600 text-white rounded-br-none' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'">
                         
-                        <!-- File Attachment UI -->
-                        <div v-if="msg.isFile" class="flex items-center gap-2 bg-white/20 rounded p-2">
-                            <svg class="text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                            </svg>
-                            <span class="truncate font-medium text-white max-w-[200px]" :title="msg.fileName">{{ msg.fileName }}</span>
-                        </div>
-
                         <!-- Typing Indicator Animation -->
-                        <div v-else-if="msg.id === -1" class="flex justify-center items-center gap-1.5 h-5 px-2">
+                        <div v-if="msg.id === -1" class="flex justify-center items-center gap-1.5 h-5 px-2">
                             <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
                             <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
                             <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
                         </div>
                         
-                        <!-- Regular Message -->
+                        <!-- Regular Message & File -->
                         <template v-else>
-                            <div v-html="formatMessage(msg.text)"></div>
-                        </template>
-                    </div>
+                            <!-- File Attachment UI (Compact) -->
+                            <div v-if="msg.isFile" class="flex items-center gap-1.5 text-xs mb-2 opacity-90 border-b border-white/20 pb-1.5">
+                                <svg class="flex-shrink-0" :class="msg.role === 'user' ? 'text-white' : 'text-purple-600'" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                </svg>
+                                <span class="truncate italic font-medium max-w-[180px]" :title="msg.fileName">{{ msg.fileName }}</span>
+                            </div>
+                            <!-- Format text -->
+                            <div v-html="formatMessage(msg.text, msg.role)"></div>
+                        </template>                    </div>
                 </div>
             </div>
 
             <!-- Input Area -->
             <div class="p-3 bg-white border-t border-gray-100">
 
-                <!-- Hiển thị file đã chọn -->
+                <!-- Hiển thị file đã chọn (Compact) -->
                 <div v-if="selectedFile"
-                    class="mb-2 px-3 py-1.5 bg-gray-100 rounded-lg flex items-center justify-between text-xs border border-gray-200">
-                    <div class="flex items-center gap-2 truncate">
-                        <svg class="text-purple-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="14"
-                            height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    class="mb-2 px-2 py-1 bg-purple-50 rounded flex items-center justify-between text-[11px] border border-purple-100">
+                    <div class="flex items-center gap-1.5 truncate">
+                        <svg class="text-purple-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="12"
+                            height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                             stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                         </svg>
-                        <span class="truncate max-w-[200px] text-gray-700 font-medium">{{ selectedFile.name }}</span>
+                        <span class="truncate max-w-[200px] text-purple-800 font-medium">{{ selectedFile.name }}</span>
                     </div>
-                    <button @click="removeFile" class="text-gray-400 hover:text-red-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    <button @click="removeFile" class="text-purple-400 hover:text-red-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -124,7 +120,7 @@
                     <!-- Textarea tự động dãn hoặc Input thường -->
                     <div
                         class="flex-1 bg-gray-100 rounded-2xl px-4 py-2 focus-within:ring-2 focus-within:ring-purple-200 transition-all border border-transparent focus-within:bg-white focus-within:border-purple-300">
-                        <input v-model="messageText" @keyup.enter="sendMessage" placeholder="Nhập tin nhắn..."
+                        <input ref="chatInput" v-model="messageText" @keyup.enter="sendMessage" placeholder="Nhập tin nhắn..."
                             class="w-full bg-transparent border-none focus:outline-none text-sm text-gray-700 placeholder-gray-400" />
                     </div>
 
@@ -202,6 +198,9 @@ export default defineComponent({
                 this.position.x -= this.CHAT_WIDTH - this.BUTTON_SIZE
                 this.position.y -= this.CHAT_HEIGHT - this.BUTTON_SIZE
                 this.isOpen = true
+                nextTick(() => {
+                    (this.$refs.chatInput as HTMLInputElement)?.focus()
+                })
             }
         },
 
@@ -268,6 +267,9 @@ export default defineComponent({
             }
 
             target.value = ''
+            nextTick(() => {
+                (this.$refs.chatInput as HTMLInputElement)?.focus()
+            })
         },
 
         removeFile() {
@@ -293,25 +295,14 @@ export default defineComponent({
                 }
             }
 
-            // Push File Message
-            if (file) {
-                this.messages.push({
-                    id: Date.now() + 1,
-                    role: 'user',
-                    text: `[File: ${file.name}]`,
-                    isFile: true,
-                    fileName: file.name
-                } as any)
-            }
-            
-            // Push Text Message
-            if (userText) {
-                this.messages.push({
-                    id: Date.now() + 2,
-                    role: 'user',
-                    text: userText,
-                })
-            }
+            // Push Message (Combined File + Text)
+            this.messages.push({
+                id: Date.now(),
+                role: 'user',
+                text: userText || (file ? `Đã gửi tệp: ${file.name}` : ''),
+                isFile: !!file,
+                fileName: file?.name
+            })
 
             this.messageText = ''
             this.selectedFile = null
@@ -372,12 +363,50 @@ export default defineComponent({
             }
         },
 
-        formatMessage(text: string) {
+        formatMessage(text: string, role: string) {
             if (!text) return ''
-            // Basic escape HTML tags to prevent XSS
-            let safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;")
-            // Parse Markdown links [text](url) -> <a href="url" target="_blank" class="text-purple-600 underline font-medium">text</a>
-            return safeText.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-purple-300 underline font-medium hover:text-purple-400">$1</a>')
+            
+            // 1. Escape HTML
+            let safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            // Color constants based on role
+            const isAI = role === 'ai';
+            const boldClass = isAI ? 'font-bold text-gray-900' : 'font-bold text-white underline decoration-purple-300';
+            const italicClass = isAI ? 'italic text-gray-600' : 'italic text-purple-100';
+            const linkClass = isAI ? 'text-purple-600 underline font-bold hover:text-purple-800' : 'text-white underline font-bold opacity-90 hover:opacity-100';
+            
+            // 2. Bold: **text**
+            safeText = safeText.replace(/\*\*(.*?)\*\*/g, `<b class="${boldClass}">$1</b>`);
+            
+            // 3. Italic: *text* or _text_
+            safeText = safeText.replace(/\*(.*?)\*/g, `<i class="${italicClass}">$1</i>`);
+            safeText = safeText.replace(/_(.*?)_/g, `<i class="${italicClass}">$1</i>`);
+            
+            // 4. Newlines: \n to <br>
+            safeText = safeText.replace(/\n/g, '<br>');
+            
+            // 5. Lists (simple)
+            const lines = safeText.split('<br>');
+            const formattedLines = lines.map(line => {
+                const trimmed = line.trim();
+                // Bullet points
+                if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                    return `<div class="pl-4 mt-1 flex items-start"><span class="mr-2 opacity-60">•</span><span>${trimmed.substring(2)}</span></div>`;
+                }
+                // Numbered points
+                const numMatch = trimmed.match(/^(\d+)\. (.*)/);
+                if (numMatch) {
+                    return `<div class="pl-4 mt-1 flex items-start"><span class="mr-2 font-medium opacity-60">${numMatch[1]}.</span><span>${numMatch[2]}</span></div>`;
+                }
+                return line;
+            });
+            
+            safeText = formattedLines.join('<div class="h-1"></div>');
+
+            // 6. Links [text](url)
+            safeText = safeText.replace(/\[([^\]]+)\]\(([^)]+)\)/g, `<a href="$2" target="_blank" class="${linkClass}">$1</a>`);
+            
+            return safeText;
         }
     },
 })
