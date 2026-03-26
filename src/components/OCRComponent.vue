@@ -184,18 +184,15 @@
                                 class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-600 mb-1">Ngày ban hành</label>
-                                    <input type="date" v-model="form.issued_date"
-                                        class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                                    <AppDatePicker v-model="form.issued_date" />
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-blue-600 mb-1">Ngày hiệu lực</label>
-                                    <input type="date" v-model="form.effective_start_date"
-                                        class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                                    <AppDatePicker v-model="form.effective_start_date" />
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-red-600 mb-1">Ngày hết hiệu lực</label>
-                                    <input type="date" v-model="form.effective_end_date"
-                                        class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                                    <AppDatePicker v-model="form.effective_end_date" />
                                 </div>
                             </div>
 
@@ -296,11 +293,13 @@ import { uploadAttachment } from "../api/attachmentApi";
 import type { Doc } from "../types/DocumentTypes";
 import { normalizeDocType } from "../utils/textUtils";
 import ToastNotification from "./ToastNotification.vue";
+import AppDatePicker from "./AppDatePicker.vue";
 
 export default defineComponent({
     name: "OCRComponent",
     components: {
-        ToastNotification
+        ToastNotification,
+        AppDatePicker
     },
     data() {
         return {

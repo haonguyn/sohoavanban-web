@@ -333,8 +333,7 @@
                                         <div>
                                             <label class="block text-sm font-medium text-gray-500 mb-1">Ngày ban
                                                 hành</label>
-                                            <input v-if="isEditing" type="date" v-model="tempDoc.issued_date"
-                                                class="w-full border-gray-300 rounded-md border p-2 text-sm">
+                                            <AppDatePicker v-if="isEditing" v-model="tempDoc.issued_date" />
                                             <p v-else class="text-gray-900">{{ formatDate(selectedDoc.issued_date) }}
                                             </p>
                                         </div>
@@ -351,18 +350,16 @@
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-500 mb-1">Ngày bắt
                                                         đầu hiệu lực</label>
-                                                    <input v-if="isEditing" type="date"
-                                                        v-model="tempDoc.effective_start_date"
-                                                        class="w-full border-gray-300 rounded-md border p-2 text-sm">
+                                                    <AppDatePicker v-if="isEditing"
+                                                        v-model="tempDoc.effective_start_date" />
                                                     <p v-else class="text-gray-900">{{
                                                         formatDate(selectedDoc.effective_start_date) }}</p>
                                                 </div>
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-500 mb-1">Ngày hết
                                                         hiệu lực</label>
-                                                    <input v-if="isEditing" type="date"
-                                                        v-model="tempDoc.effective_end_date"
-                                                        class="w-full border-gray-300 rounded-md border p-2 text-sm">
+                                                    <AppDatePicker v-if="isEditing"
+                                                        v-model="tempDoc.effective_end_date" />
                                                     <p v-else
                                                         :class="selectedDoc.effective_end_date ? 'text-gray-900' : 'text-gray-400 italic'">
                                                         {{ selectedDoc.effective_end_date ?
@@ -552,6 +549,7 @@ import { base64ToBlob, downloadFile, formatDate, formatFileSize } from '../utils
 import ToastNotification from '../components/ToastNotification.vue';
 import { fetchAttachmentsByDoc } from '../api/attachmentApi';
 import LoadingComponent from '../components/LoadingComponent.vue';
+import AppDatePicker from '../components/AppDatePicker.vue';
 
 export default defineComponent({
     name: 'DocumentManager',
@@ -560,6 +558,7 @@ export default defineComponent({
         Footer,
         ToastNotification,
         LoadingComponent,
+        AppDatePicker,
     },
     data() {
         return {
