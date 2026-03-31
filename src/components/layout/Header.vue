@@ -14,7 +14,7 @@
             </svg>
           </div>
           <span class="text-lg font-bold text-gray-800 tracking-wide">
-            OCR APP
+            DocuMind Portal
           </span>
         </RouterLink>
 

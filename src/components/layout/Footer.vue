@@ -13,7 +13,7 @@
                             d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12" />
                         </svg>
                         <span class="text-xl font-extrabold tracking-wide">
-                            OCR APP
+                            DocuMind Portal
                         </span>
                     </div>
                     <p class="text-sm text-gray-400 leading-relaxed">
@@ -89,7 +89,7 @@
             <!-- Divider -->
             <div class="mt-12 border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
                 <p class="text-xs text-gray-500">
-                    © {{ new Date().getFullYear() }} Hệ thống văn bản số. All rights reserved.
+                    © {{ new Date().getFullYear() }} DocuMind Portal. All rights reserved.
                 </p>
 
                 <div class="text-xs text-gray-500">
