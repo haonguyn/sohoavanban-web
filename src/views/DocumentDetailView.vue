@@ -139,20 +139,30 @@
                             </p>
                         </div>
 
-                        <!-- PDF Viewer Section -->
-                        <div class="flex-grow bg-gray-200 relative min-h-[600px] sm:min-h-[800px]">
+                        <!-- File Preview Viewer Section -->
+                        <div class="flex-grow bg-gray-200 relative min-h-[600px] sm:min-h-[800px] flex justify-center items-center p-1">
                             <!-- Loading State -->
-                            <div v-if="loadingPdf" class="absolute inset-0 flex items-center justify-center">
+                            <div v-if="loadingPdf" class="absolute inset-0 flex items-center justify-center z-10">
                                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                             </div>
 
-                            <iframe v-if="document?.attachments?.preview_url" :src="document.attachments.preview_url"
-                                class="w-full h-full absolute inset-0" frameborder="0" @load="loadingPdf = false">
+                            <iframe v-if="document?.attachments?.preview_url && documentFileType === 'pdf'" 
+                                :src="document.attachments.preview_url + '#toolbar=0&navpanes=0&view=FitH'"
+                                class="w-full h-full absolute inset-0 rounded shadow-lg border border-gray-300" 
+                                frameborder="0" 
+                                @load="loadingPdf = false">
                             </iframe>
 
-                            <!-- Fallback khi không có PDF -->
+                            <img v-else-if="document?.attachments?.preview_url && documentFileType === 'image'" 
+                                :src="document.attachments.preview_url" 
+                                alt="Image Preview" 
+                                class="max-w-full max-h-full object-contain shadow-2xl rounded relative z-0" 
+                                @load="loadingPdf = false" 
+                                @error="loadingPdf = false" />
+
+                            <!-- Fallback khi không có Preview hoặc không hỗ trợ -->
                             <div v-else
-                                class="absolute inset-0 flex flex-col items-center justify-center text-gray-500 p-8 text-center">
+                                class="absolute inset-0 flex flex-col items-center justify-center bg-gray-200 text-gray-500 p-8 text-center z-0">
                                 <svg class="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -161,7 +171,7 @@
                                 </svg>
                                 <p class="text-lg font-medium">Không thể hiển thị bản xem trước</p>
                                 <p class="text-sm mb-4">Vui lòng tải về để xem nội dung chi tiết.</p>
-                                <button @click="doDownloadFile(document)"
+                                <button v-if="document?.attachments" @click="doDownloadFile(document)"
                                     class="text-blue-600 hover:underline font-medium">
                                     Tải file đính kèm
                                 </button>
@@ -203,18 +213,53 @@
 
                                 <!-- Tab: Góp ý -->
                                 <div v-if="activeTab === 'feedback'">
-                                    <form @submit.prevent="" class="space-y-4 max-w-2xl">
-                                        <div>
-                                            <label class="block mb-2 text-sm font-medium text-gray-900">Nội dung góp
-                                                ý</label>
-                                            <textarea rows="4"
-                                                class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                                                placeholder="Nhập ý kiến của bạn về văn bản này..."></textarea>
+                                    <div class="space-y-6">
+                                        <!-- Danh sách góp ý (Chỉ hiện khi đăng nhập) -->
+                                        <div v-if="isLoggedIn" class="space-y-4">
+                                            <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider border-b pb-2">Danh sách góp ý trước đó</h4>
+                                            <div v-if="feedbacks.length > 0" class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                                <div v-for="fb in feedbacks" :key="fb.id" class="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-white transition-colors animate-fade-in">
+                                                    <div class="flex justify-between items-start mb-2">
+                                                        <span class="font-bold text-blue-700 text-sm">
+                                                            {{ fb.full_name || fb.username }}
+                                                        </span>
+                                                        <span class="text-xs text-gray-500 italic">{{ formatDate(fb.created_at) }}</span>
+                                                    </div>
+                                                    <p class="text-sm text-gray-700 line-clamp-3 leading-relaxed">{{ fb.content }}</p>
+                                                </div>
+                                            </div>
+                                            <div v-else class="text-center py-8 text-gray-500 italic text-sm bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                                                Chưa có góp ý nào cho văn bản này.
+                                            </div>
                                         </div>
-                                        <button type="button"
-                                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2">Gửi
-                                            góp ý</button>
-                                    </form>
+                                        
+                                        <!-- Thông báo cho khách -->
+                                        <div v-else class="p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm flex items-center gap-3">
+                                            <i class="fa-solid fa-circle-info text-lg"></i>
+                                            <span>Bạn cần <RouterLink to="/login" class="font-bold underline hover:text-blue-800">đăng nhập</RouterLink> để xem các góp ý trước đó.</span>
+                                        </div>
+
+                                        <!-- Form gửi góp ý (Cho tất cả) -->
+                                        <div class="pt-4 border-t border-gray-100">
+                                            <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">Gửi góp ý của bạn</h4>
+                                            <div class="space-y-4 max-w-2xl">
+                                                <div class="flex items-center gap-2 mb-2 text-sm text-gray-500" v-if="!isLoggedIn">
+                                                    <i class="fa-solid fa-user-secret"></i> Bạn đang gửi với tư cách <strong>Guest (Khách)</strong>
+                                                </div>
+                                                <div class="flex items-center gap-2 mb-2 text-sm text-gray-500" v-else>
+                                                    <i class="fa-solid fa-user-check text-green-600"></i> Bạn đang gửi với tư cách <strong>{{ currentUser }}</strong>
+                                                </div>
+                                                <textarea v-model="feedbackContent" rows="4"
+                                                    class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                    placeholder="Nhập ý kiến của bạn về văn bản này..."></textarea>
+                                                <button @click="handleSendFeedback" :disabled="!feedbackContent.trim() || sendingFeedback"
+                                                    class="text-white bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 transition-all flex items-center justify-center min-w-[120px] shadow-sm active:scale-95">
+                                                    <i v-if="sendingFeedback" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                                                    {{ sendingFeedback ? 'Đang gửi...' : 'Gửi góp ý' }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -274,6 +319,9 @@ import { base64ToBlob, downloadFile, formatDate, formatFileSize, getDocumentEffe
 import ToastNotification from "../components/ToastNotification.vue";
 import { getStatusClass } from "../utils/textUtils";
 import LoadingComponent from "../components/LoadingComponent.vue";
+import { fetchFeedbacks, submitFeedback } from "../api/feedbackApi";
+import type { Feedback } from "../types/FeedbackTypes";
+import { getToken } from "../utils/authUtils";
 
 export default defineComponent({
     name: "DocumentDetail",
@@ -288,8 +336,18 @@ export default defineComponent({
             activeTab: 'history' as 'history' | 'feedback',
             loadingPdf: true,
             document: {} as Doc,
-            relatedDocs: [] as any[]
+            relatedDocs: [] as any[],
+            feedbacks: [] as Feedback[],
+            feedbackContent: '',
+            sendingFeedback: false
         };
+    },
+    watch: {
+        activeTab(newTab) {
+            if (newTab === 'feedback' && this.isLoggedIn) {
+                this.loadFeedbacks();
+            }
+        }
     },
     computed: {
         effectiveStatus() {
@@ -297,6 +355,33 @@ export default defineComponent({
                 effective_start_date: this.document.effective_start_date,
                 effective_end_date: this.document.effective_end_date,
             });
+        },
+        documentFileType(): string {
+            const att = this.document?.attachments as any;
+            if (!att) return '';
+            
+            const filename = (att.filename || '').toLowerCase();
+            if (filename.endsWith('.pdf')) {
+                return 'pdf';
+            } else if (filename.match(/\.(jpeg|jpg|png|gif|webp|bmp)$/)) {
+                return 'image';
+            }
+            return 'other';
+        },
+        isLoggedIn(): boolean {
+            return !!getToken();
+        },
+        currentUser(): string {
+            const userInfo = localStorage.getItem("user_info");
+            if (userInfo) {
+                try {
+                    const parsed = JSON.parse(userInfo);
+                    return parsed.full_name || parsed.username || 'Thành viên';
+                } catch (e) {
+                    return 'Thành viên';
+                }
+            }
+            return 'Guest';
         },
     },
     mounted() {
@@ -307,14 +392,21 @@ export default defineComponent({
         async loadDocument(id: number) {
             (this.$refs.loadingRef as any).show();
             try {
-                const [docRes, attachRes, linksRes] = await Promise.all([
-                    getDocumentDetail(id),
+                // Tải thông tin văn bản lên trước để hiển thị ẩn dưới lớp màn hình Loading
+                const docRes = await getDocumentDetail(id);
+                this.document = {
+                    ...docRes.data,
+                    attachments: null,
+                };
+
+                // Sau đó tải tiếp các thành phần còn lại
+                const [attachRes, linksRes] = await Promise.all([
                     fetchAttachmentsByDoc(id),
                     getDocumentLinks(id).catch(() => ({ data: [] }))
                 ]);
                 const lastAttachment = attachRes.data.length > 0 ? attachRes.data[attachRes.data.length - 1] : null;
                 this.document = {
-                    ...docRes.data,
+                    ...this.document,
                     attachments: lastAttachment,
                 };
 
@@ -343,6 +435,11 @@ export default defineComponent({
                         };
                     }
                 });
+
+                // Tự động tải góp ý nếu người dùng đã đăng nhập
+                if (this.isLoggedIn) {
+                    this.loadFeedbacks();
+                }
             } finally {
                 (this.$refs.loadingRef as any).hide();
             }
@@ -397,7 +494,31 @@ export default defineComponent({
         },
         formatFileSize,
         formatDate,
-        getStatusClass
+        getStatusClass,
+        async loadFeedbacks() {
+            try {
+                const res = await fetchFeedbacks(this.document.id);
+                this.feedbacks = res.data;
+            } catch (err) {
+                console.error("Lỗi tải góp ý:", err);
+            }
+        },
+        async handleSendFeedback() {
+            if (!this.feedbackContent.trim()) return;
+            this.sendingFeedback = true;
+            try {
+                await submitFeedback(this.document.id, this.feedbackContent);
+                (this.$refs.myToast as any).success("Thành công", "Góp ý của bạn đã được gửi thành công!");
+                this.feedbackContent = '';
+                if (this.isLoggedIn) {
+                    this.loadFeedbacks();
+                }
+            } catch (err: any) {
+                (this.$refs.myToast as any).error("Lỗi", "Không thể gửi góp ý vào lúc này. Vui lòng thử lại sau.");
+            } finally {
+                this.sendingFeedback = false;
+            }
+        },
     },
 });
 </script>

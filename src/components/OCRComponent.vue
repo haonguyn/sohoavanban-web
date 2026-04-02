@@ -51,7 +51,7 @@
                                     </label>
                                     hoặc kéo thả vào đây
                                 </div>
-                                <p class="text-xs text-gray-500 mt-1">PDF, JPG, PNG (Max 10MB)</p>
+                                <p class="text-xs text-gray-500 mt-1">PDF, JPG, PNG (Tối đa 10MB)</p>
                             </div>
                             <div v-else class="w-full h-full flex flex-col justify-center items-center z-10">
                                 <div class="flex items-center space-x-2 bg-blue-100 px-3 py-1 rounded-full mb-2">
@@ -307,14 +307,9 @@
                         </div>
 
                         <!-- VIEW 4: Văn bản gốc (Native Preview) -->
-                        <div v-show="!isLoading && filePreviewUrl && (!isOcrDone || showLayout)"
-                            class="w-full h-full bg-gray-200 flex justify-center items-center overflow-auto p-1 absolute inset-0">
-                            <iframe v-if="fileType === 'pdf'"
-                                :src="filePreviewUrl ? (filePreviewUrl + '#toolbar=0&navpanes=0&view=FitH') : undefined"
-                                title="PDF Preview"
-                                class="w-full h-full rounded shadow-lg border border-gray-300"></iframe>
-                            <img v-else-if="fileType === 'image'" :src="filePreviewUrl || undefined" alt="Image Preview"
-                                class="max-w-full max-h-full object-contain shadow-2xl rounded" />
+                        <div v-show="!isLoading && filePreviewUrl && (!isOcrDone || showLayout)" class="w-full h-full bg-gray-200 flex justify-center items-center overflow-auto p-1 absolute inset-0">
+                            <iframe v-if="fileType === 'pdf'" :src="filePreviewUrl ? (filePreviewUrl + '#toolbar=0&navpanes=0&view=FitH') : undefined" title="Xem trước PDF" class="w-full h-full rounded shadow-lg border border-gray-300"></iframe>
+                            <img v-else-if="fileType === 'image'" :src="filePreviewUrl || undefined" alt="Xem trước Ảnh" class="max-w-full max-h-full object-contain shadow-2xl rounded" />
                         </div>
 
                         <!-- VIEW 5: Empty -->

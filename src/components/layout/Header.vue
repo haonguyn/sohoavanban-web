@@ -50,7 +50,7 @@
                 hover:opacity-100 hover:scale-100 hover:visible">
                 <RouterLink v-if="hasRole(['admin'])" to="/admin/dashboard"
                   class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
-                  Admin
+                  Quản trị hệ thống
                 </RouterLink>
                 <button @click="logout" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                   Đăng xuất
