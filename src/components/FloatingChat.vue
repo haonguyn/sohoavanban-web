@@ -22,9 +22,9 @@
                 <div class="flex items-center gap-2">
                     <span class="text-xl">🤖</span>
                     <div>
-                        <h3 class="font-bold text-sm">Chat Bot</h3>
+                        <h3 class="font-bold text-sm">Trợ lý ảo</h3>
                         <p class="text-xs text-blue-200 flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-green-400 block"></span> Online
+                            <span class="w-2 h-2 rounded-full bg-green-400 block"></span> Trực tuyến
                         </p>
                     </div>
                 </div>

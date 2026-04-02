@@ -45,7 +45,7 @@
                         Hỗ trợ
                     </h4>
                     <ul class="space-y-3 text-sm">
-                        <li><a href="#" class="footer-link">FAQ</a></li>
+                        <li><a href="#" class="footer-link">Câu hỏi thường gặp</a></li>
                         <li><a href="#" class="footer-link">Chính sách bảo mật</a></li>
                         <li><a href="#" class="footer-link">Điều khoản dịch vụ</a></li>
                     </ul>

@@ -23,9 +23,9 @@
                         <select v-model="filterStatus"
                             class="border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:ring-blue-500 focus:border-blue-500">
                             <option value="">Tất cả trạng thái</option>
-                            <option value="approved">Đã duyệt (Approved)</option>
-                            <option value="pending">Chờ duyệt (Pending)</option>
-                            <option value="rejected">Từ chối (Rejected)</option>
+                            <option value="approved">Đã duyệt</option>
+                            <option value="pending">Chờ duyệt</option>
+                            <option value="rejected">Từ chối</option>
                         </select>
                     </div>
                 </div>
@@ -159,7 +159,7 @@
                                                 title="Xem trang dân">
                                                 <i class="fa-solid fa-arrow-up-right-from-square text-lg"></i>
                                             </button>
-                                            <button @click="confirmDelete(doc)"
+                                            <button v-if="hasRole(['admin'])" @click="confirmDelete(doc)"
                                                 class="text-gray-500 hover:text-red-600 transition-colors p-1"
                                                 title="Xóa">
                                                 <i class="fa-regular fa-trash-can text-lg"></i>
@@ -227,14 +227,12 @@
                             <p class="mt-1 text-sm text-gray-500">
                                 Tạo bởi: {{
                                     selectedDoc?.history
-                                        ?.find(h => h.action === 'created')
+                                        ?.find(h => h.action === 'Khởi tạo văn bản')
                                         ?.user ?? ''
                                 }} | Ngày tạo: {{
-                                    formatDate(
-                                        selectedDoc?.history
-                                            ?.find(h => h.action === 'created')
-                                            ?.date ?? ''
-                                    )
+                                    selectedDoc?.history
+                                        ?.find(h => h.action === 'Khởi tạo văn bản')
+                                        ?.date ?? ''
                                 }}
                             </p>
                         </div>
@@ -373,7 +371,7 @@
 
                                 <!-- Ghi chú -->
                                 <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-                                    <label class="block text-sm font-medium text-gray-500 mb-1">Ghi chú (Note)</label>
+                                    <label class="block text-sm font-medium text-gray-500 mb-1">Ghi chú</label>
                                     <textarea v-if="isEditing" v-model="tempDoc.note" rows="2"
                                         class="w-full border-gray-300 rounded-md border p-2 text-sm"></textarea>
                                     <p v-else class="text-gray-700 text-sm">{{ selectedDoc.note || 'Không có ghi chú.'
@@ -384,7 +382,7 @@
                             <!-- CỘT PHẢI (1/3): Meta & Trạng thái -->
                             <div class="space-y-6">
                                 <!-- Card Trạng thái -->
-                                <div class="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                                <div v-if="hasRole(['admin'])" class="bg-gray-50 rounded-lg p-5 border border-gray-200">
                                     <h4 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4">Quản lý
                                     </h4>
 
@@ -395,8 +393,8 @@
                                                 truy cập</label>
                                             <select v-if="isEditing" v-model="tempDoc.visibility"
                                                 class="w-full border-gray-300 rounded-md border p-2 text-sm">
-                                                <option value="public">Công khai (Public)</option>
-                                                <option value="private">Riêng tư (Private)</option>
+                                                <option value="public">Công khai</option>
+                                                <option value="private">Riêng tư</option>
                                             </select>
                                             <div v-else class="flex items-center mt-1">
                                                 <span v-if="selectedDoc.visibility === 'public'"
@@ -415,9 +413,9 @@
                                                 thái duyệt</label>
                                             <select v-if="isEditing" v-model="tempDoc.status"
                                                 class="w-full border-gray-300 rounded-md border p-2 text-sm">
-                                                <option value="pending">Chờ duyệt (Pending)</option>
-                                                <option value="approved">Đã duyệt (Approved)</option>
-                                                <option value="rejected">Từ chối (Rejected)</option>
+                                                <option value="pending">Chờ duyệt</option>
+                                                <option value="approved">Đã duyệt</option>
+                                                <option value="rejected">Từ chối</option>
                                             </select>
                                             <span v-else :class="getStatusClass(selectedDoc.status)"
                                                 class="px-3 py-1 inline-flex text-sm font-semibold rounded-full border mt-1">
@@ -598,6 +596,7 @@ import Header from '../components/layout/Header.vue';
 import Footer from '../components/layout/Footer.vue';
 import { deleteDocument, fetchDocuments, updateDocument, getDocumentLinks, createDocumentLink, deleteDocumentLink } from '../api/documentApi';
 import { base64ToBlob, downloadFile, formatDate, formatFileSize } from '../utils/fileUtils';
+import { hasRole } from '../utils/authUtils';
 import ToastNotification from '../components/ToastNotification.vue';
 import { fetchAttachmentsByDoc } from '../api/attachmentApi';
 import LoadingComponent from '../components/LoadingComponent.vue';
@@ -686,6 +685,7 @@ export default defineComponent({
             }
         },
 
+        hasRole,
         formatDate,
         formatFileSize,
 
