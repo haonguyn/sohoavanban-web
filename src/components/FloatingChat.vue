@@ -1,11 +1,11 @@
 <template>
     <!-- Container chính -->
-    <div class="fixed z-50" :style="{ left: position.x + 'px', top: position.y + 'px' }">
+    <div class="fixed z-50 bottom-6 right-6">
 
         <!-- BUTTON THU GỌN -->
         <div v-if="!isOpen"
-            class="w-14 h-14 rounded-full bg-purple-600 text-white flex items-center justify-center cursor-pointer shadow-xl hover:bg-purple-700 transition-colors active:scale-95"
-            @mousedown="startDrag" @click="toggleChat">
+            class="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center cursor-pointer shadow-xl hover:bg-blue-700 transition-colors active:scale-95"
+            @click="toggleChat">
             <!-- Icon Chat -->
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -18,20 +18,19 @@
             :style="{ width: CHAT_WIDTH + 'px', height: CHAT_HEIGHT + 'px' }">
 
             <!-- Header -->
-            <div class="p-4 bg-purple-600 text-white cursor-move flex items-center justify-between select-none"
-                @mousedown="startDrag">
+            <div class="p-4 bg-blue-600 text-white flex items-center justify-between select-none">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">🤖</span>
                     <div>
                         <h3 class="font-bold text-sm">Chat Bot</h3>
-                        <p class="text-xs text-purple-200 flex items-center gap-1">
+                        <p class="text-xs text-blue-200 flex items-center gap-1">
                             <span class="w-2 h-2 rounded-full bg-green-400 block"></span> Online
                         </p>
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
                     <!-- Nút thu nhỏ (-) -->
-                    <button @click="toggleChat" class="hover:bg-purple-700 p-1 rounded transition-colors" title="Thu nhỏ">
+                    <button @click="toggleChat" class="hover:bg-blue-700 p-1 rounded transition-colors" title="Thu nhỏ">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -54,7 +53,7 @@
                     :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
 
                     <div class="max-w-[85%] p-4 rounded-2xl text-sm shadow-sm leading-relaxed"
-                        :class="msg.role === 'user' ? 'bg-purple-600 text-white rounded-br-none' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'">
+                        :class="msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'">
                         
                         <!-- Typing Indicator Animation -->
                         <div v-if="msg.id === -1" class="flex justify-center items-center gap-1.5 h-5 px-2">
@@ -67,7 +66,7 @@
                         <template v-else>
                             <!-- File Attachment UI (Compact) -->
                             <div v-if="msg.isFile" class="flex items-center gap-1.5 text-xs mb-2 opacity-90 border-b border-white/20 pb-1.5">
-                                <svg class="flex-shrink-0" :class="msg.role === 'user' ? 'text-white' : 'text-purple-600'" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <svg class="flex-shrink-0" :class="msg.role === 'user' ? 'text-white' : 'text-blue-600'" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                                 </svg>
                                 <span class="truncate italic font-medium max-w-[180px]" :title="msg.fileName">{{ msg.fileName }}</span>
@@ -83,16 +82,16 @@
 
                 <!-- Hiển thị file đã chọn (Compact) -->
                 <div v-if="selectedFile"
-                    class="mb-2 px-2 py-1 bg-purple-50 rounded flex items-center justify-between text-[11px] border border-purple-100">
+                    class="mb-2 px-2 py-1 bg-blue-50 rounded flex items-center justify-between text-[11px] border border-blue-100">
                     <div class="flex items-center gap-1.5 truncate">
-                        <svg class="text-purple-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="12"
+                        <svg class="text-blue-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="12"
                             height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                             stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                         </svg>
-                        <span class="truncate max-w-[200px] text-purple-800 font-medium">{{ selectedFile.name }}</span>
+                        <span class="truncate max-w-[200px] text-blue-800 font-medium">{{ selectedFile.name }}</span>
                     </div>
-                    <button @click="removeFile" class="text-purple-400 hover:text-red-500 transition-colors">
+                    <button @click="removeFile" class="text-blue-400 hover:text-red-500 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -105,7 +104,7 @@
                 <div class="flex items-end gap-2">
                     <!-- Nút Attach -->
                     <button @click="triggerFileSelect"
-                        class="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-colors pb-3">
+                        class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors pb-3">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path
@@ -119,14 +118,14 @@
 
                     <!-- Textarea tự động dãn hoặc Input thường -->
                     <div
-                        class="flex-1 bg-gray-100 rounded-2xl px-4 py-2 focus-within:ring-2 focus-within:ring-purple-200 transition-all border border-transparent focus-within:bg-white focus-within:border-purple-300">
+                        class="flex-1 bg-gray-100 rounded-2xl px-4 py-2 focus-within:ring-2 focus-within:ring-blue-200 transition-all border border-transparent focus-within:bg-white focus-within:border-blue-300">
                         <input ref="chatInput" v-model="messageText" @keyup.enter="sendMessage" placeholder="Nhập tin nhắn..."
                             class="w-full bg-transparent border-none focus:outline-none text-sm text-gray-700 placeholder-gray-400" />
                     </div>
 
                     <!-- Nút Send -->
                     <button @click="sendMessage" :disabled="!messageText && !selectedFile"
-                        class="p-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all active:scale-95 pb-2">
+                        class="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all active:scale-95 pb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -141,7 +140,7 @@
 
 <script lang="ts">
 import { defineComponent, nextTick } from 'vue'
-import api from '../api/axios'
+import { sendChatMessage } from '../api/chatApi'
 
 export default defineComponent({
     name: 'FloatingChat',
@@ -153,16 +152,6 @@ export default defineComponent({
             CHAT_HEIGHT: 520,
 
             isOpen: false,
-            position: {
-                x: 0,
-                y: 0,
-            },
-            isDragging: false,
-            hasDragged: false,
-            dragOffset: {
-                x: 0,
-                y: 0,
-            },
 
             fileInput: null as HTMLInputElement | null,
             selectedFile: null as File | null,
@@ -179,25 +168,13 @@ export default defineComponent({
     },
 
     mounted() {
-        this.position.x = window.innerWidth - this.BUTTON_SIZE - 24
-        this.position.y = window.innerHeight - this.BUTTON_SIZE - 24
+        // Chat uses CSS fixed positioning (bottom/right)
     },
 
     methods: {
         toggleChat() {
-            if (this.hasDragged) {
-                this.hasDragged = false
-                return
-            }
-
+            this.isOpen = !this.isOpen
             if (this.isOpen) {
-                this.position.x += this.CHAT_WIDTH - this.BUTTON_SIZE
-                this.position.y += this.CHAT_HEIGHT - this.BUTTON_SIZE
-                this.isOpen = false
-            } else {
-                this.position.x -= this.CHAT_WIDTH - this.BUTTON_SIZE
-                this.position.y -= this.CHAT_HEIGHT - this.BUTTON_SIZE
-                this.isOpen = true
                 nextTick(() => {
                     (this.$refs.chatInput as HTMLInputElement)?.focus()
                 })
@@ -224,35 +201,7 @@ export default defineComponent({
             }, 300)
         },
 
-        startDrag(e: MouseEvent) {
-            if (e.button !== 0) return
-
-            this.isDragging = true
-            this.hasDragged = false
-            this.dragOffset.x = e.clientX - this.position.x
-            this.dragOffset.y = e.clientY - this.position.y
-
-            window.addEventListener('mousemove', this.onDrag)
-            window.addEventListener('mouseup', this.stopDrag)
-        },
-
-        onDrag(e: MouseEvent) {
-            if (!this.isDragging) return
-            this.hasDragged = true
-            this.position.x = e.clientX - this.dragOffset.x
-            this.position.y = e.clientY - this.dragOffset.y
-        },
-
-        stopDrag() {
-            this.isDragging = false
-            window.removeEventListener('mousemove', this.onDrag)
-            window.removeEventListener('mouseup', this.stopDrag)
-            
-            // Re-enable click after a short delay so the click event doesn't trigger toggleChat immediately
-            setTimeout(() => {
-                this.hasDragged = false
-            }, 100)
-        },
+        // Removed drag methods as chat is now fixed
 
         triggerFileSelect() {
             (this.$refs.fileInput as HTMLInputElement)?.click()
@@ -325,10 +274,7 @@ export default defineComponent({
                 }
                 formData.append('history', JSON.stringify(historyToDBSend))
 
-                const res = await api.post('/chat/', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                    timeout: 60000 // 60s timeout for LLM
-                })
+                const res = await sendChatMessage(formData)
 
                 // Remove typing indicator
                 this.messages = this.messages.filter(m => m.id !== -1)
@@ -371,9 +317,9 @@ export default defineComponent({
             
             // Color constants based on role
             const isAI = role === 'ai';
-            const boldClass = isAI ? 'font-bold text-gray-900' : 'font-bold text-white underline decoration-purple-300';
-            const italicClass = isAI ? 'italic text-gray-600' : 'italic text-purple-100';
-            const linkClass = isAI ? 'text-purple-600 underline font-bold hover:text-purple-800' : 'text-white underline font-bold opacity-90 hover:opacity-100';
+            const boldClass = isAI ? 'font-bold text-gray-900' : 'font-bold text-white underline decoration-blue-300';
+            const italicClass = isAI ? 'italic text-gray-600' : 'italic text-blue-100';
+            const linkClass = isAI ? 'text-blue-600 underline font-bold hover:text-blue-800' : 'text-white underline font-bold opacity-90 hover:opacity-100';
             
             // 2. Bold: **text**
             safeText = safeText.replace(/\*\*(.*?)\*\*/g, `<b class="${boldClass}">$1</b>`);
