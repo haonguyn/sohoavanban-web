@@ -623,7 +623,7 @@ export default defineComponent({
         Footer,
         ToastNotification,
         LoadingComponent,
-        NetworkGraphWidget
+        NetworkGraphWidget,
         AppDatePicker,
     },
     data() {
