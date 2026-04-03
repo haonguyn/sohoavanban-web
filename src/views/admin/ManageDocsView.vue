@@ -290,7 +290,7 @@
                                 </p>
                                 <div class="w-full h-full border-2 border-dashed border-slate-500 rounded bg-slate-800/50 backdrop-blur-sm z-10 overflow-hidden p-4">
                                     <iframe v-if="selectedDoc?.attachments?.preview_url"
-                                        :src="selectedDoc.attachments.preview_url" class="w-full h-full rounded"
+                                        :src="selectedDoc.attachments.preview_url + '#toolbar=0&navpanes=0&view=FitH'" class="w-full h-full rounded"
                                         frameborder="0"></iframe>
                                     <div v-else class="w-full h-full flex items-center justify-center text-slate-400">
                                         Không có file để preview
