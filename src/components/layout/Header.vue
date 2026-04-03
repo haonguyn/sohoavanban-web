@@ -20,12 +20,19 @@
 
         <!-- Desktop Menu -->
         <div class="hidden md:flex items-center gap-6">
-          <RouterLink v-for="item in menu" :key="item.to" :to="item.to" class="relative text-sm font-medium transition"
+          <RouterLink v-for="item in menu" :key="item.to" :to="item.to" @click="handleMenuClick(item)" class="relative text-sm font-medium transition flex items-center gap-1.5"
             v-show="!item.roles || hasRole(item.roles)"
             :class="isActive(item.to)
               ? 'text-blue-600'
               : 'text-gray-600 hover:text-blue-600'">
             {{ item.label }}
+            
+            <!-- Hiển thị badge nế có tab là Quản lý và count > 0 -->
+            <span v-if="item.label === 'Quản lý' && unreadDocsCount > 0" 
+              class="inline-flex items-center justify-center w-4 h-4 ml-1 text-[10px] font-bold text-white bg-red-500 rounded-full shadow-sm animate-pulse">
+              {{ unreadDocsCount }}
+            </span>
+
             <span v-if="isActive(item.to)" class="absolute -bottom-1 left-0 h-0.5 w-full bg-blue-600 rounded-full" />
           </RouterLink>
         </div>
@@ -75,7 +82,7 @@
 
       <!-- Mobile Menu -->
       <div v-if="open" class="md:hidden pb-4 space-y-2">
-        <RouterLink v-for="item in menu" :key="item.to" :to="item.to"
+        <RouterLink v-for="item in menu" :key="item.to" :to="item.to" @click="handleMenuClick(item)"
           class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">
           {{ item.label }}
         </RouterLink>
@@ -90,6 +97,7 @@ import { defineComponent } from "vue";
 import { useRoute } from "vue-router";
 import { doLogout, hasRole } from "../../utils/authUtils";
 import type { User } from "../../types/UserTypes";
+import { connectWS, unreadDocsCount, resetCount } from "../../store/wsStore";
 
 export default defineComponent({
   name: "HeaderMenu",
@@ -108,7 +116,16 @@ export default defineComponent({
     };
   },
 
+  mounted() {
+    connectWS();
+  },
+
   methods: {
+    handleMenuClick(item: any) {
+      if (item.label === 'Quản lý') {
+        resetCount();
+      }
+    },
     isActive(path: string) {
       const route = useRoute();
       return route.path === path;
@@ -118,6 +135,9 @@ export default defineComponent({
     async logout() { await doLogout(); }
   },
   computed: {
+    unreadDocsCount(): number {
+      return unreadDocsCount.value;
+    },
     username(): string | null {
       return this.user?.username ?? null;
     },

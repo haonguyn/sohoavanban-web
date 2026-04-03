@@ -200,6 +200,15 @@
                                  </button>
                              </div>
                         </div>
+
+                        <!-- Nút Tải xuống .docx -->
+                        <div v-if="isOcrDone && extractedText" class="flex items-center">
+                             <button @click="handleDownloadDocx" 
+                                     class="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all active:scale-95">
+                                 <i class="fa-solid fa-file-word text-sm"></i>
+                                 Tải xuống (.docx)
+                             </button>
+                        </div>
                     </div>
 
                     <div class="flex-1 min-h-0 relative bg-gray-50 border-x border-b border-gray-200 rounded-b-lg overflow-hidden">
@@ -276,7 +285,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { processOCR } from "../api/ocrApi";
+import { processOCR, downloadOCRDocx } from "../api/ocrApi";
 import { createDocument, createDocumentLink, fetchDocuments } from "../api/documentApi";
 import { uploadAttachment } from "../api/attachmentApi";
 import { normalizeDocType } from "../utils/textUtils";
@@ -379,9 +388,10 @@ export default defineComponent({
             this.isLoading = true; this.isOcrDone = false;
             try {
                 const res = await processOCR(this.selectedFile);
-                const { text, data, accuracy, positions, metadata } = res.data;
-                this.extractedText = text; this.positions = positions || []; this.metadata = metadata || { pages: [] };
-                this.form = { ...this.form, doc_number: data.doc_number || "", title: data.title || "", doc_type: normalizeDocType(data.doc_type) || "", issued_by: data.issued_by || "", signer: data.signer || "", summary: data.summary || "", full_text: text, issued_date: data.issued_date || "", note: "Từ tệp " + this.selectedFile.name, effective_start_date: data.effective_start_date || data.issued_date || "", effective_end_date: data.effective_end_date || "", page_count: Number(data.page_count) || 0, field: data.field || "" };
+                const { data, accuracy, positions, metadata } = res.data;
+                this.positions = positions || []; this.metadata = metadata || { pages: [] };
+                this.syncAllText();
+                this.form = { ...this.form, doc_number: data.doc_number || "", title: data.title || "", doc_type: normalizeDocType(data.doc_type) || "", issued_by: data.issued_by || "", signer: data.signer || "", summary: data.summary || "", full_text: this.extractedText, issued_date: data.issued_date || "", note: "Từ tệp " + this.selectedFile.name, effective_start_date: data.effective_start_date || data.issued_date || "", effective_end_date: data.effective_end_date || "", page_count: Number(data.page_count) || 0, field: data.field || "" };
                 this.accuracy = accuracy; this.isOcrDone = true; this.showLayout = false;
             } catch (err) { (this.$refs.myToast as any).error("Lỗi", "OCR thất bại."); } finally { this.isLoading = false; }
         },
@@ -546,6 +556,31 @@ export default defineComponent({
                 return Math.min(baseWidth, contentWidthWithMargin);
             }
             return baseWidth;
+        },
+        async handleDownloadDocx() {
+            if (!this.positions || this.positions.length === 0) return;
+            
+            try {
+                const now = new Date();
+                const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+                const filename = `${this.form.doc_number || "van_ban_ocr"}_${timestamp}.docx`;
+                const res = await downloadOCRDocx(this.positions, this.metadata.pages, filename);
+                
+                // Tạo link để tải file từ blob
+                const url = window.URL.createObjectURL(new Blob([res.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', filename);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+                
+                (this.$refs.myToast as any).success("Thành công", "Đã tải xuống tệp .docx");
+            } catch (err: any) {
+                console.error("Lỗi khi tải file docx:", err);
+                (this.$refs.myToast as any).error("Lỗi", "Không thể tải xuống tệp .docx");
+            }
         }
     }
 });

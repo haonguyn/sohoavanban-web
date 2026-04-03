@@ -1,11 +1,12 @@
 <template>
     <!-- Container chính -->
-    <div class="fixed z-50 bottom-6 right-6">
+    <div class="fixed z-50 right-6 transition-[bottom] duration-300" :class="{ 'transition-none': isDragging }" :style="{ bottom: bottomOffset + 'px' }">
 
         <!-- BUTTON THU GỌN -->
         <div v-if="!isOpen"
-            class="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center cursor-pointer shadow-xl hover:bg-blue-700 transition-colors active:scale-95"
-            @click="toggleChat">
+            class="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center cursor-move shadow-xl hover:bg-blue-700 transition-colors active:scale-95"
+            @mousedown="startDrag"
+            @click="handleClick">
             <!-- Icon Chat -->
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -18,7 +19,7 @@
             :style="{ width: CHAT_WIDTH + 'px', height: CHAT_HEIGHT + 'px' }">
 
             <!-- Header -->
-            <div class="p-4 bg-blue-600 text-white flex items-center justify-between select-none">
+            <div class="p-4 bg-blue-600 text-white flex items-center justify-between select-none cursor-move" @mousedown="startDrag">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">🤖</span>
                     <div>
@@ -152,6 +153,11 @@ export default defineComponent({
             CHAT_HEIGHT: 520,
 
             isOpen: false,
+            bottomOffset: 24, // Tương đương bottom-6
+            isDragging: false,
+            dragStartY: 0,
+            dragStartBottom: 0,
+            hasDragged: false,
 
             fileInput: null as HTMLInputElement | null,
             selectedFile: null as File | null,
@@ -168,10 +174,21 @@ export default defineComponent({
     },
 
     mounted() {
-        // Chat uses CSS fixed positioning (bottom/right)
+        // Khôi phục vị trí nếu có lưu
+        const savedBottom = localStorage.getItem('chat_bottom_pos');
+        if (savedBottom) {
+            this.bottomOffset = parseInt(savedBottom);
+        }
     },
 
     methods: {
+        handleClick() {
+            // Chỉ toggle nếu không phải đang kết thúc một cú kéo
+            if (!this.hasDragged) {
+                this.toggleChat();
+            }
+        },
+
         toggleChat() {
             this.isOpen = !this.isOpen
             if (this.isOpen) {
@@ -201,7 +218,48 @@ export default defineComponent({
             }, 300)
         },
 
-        // Removed drag methods as chat is now fixed
+        // Drag methods
+        startDrag(e: MouseEvent) {
+            this.isDragging = true;
+            this.hasDragged = false;
+            this.dragStartY = e.clientY;
+            this.dragStartBottom = this.bottomOffset;
+
+            window.addEventListener('mousemove', this.onDrag);
+            window.addEventListener('mouseup', this.stopDrag);
+            
+            // Ngăn chặn bôi đen text khi kéo
+            e.preventDefault();
+        },
+
+        onDrag(e: MouseEvent) {
+            if (!this.isDragging) return;
+            
+            const deltaY = this.dragStartY - e.clientY;
+            if (Math.abs(deltaY) > 5) {
+                this.hasDragged = true;
+            }
+
+            let newBottom = this.dragStartBottom + deltaY;
+            
+            // Giới hạn vùng kéo
+            const minBottom = 24;
+            const maxBottom = window.innerHeight - (this.isOpen ? this.CHAT_HEIGHT : this.BUTTON_SIZE) - 24;
+            
+            if (newBottom < minBottom) newBottom = minBottom;
+            if (newBottom > maxBottom) newBottom = maxBottom;
+            
+            this.bottomOffset = newBottom;
+        },
+
+        stopDrag() {
+            this.isDragging = false;
+            window.removeEventListener('mousemove', this.onDrag);
+            window.removeEventListener('mouseup', this.stopDrag);
+            
+            // Lưu vị trí
+            localStorage.setItem('chat_bottom_pos', this.bottomOffset.toString());
+        },
 
         triggerFileSelect() {
             (this.$refs.fileInput as HTMLInputElement)?.click()

@@ -98,7 +98,7 @@
 import { defineComponent } from "vue";
 import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
-import axios from "axios";
+import api from "../api/axios";
 
 export default defineComponent({
     name: "RegisterForm",
@@ -130,8 +130,8 @@ export default defineComponent({
                     password: this.password,
                 };
 
-                await axios.post(
-                    "http://127.0.0.1:8000/api/auth/register/",
+                await api.post(
+                    "/auth/register/",
                     payload
                 );
 

@@ -26,13 +26,22 @@
         Chức
         năng chính</p>
 
-      <RouterLink v-for="item in features" :key="item.to" :to="item.to"
+      <RouterLink v-for="item in features" :key="item.to" :to="item.to" @click="handleMenuClick(item)"
         class='flex items-center gap-2 px-6 py-3 text-sm font-medium rounded-lg transition'
-        :title="isCollapsed ? item.label : ''" :class="[isActive(item.to) ? 'bg-blue-50 text-blue-600 font-bold border-r-4 border-blue-600' : 'text-slate-600 hover:bg-slate-50',
-        isCollapsed ? 'justify-center' : '']">
-        <i :class="item.icon" class="text-base"></i>
-        <span v-show="!isCollapsed" class="whitespace-nowrap transition-opacity duration-500">
+        :title="isCollapsed ? item.label : ''" 
+        :class="[isActive(item.to) ? 'bg-blue-50 font-bold border-r-4 border-blue-600' : 'hover:bg-slate-50', 
+                 isActive(item.to) ? (item.label === 'Kho văn bản' && unreadDocsCount > 0 ? 'text-red-600' : 'text-blue-600') : (item.label === 'Kho văn bản' && unreadDocsCount > 0 ? 'text-red-500 font-bold' : 'text-slate-600'),
+                 isCollapsed ? 'justify-center' : '']">
+        <i :class="item.icon" class="text-base relative">
+          <span v-if="item.label === 'Kho văn bản' && unreadDocsCount > 0 && isCollapsed" 
+            class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white"></span>
+        </i>
+        <span v-show="!isCollapsed" class="whitespace-nowrap transition-opacity duration-500 flex items-center gap-2">
           {{ item.label }}
+          <span v-if="item.label === 'Kho văn bản' && unreadDocsCount > 0" 
+            class="inline-flex items-center justify-center w-5 h-5 text-xs text-white bg-red-500 rounded-full font-bold shadow-sm animate-pulse">
+            {{ unreadDocsCount }}
+          </span>
         </span>
       </RouterLink>
 
@@ -78,6 +87,7 @@
 import { defineComponent } from "vue";
 import { useRoute } from 'vue-router'
 import { doLogout } from "../../utils/authUtils";
+import { unreadDocsCount, resetCount, connectWS } from "../../store/wsStore";
 
 export default defineComponent({
   name: 'NavbarAdmin',
@@ -96,8 +106,22 @@ export default defineComponent({
       ]
     }
   },
-  mounted() { const userInfo = localStorage.getItem("user_info"); if (userInfo) { this.currentUser = JSON.parse(userInfo); } },
+  mounted() { 
+    const userInfo = localStorage.getItem("user_info"); 
+    if (userInfo) { this.currentUser = JSON.parse(userInfo); } 
+    connectWS();
+  },
+  computed: {
+    unreadDocsCount(): number {
+      return unreadDocsCount.value;
+    }
+  },
   methods: {
+    handleMenuClick(item: any) {
+      if (item.label === 'Kho văn bản') {
+        resetCount();
+      }
+    },
     toggleSidebar() {
       this.isCollapsed = !this.isCollapsed;
       localStorage.setItem("sidebar_collapsed", String(this.isCollapsed));
