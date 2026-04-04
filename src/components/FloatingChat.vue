@@ -3,7 +3,7 @@
     <div class="fixed z-50 right-6 transition-[bottom] duration-300" :class="{ 'transition-none': isDragging }" :style="{ bottom: bottomOffset + 'px' }">
 
         <!-- BUTTON THU GỌN -->
-        <div v-if="!isOpen"
+        <div v-show="!isOpen"
             class="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center cursor-move shadow-xl hover:bg-blue-700 transition-colors active:scale-95"
             @mousedown="startDrag"
             @click="handleClick">
@@ -15,7 +15,7 @@
         </div>
 
         <!-- CỬA SỔ CHAT MỞ RỘNG -->
-        <div v-else class="bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
+        <div v-show="isOpen" class="bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
             :style="{ width: CHAT_WIDTH + 'px', height: CHAT_HEIGHT + 'px' }">
 
             <!-- Header -->
@@ -141,7 +141,7 @@
 
 <script lang="ts">
 import { defineComponent, nextTick } from 'vue'
-import { sendChatMessage } from '../api/chatApi'
+import { sendChatMessage, closeConversation } from '../api/chatApi'
 
 export default defineComponent({
     name: 'FloatingChat',
@@ -163,6 +163,8 @@ export default defineComponent({
             selectedFile: null as File | null,
             messageText: '',
             isLoading: false,
+            conversationId: null as number | null,
+            sessionId: 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
             messages: [
                 {
                     id: 1,
@@ -179,6 +181,16 @@ export default defineComponent({
         if (savedBottom) {
             this.bottomOffset = parseInt(savedBottom);
         }
+        // Khi refresh trang -> đóng conversation hiện tại
+        window.addEventListener('beforeunload', this.handleBeforeUnload);
+    },
+
+    beforeUnmount() {
+        window.removeEventListener('beforeunload', this.handleBeforeUnload);
+        // Đóng conversation khi component bị hủy
+        if (this.conversationId) {
+            closeConversation(this.conversationId).catch(() => {});
+        }
     },
 
     methods: {
@@ -194,17 +206,24 @@ export default defineComponent({
             if (this.isOpen) {
                 nextTick(() => {
                     (this.$refs.chatInput as HTMLInputElement)?.focus()
+                    setTimeout(() => {
+                        this.scrollToBottom()
+                    }, 10)
                 })
             }
         },
 
         closeAndClearChat() {
+            if (this.conversationId) {
+                closeConversation(this.conversationId).catch(() => {});
+            }
+            
             // Thu nhỏ
             if (this.isOpen) {
                 this.toggleChat()
             }
             
-            // Đợi thu nhỏ xong rồi xoá tin nhắn
+            // Đợi thu nhỏ xong rồi xoá tin nhắn và reset conversation
             setTimeout(() => {
                 this.messages = [
                     {
@@ -215,7 +234,22 @@ export default defineComponent({
                 ]
                 this.messageText = ''
                 this.selectedFile = null
+                this.conversationId = null
+                this.sessionId = this.generateSessionId()
             }, 300)
+        },
+
+        handleBeforeUnload() {
+            // Đóng conversation khi người dùng refresh / đóng tab
+            if (this.conversationId) {
+                // Sử dụng sendBeacon vì beforeunload không chờ async
+                const payload = JSON.stringify({ conversation_id: this.conversationId });
+                navigator.sendBeacon('/api/chat/close/', new Blob([payload], { type: 'application/json' }));
+            }
+        },
+
+        generateSessionId(): string {
+            return 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
         },
 
         // Drag methods
@@ -331,11 +365,20 @@ export default defineComponent({
                     formData.append('file', file)
                 }
                 formData.append('history', JSON.stringify(historyToDBSend))
+                if (this.conversationId) {
+                    formData.append('conversation_id', String(this.conversationId))
+                }
+                formData.append('session_id', this.sessionId)
 
                 const res = await sendChatMessage(formData)
 
                 // Remove typing indicator
                 this.messages = this.messages.filter(m => m.id !== -1)
+                
+                // Lưu conversation_id từ server
+                if (res.data.conversation_id) {
+                    this.conversationId = res.data.conversation_id
+                }
                 
                 // Add AI Message
                 this.messages.push({
