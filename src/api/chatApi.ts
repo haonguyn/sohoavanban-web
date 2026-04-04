@@ -8,3 +8,7 @@ export const sendChatMessage = async (formData: FormData) => {
     timeout: 60000, // 60s timeout for LLM
   });
 };
+
+export const closeConversation = async (conversationId: number) => {
+  return await api.post("/chat/close/", { conversation_id: conversationId });
+};
