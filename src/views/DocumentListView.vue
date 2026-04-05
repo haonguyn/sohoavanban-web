@@ -5,12 +5,21 @@
             <LoadingComponent v-if="isLoading" />
             <div v-else class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Toolbar: Stats & Filter -->
-                <div class="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
-                        <h2 class="text-3xl font-bold text-gray-900">Danh sách văn bản lưu trữ</h2>
-                        <p class="text-lg text-gray-600 mt-1">Quản lý các văn bản đã được OCR và lưu trữ vào hệ thống.
-                        </p>
+                <div class="mb-8 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 px-1">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-transform">
+                            <i class="fa-solid fa-folder-open text-xl"></i>
+                        </div>
+                        <div class="flex flex-col gap-0.5">
+                            <h2 class="text-3xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent tracking-tight">
+                                Danh sách văn bản
+                            </h2>
+                            <p class="text-[15px] text-slate-500 font-medium">
+                                Kho lưu trữ các văn bản đã được bóc tách dữ liệu AI.
+                            </p>
+                        </div>
                     </div>
+                    
                     <div class="flex flex-col sm:flex-row gap-3">
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -65,6 +74,9 @@
                     </div>
 
                 </div>
+
+                <NetworkGraphWidget />
+
                 <!-- Main Data Table -->
                 <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
                     <div class="overflow-x-auto">
@@ -485,7 +497,7 @@
                                             <div>
                                                 <label class="block text-xs font-medium text-gray-500 mb-1">Loại liên kết</label>
                                                 <select v-model="linkForm.link_type" class="w-full border-gray-300 rounded border p-2 text-sm">
-                                                    <option value="">-- Chọn loại --</option>
+                                                    <option value="auto">✨ AI Tự nhận diện (Khuyên dùng)</option>
                                                     <option value="thay_the_1_phan">Thay thế 1 phần</option>
                                                     <option value="thay_the_toan_phan">Thay thế toàn phần</option>
                                                     <option value="bai_bo_1_phan">Bãi bỏ 1 phần</option>
@@ -604,6 +616,7 @@ import { base64ToBlob, downloadFile, formatDate, formatFileSize } from '../utils
 import ToastNotification from '../components/ToastNotification.vue';
 import { fetchAttachmentsByDoc } from '../api/attachmentApi';
 import LoadingComponent from '../components/LoadingComponent.vue';
+import NetworkGraphWidget from '../components/admin/NetworkGraphWidget.vue';
 
 export default defineComponent({
     name: 'DocumentManager',
@@ -612,6 +625,7 @@ export default defineComponent({
         Footer,
         ToastNotification,
         LoadingComponent,
+        NetworkGraphWidget
     },
     data() {
         return {
@@ -625,7 +639,7 @@ export default defineComponent({
             docToDelete: null as Doc | null,
             documents: [] as Doc[],
             relatedDocs: [] as any[],
-            linkForm: { target_doc_number: "", link_type: "" },
+            linkForm: { target_doc_number: "", link_type: "auto" },
 
             currentPage: 1,
             pageSize: 10,
@@ -860,7 +874,7 @@ export default defineComponent({
                     link_type: this.linkForm.link_type
                 });
                 (this.$refs.myToast as any).success("Thành công", "Đã thêm liên kết.");
-                this.linkForm = { target_doc_number: "", link_type: "" };
+                this.linkForm = { target_doc_number: "", link_type: "auto" };
                 await this.refreshLinks(Number(this.selectedDoc.id));
             } catch (e: any) {
                 (this.$refs.myToast as any).error("Lỗi", e.response?.data?.detail || "Không thể tạo liên kết.");

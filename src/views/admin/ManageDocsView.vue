@@ -17,68 +17,52 @@
 
                 <!-- LIST TABLE -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
-                    <div class="overflow-auto flex-1">
+                    <div class="overflow-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         <table class="w-full">
                             <thead class="bg-slate-50 sticky top-0 z-10">
                                 <tr>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Số hiệu
-                                    </th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Tên VB
-                                    </th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Ngày BH
-                                    </th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Trạng
-                                        thái
-                                    </th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Người ký
-                                    </th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Loại văn
-                                        bản
-                                    </th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Ghi chú
-                                    </th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Chế độ
-                                        xem
-                                    </th>
-                                    <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase">Thao tác
-                                    </th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Số hiệu</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Tên văn bản</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase whitespace-nowrap">Ngày ban hành</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Trạng thái</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Người ký</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Loại văn bản</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Ghi chú</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Chế độ xem</th>
+                                    <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase">Thao tác</th>
                                 </tr>
                             </thead>
 
                             <tbody class="divide-y divide-slate-100">
-                                <tr v-for="doc in paginatedDocs" :key="doc.id"
-                                    class="hover:bg-blue-50 transition-colors">
-                                    <td class="px-6 py-4 font-bold text-blue-600">{{ doc.doc_number }}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-600 max-w-md truncate"
-                                        :title="doc.summary">{{ doc.title }}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-500">{{ doc.issued_date }}</td>
-                                    <td class="px-6 py-4">
-                                        <span
-                                            :class="`px-2.5 py-1 rounded-full text-xs font-bold ${getStatusColor(doc.status)}`">{{
-                                                convertStatus(doc.status) }}</span>
+                                <tr v-for="doc in paginatedDocs" :key="doc.id" class="hover:bg-blue-50 transition-colors">
+                                    <td class="px-4 py-3 font-bold text-blue-600 whitespace-nowrap" :title="doc.doc_number">{{ doc.doc_number }}</td>
+                                    <td class="px-4 py-3 text-sm text-slate-600 max-w-[280px]" :title="doc.summary"><div class="line-clamp-2" style="white-space: normal;">{{ doc.title }}</div></td>
+                                    <td class="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{{ doc.issued_date }}</td>
+                                    <td class="px-4 py-3">
+                                        <span :class="`px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap ${getStatusColor(doc.status)}`">
+                                            {{ convertStatus(doc.status) }}
+                                        </span>
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-slate-500">{{ doc.signer }}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-500">{{ doc.doc_type }}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-500">{{ doc.note }}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-500">
-                                        <span
-                                            :class="doc.visibility === 'public' ? 'text-green-700 bg-green-100' : 'text-rose-700 bg-rose-100'"
-                                            class="inline-flex items-center gap-1 text-xs font-bold  px-2 py-1 rounded-full">
-                                            <i
-                                                :class="doc.visibility === 'public' ? 'fas fa-globe' : 'fas fa-lock'"></i>
+                                    <td class="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{{ doc.signer }}</td>
+                                    <td class="px-4 py-3 text-sm text-slate-500">{{ doc.doc_type }}</td>
+                                    <td class="px-4 py-3 text-sm text-slate-500 max-w-[120px] truncate" :title="doc.note">{{ doc.note }}</td>
+                                    <td class="px-4 py-3 text-sm text-slate-500">
+                                        <span :class="doc.visibility === 'public' ? 'text-green-700 bg-green-100' : 'text-rose-700 bg-rose-100'"
+                                            class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap">
+                                            <i :class="doc.visibility === 'public' ? 'fas fa-globe' : 'fas fa-lock'"></i>
                                             {{ doc.visibility }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-right flex justify-end gap-2">
+                                    <td class="px-4 py-3 text-right flex justify-end gap-1">
                                         <button @click="viewDetail(doc)"
-                                            class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-100 rounded-full transition"
+                                            class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-100 rounded-full transition"
                                             title="Xem chi tiết">
-                                            <i data-lucide="eye" class="w-4 h-4"></i>Xem
+                                            <i class="fa-solid fa-eye"></i>
                                         </button>
                                         <button @click="handleDeleteDocument(doc.id)"
-                                            class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-100 rounded-full transition"
+                                            class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-100 rounded-full transition"
                                             title="Xóa">
-                                            <i data-lucide="trash-2" class="w-4 h-4"></i>DELETE
+                                            <i class="fa-solid fa-trash-can"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -221,9 +205,9 @@
                                             </datalist>
                                         </div>
                                         <div>
-                                            <label class="text-xs font-bold text-slate-500">Loại liên kết</label>
-                                            <select v-model="linkForm.link_type" class="w-full border p-2 rounded mt-1">
-                                                <option value="">-- Chọn loại --</option>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Loại liên kết</label>
+                                            <select v-model="linkForm.link_type" class="w-full border-gray-300 rounded-md border p-2 text-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                                                <option value="auto">✨ AI Tự nhận diện (Khuyên dùng)</option>
                                                 <option value="thay_the_1_phan">Thay thế 1 phần</option>
                                                 <option value="thay_the_toan_phan">Thay thế toàn phần</option>
                                                 <option value="bai_bo_1_phan">Bãi bỏ 1 phần</option>
@@ -348,7 +332,7 @@ export default defineComponent({
             isPublic: false,
             editForm: {} as Partial<Doc>,
             docs: [] as Doc[],
-            linkForm: { target_doc_number: "", link_type: "" }
+            linkForm: { target_doc_number: '', link_type: 'auto' },
         };
     },
     mounted() {
@@ -440,12 +424,14 @@ export default defineComponent({
                     ...doc,
                     attachments: lastAttachment,
                 };
+                this.linkForm = { target_doc_number: '', link_type: 'auto' };
             } catch (e: any) {
                 console.error("Lỗi lấy thông tin văn bản", e);
+                this.linkForm = { target_doc_number: '', link_type: 'auto' };
             }
         },
-        startEditing() { if (!this.selectedDoc) return; this.isEditing = true; this.editForm = { ...this.selectedDoc }; this.linkForm = { target_doc_number: "", link_type: "" }; },
-        cancelEditing() { this.isEditing = false; this.editForm = {}; this.linkForm = { target_doc_number: "", link_type: "" }; },
+        startEditing() { if (!this.selectedDoc) return; this.isEditing = true; this.editForm = { ...this.selectedDoc }; this.linkForm = { target_doc_number: "", link_type: "auto" }; },
+        cancelEditing() { this.isEditing = false; this.editForm = {}; this.linkForm = { target_doc_number: "", link_type: "auto" }; },
         goBack() {
             this.selectedDoc = null;
             this.getDocuments();
@@ -493,7 +479,7 @@ export default defineComponent({
                 console.error("Lỗi cập nhật văn bản:", e);
             } finally {
                 this.isEditing = false;
-                this.linkForm = { target_doc_number: "", link_type: "" };
+                this.linkForm = { target_doc_number: "", link_type: "auto" };
                 (this.$refs.loadingRef as any).hide();
             }
         },

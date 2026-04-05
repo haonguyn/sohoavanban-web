@@ -66,6 +66,9 @@
                         </div>
                     </div>
                 </div>
+
+                <NetworkGraphWidget />
+
             </div>
         </main>
     </div>
@@ -73,12 +76,15 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Navbar from "../../components/admin/Navbar.vue";
+import NetworkGraphWidget from "../../components/admin/NetworkGraphWidget.vue";
 import type { DashboardStat, LogItem } from "../../types/DashBoardTypes";
 import { getDashboardStats, getLogs, getYearChartData } from "../../api/dashboardApi";
+
 export default defineComponent({
     name: "DashBoard",
     components: {
         Navbar,
+        NetworkGraphWidget
     },
     data() {
         return {
@@ -148,6 +154,6 @@ export default defineComponent({
                 console.error("Lỗi khi lấy logs:", error);
             }
         }
-    },
+    }
 });
 </script>
