@@ -2,13 +2,18 @@
     <div class="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8">
         <div class="container mx-auto">
             <!-- Tiêu đề trang -->
-            <header class="mb-6 text-center">
-                <h1 class="text-3xl font-bold text-gray-900">
-                    Trích xuất & Số hóa văn bản (OCR)
-                </h1>
-                <p class="text-lg text-gray-600 mt-1 max-w-2xl mx-auto">
-                    Tải lên tài liệu để hệ thống tự động trích xuất nội dung và thông tin thuộc tính
-                </p>
+            <header class="mb-8 flex items-center gap-4 px-1">
+                <div class="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-microchip text-xl"></i>
+                </div>
+                <div class="flex flex-col gap-0.5">
+                    <h1 class="text-3xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent tracking-tight">
+                        Trích xuất & Số hóa văn bản (OCR)
+                    </h1>
+                    <p class="text-[15px] text-slate-500 font-medium">
+                        Tải lên tài liệu để hệ thống AI tự động phân tích và trích xuất thông tin.
+                    </p>
+                </div>
             </header>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -220,7 +225,7 @@
                                     <div>
                                         <label class="block text-xs font-bold text-gray-600 mb-1">Loại liên kết</label>
                                         <select v-model="linkForm.link_type" class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
-                                            <option value="">-- Chọn loại --</option>
+                                            <option value="auto">✨ AI Tự nhận dạng (Khuyên dùng)</option>
                                             <option value="thay_the_1_phan">Thay thế 1 phần</option>
                                             <option value="thay_the_toan_phan">Thay thế toàn phần</option>
                                             <option value="bai_bo_1_phan">Bãi bỏ 1 phần</option>
@@ -339,7 +344,7 @@ export default defineComponent({
             accuracy: '',
             // FORM DATA MODEL (Để OCR tự fill vào đây)
             form: {} as Partial<Doc>,
-            linkForm: { target_doc_number: "", link_type: "" },
+            linkForm: { target_doc_number: '', link_type: 'auto' },
             availableDocs: [] as Doc[]
         };
     },
@@ -435,7 +440,7 @@ export default defineComponent({
                 page_count: null as number | null,
                 field: "",
             };
-            this.linkForm = { target_doc_number: "", link_type: "" };
+            this.linkForm = { target_doc_number: "", link_type: "auto" };
         },
 
         async startOCR() {

@@ -65,10 +65,17 @@
             {{ currentUser.username }}</p>
         </div>
       </div>
+      <RouterLink to="/"
+        class="flex items-center justify-center w-full gap-2 text-sm font-bold text-slate-500 hover:text-emerald-600 py-2 hover:bg-emerald-50 rounded-lg transition overflow-hidden"
+        :class="isCollapsed ? 'mt-4' : 'mt-2'" :title="isCollapsed ? 'Trang chủ' : ''">
+        <i class="fas fa-house w-4 h-4 shrink-0 text-center"></i>
+        <span v-show="!isCollapsed" class="whitespace-nowrap">Trang chủ</span>
+      </RouterLink>
+      
       <button @click="handleLogout"
-        class="flex items-center justify-center w-full gap-2 text-sm font-bold text-slate-500 hover:text-rose-600 py-2 hover:bg-rose-50 rounded-lg transition overflow-hidden"
-        :class="isCollapsed ? 'mt-2' : ''" :title="isCollapsed ? 'Đăng xuất' : ''">
-        <i class="fas fa-right-from-bracket w-4 h-4 shrink-0"></i>
+        class="flex items-center justify-center w-full gap-2 text-sm font-bold text-slate-500 hover:text-rose-600 py-2 hover:bg-rose-50 rounded-lg transition overflow-hidden mt-1"
+        :title="isCollapsed ? 'Đăng xuất' : ''">
+        <i class="fas fa-right-from-bracket w-4 h-4 shrink-0 text-center"></i>
         <span v-show="!isCollapsed" class="whitespace-nowrap">Đăng xuất</span>
       </button>
     </div>

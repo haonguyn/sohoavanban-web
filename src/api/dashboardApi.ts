@@ -17,3 +17,8 @@ export const getYearChartData = async (year: number): Promise<YearChartResponse>
   );
   return res.data;
 };
+
+export const getNetworkGraphData = async (): Promise<any> => {
+  const res = await api.get("/dashboard/network-graph/");
+  return res.data;
+};

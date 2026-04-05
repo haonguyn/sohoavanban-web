@@ -3,13 +3,18 @@
     <div class="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8">
         <div class="container mx-auto">
             <!-- Tiêu đề trang -->
-            <div class="mb-6">
-                <h1 class="text-3xl font-bold text-gray-900">
-                    Tra cứu văn bản
-                </h1>
-                <p class="text-lg text-gray-600 mt-1">
-                    Hệ thống văn bản pháp luật đầy đủ và cập nhật
-                </p>
+            <div class="mb-8 flex items-center gap-4 px-1">
+                <div class="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-search text-xl"></i>
+                </div>
+                <div class="flex flex-col gap-0.5">
+                    <h1 class="text-3xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent tracking-tight">
+                        Tra cứu văn bản
+                    </h1>
+                    <p class="text-[15px] text-slate-500 font-medium">
+                        Hệ thống tra cứu thông tin văn bản pháp luật nhanh chóng, chính xác.
+                    </p>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
