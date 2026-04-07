@@ -1,11 +1,12 @@
 <template>
     <!-- Container chính -->
-    <div class="fixed z-50" :style="{ left: position.x + 'px', top: position.y + 'px' }">
+    <div class="fixed z-50 right-6 transition-[bottom] duration-300" :class="{ 'transition-none': isDragging }" :style="{ bottom: bottomOffset + 'px' }">
 
         <!-- BUTTON THU GỌN -->
-        <div v-if="!isOpen"
-            class="w-14 h-14 rounded-full bg-purple-600 text-white flex items-center justify-center cursor-pointer shadow-xl hover:bg-purple-700 transition-colors active:scale-95"
-            @mousedown="startDrag" @click="toggleChat">
+        <div v-show="!isOpen"
+            class="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center cursor-move shadow-xl hover:bg-blue-700 transition-colors active:scale-95"
+            @mousedown="startDrag"
+            @click="handleClick">
             <!-- Icon Chat -->
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -14,24 +15,23 @@
         </div>
 
         <!-- CỬA SỔ CHAT MỞ RỘNG -->
-        <div v-else class="bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
+        <div v-show="isOpen" class="bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
             :style="{ width: CHAT_WIDTH + 'px', height: CHAT_HEIGHT + 'px' }">
 
             <!-- Header -->
-            <div class="p-4 bg-purple-600 text-white cursor-move flex items-center justify-between select-none"
-                @mousedown="startDrag">
+            <div class="p-4 bg-blue-600 text-white flex items-center justify-between select-none cursor-move" @mousedown="startDrag">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">🤖</span>
                     <div>
-                        <h3 class="font-bold text-sm">Chat Bot</h3>
-                        <p class="text-xs text-purple-200 flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-green-400 block"></span> Online
+                        <h3 class="font-bold text-sm">Trợ lý ảo</h3>
+                        <p class="text-xs text-blue-200 flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-green-400 block"></span> Trực tuyến
                         </p>
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
                     <!-- Nút thu nhỏ (-) -->
-                    <button @click="toggleChat" class="hover:bg-purple-700 p-1 rounded transition-colors" title="Thu nhỏ">
+                    <button @click="toggleChat" class="hover:bg-blue-700 p-1 rounded transition-colors" title="Thu nhỏ">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -53,51 +53,47 @@
                 <div v-for="msg in messages" :key="msg.id" class="flex"
                     :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
 
-                    <div class="max-w-[80%] p-3 rounded-2xl text-sm shadow-sm"
-                        style="white-space: pre-wrap;"
-                        :class="msg.role === 'user' ? 'bg-purple-600 text-white rounded-br-none' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'">
+                    <div class="max-w-[85%] p-4 rounded-2xl text-sm shadow-sm leading-relaxed"
+                        :class="msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'">
                         
-                        <!-- File Attachment UI -->
-                        <div v-if="msg.isFile" class="flex items-center gap-2 bg-white/20 rounded p-2">
-                            <svg class="text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                            </svg>
-                            <span class="truncate font-medium text-white max-w-[200px]" :title="msg.fileName">{{ msg.fileName }}</span>
-                        </div>
-
                         <!-- Typing Indicator Animation -->
-                        <div v-else-if="msg.id === -1" class="flex justify-center items-center gap-1.5 h-5 px-2">
+                        <div v-if="msg.id === -1" class="flex justify-center items-center gap-1.5 h-5 px-2">
                             <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
                             <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
                             <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
                         </div>
                         
-                        <!-- Regular Message -->
+                        <!-- Regular Message & File -->
                         <template v-else>
-                            <div v-html="formatMessage(msg.text)"></div>
-                        </template>
-                    </div>
+                            <!-- File Attachment UI (Compact) -->
+                            <div v-if="msg.isFile" class="flex items-center gap-1.5 text-xs mb-2 opacity-90 border-b border-white/20 pb-1.5">
+                                <svg class="flex-shrink-0" :class="msg.role === 'user' ? 'text-white' : 'text-blue-600'" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                </svg>
+                                <span class="truncate italic font-medium max-w-[180px]" :title="msg.fileName">{{ msg.fileName }}</span>
+                            </div>
+                            <!-- Format text -->
+                            <div v-html="formatMessage(msg.text, msg.role)"></div>
+                        </template>                    </div>
                 </div>
             </div>
 
             <!-- Input Area -->
             <div class="p-3 bg-white border-t border-gray-100">
 
-                <!-- Hiển thị file đã chọn -->
+                <!-- Hiển thị file đã chọn (Compact) -->
                 <div v-if="selectedFile"
-                    class="mb-2 px-3 py-1.5 bg-gray-100 rounded-lg flex items-center justify-between text-xs border border-gray-200">
-                    <div class="flex items-center gap-2 truncate">
-                        <svg class="text-purple-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="14"
-                            height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    class="mb-2 px-2 py-1 bg-blue-50 rounded flex items-center justify-between text-[11px] border border-blue-100">
+                    <div class="flex items-center gap-1.5 truncate">
+                        <svg class="text-blue-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="12"
+                            height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                             stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                         </svg>
-                        <span class="truncate max-w-[200px] text-gray-700 font-medium">{{ selectedFile.name }}</span>
+                        <span class="truncate max-w-[200px] text-blue-800 font-medium">{{ selectedFile.name }}</span>
                     </div>
-                    <button @click="removeFile" class="text-gray-400 hover:text-red-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    <button @click="removeFile" class="text-blue-400 hover:text-red-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -109,7 +105,7 @@
                 <div class="flex items-end gap-2">
                     <!-- Nút Attach -->
                     <button @click="triggerFileSelect"
-                        class="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-colors pb-3">
+                        class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors pb-3">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path
@@ -123,14 +119,14 @@
 
                     <!-- Textarea tự động dãn hoặc Input thường -->
                     <div
-                        class="flex-1 bg-gray-100 rounded-2xl px-4 py-2 focus-within:ring-2 focus-within:ring-purple-200 transition-all border border-transparent focus-within:bg-white focus-within:border-purple-300">
-                        <input v-model="messageText" @keyup.enter="sendMessage" placeholder="Nhập tin nhắn..."
+                        class="flex-1 bg-gray-100 rounded-2xl px-4 py-2 focus-within:ring-2 focus-within:ring-blue-200 transition-all border border-transparent focus-within:bg-white focus-within:border-blue-300">
+                        <input ref="chatInput" v-model="messageText" @keyup.enter="sendMessage" placeholder="Nhập tin nhắn..."
                             class="w-full bg-transparent border-none focus:outline-none text-sm text-gray-700 placeholder-gray-400" />
                     </div>
 
                     <!-- Nút Send -->
                     <button @click="sendMessage" :disabled="!messageText && !selectedFile"
-                        class="p-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all active:scale-95 pb-2">
+                        class="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all active:scale-95 pb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -145,7 +141,7 @@
 
 <script lang="ts">
 import { defineComponent, nextTick } from 'vue'
-import api from '../api/axios'
+import { sendChatMessage, closeConversation } from '../api/chatApi'
 
 export default defineComponent({
     name: 'FloatingChat',
@@ -157,21 +153,18 @@ export default defineComponent({
             CHAT_HEIGHT: 520,
 
             isOpen: false,
-            position: {
-                x: 0,
-                y: 0,
-            },
+            bottomOffset: 24, // Tương đương bottom-6
             isDragging: false,
+            dragStartY: 0,
+            dragStartBottom: 0,
             hasDragged: false,
-            dragOffset: {
-                x: 0,
-                y: 0,
-            },
 
             fileInput: null as HTMLInputElement | null,
             selectedFile: null as File | null,
             messageText: '',
             isLoading: false,
+            conversationId: null as number | null,
+            sessionId: 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
             messages: [
                 {
                     id: 1,
@@ -183,35 +176,54 @@ export default defineComponent({
     },
 
     mounted() {
-        this.position.x = window.innerWidth - this.BUTTON_SIZE - 24
-        this.position.y = window.innerHeight - this.BUTTON_SIZE - 24
+        // Khôi phục vị trí nếu có lưu
+        const savedBottom = localStorage.getItem('chat_bottom_pos');
+        if (savedBottom) {
+            this.bottomOffset = parseInt(savedBottom);
+        }
+        // Khi refresh trang -> đóng conversation hiện tại
+        window.addEventListener('beforeunload', this.handleBeforeUnload);
+    },
+
+    beforeUnmount() {
+        window.removeEventListener('beforeunload', this.handleBeforeUnload);
+        // Đóng conversation khi component bị hủy
+        if (this.conversationId) {
+            closeConversation(this.conversationId).catch(() => {});
+        }
     },
 
     methods: {
-        toggleChat() {
-            if (this.hasDragged) {
-                this.hasDragged = false
-                return
+        handleClick() {
+            // Chỉ toggle nếu không phải đang kết thúc một cú kéo
+            if (!this.hasDragged) {
+                this.toggleChat();
             }
+        },
 
+        toggleChat() {
+            this.isOpen = !this.isOpen
             if (this.isOpen) {
-                this.position.x += this.CHAT_WIDTH - this.BUTTON_SIZE
-                this.position.y += this.CHAT_HEIGHT - this.BUTTON_SIZE
-                this.isOpen = false
-            } else {
-                this.position.x -= this.CHAT_WIDTH - this.BUTTON_SIZE
-                this.position.y -= this.CHAT_HEIGHT - this.BUTTON_SIZE
-                this.isOpen = true
+                nextTick(() => {
+                    (this.$refs.chatInput as HTMLInputElement)?.focus()
+                    setTimeout(() => {
+                        this.scrollToBottom()
+                    }, 10)
+                })
             }
         },
 
         closeAndClearChat() {
+            if (this.conversationId) {
+                closeConversation(this.conversationId).catch(() => {});
+            }
+            
             // Thu nhỏ
             if (this.isOpen) {
                 this.toggleChat()
             }
             
-            // Đợi thu nhỏ xong rồi xoá tin nhắn
+            // Đợi thu nhỏ xong rồi xoá tin nhắn và reset conversation
             setTimeout(() => {
                 this.messages = [
                     {
@@ -222,37 +234,65 @@ export default defineComponent({
                 ]
                 this.messageText = ''
                 this.selectedFile = null
+                this.conversationId = null
+                this.sessionId = this.generateSessionId()
             }, 300)
         },
 
+        handleBeforeUnload() {
+            // Đóng conversation khi người dùng refresh / đóng tab
+            if (this.conversationId) {
+                // Sử dụng sendBeacon vì beforeunload không chờ async
+                const payload = JSON.stringify({ conversation_id: this.conversationId });
+                navigator.sendBeacon('/api/chat/close/', new Blob([payload], { type: 'application/json' }));
+            }
+        },
+
+        generateSessionId(): string {
+            return 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+        },
+
+        // Drag methods
         startDrag(e: MouseEvent) {
-            if (e.button !== 0) return
+            this.isDragging = true;
+            this.hasDragged = false;
+            this.dragStartY = e.clientY;
+            this.dragStartBottom = this.bottomOffset;
 
-            this.isDragging = true
-            this.hasDragged = false
-            this.dragOffset.x = e.clientX - this.position.x
-            this.dragOffset.y = e.clientY - this.position.y
-
-            window.addEventListener('mousemove', this.onDrag)
-            window.addEventListener('mouseup', this.stopDrag)
+            window.addEventListener('mousemove', this.onDrag);
+            window.addEventListener('mouseup', this.stopDrag);
+            
+            // Ngăn chặn bôi đen text khi kéo
+            e.preventDefault();
         },
 
         onDrag(e: MouseEvent) {
-            if (!this.isDragging) return
-            this.hasDragged = true
-            this.position.x = e.clientX - this.dragOffset.x
-            this.position.y = e.clientY - this.dragOffset.y
+            if (!this.isDragging) return;
+            
+            const deltaY = this.dragStartY - e.clientY;
+            if (Math.abs(deltaY) > 5) {
+                this.hasDragged = true;
+            }
+
+            let newBottom = this.dragStartBottom + deltaY;
+            
+            // Giới hạn vùng kéo
+            const minBottom = 24;
+            const maxBottom = window.innerHeight - (this.isOpen ? this.CHAT_HEIGHT : this.BUTTON_SIZE) - 24;
+            
+            if (newBottom < minBottom) newBottom = minBottom;
+            if (newBottom > maxBottom) newBottom = maxBottom;
+            
+            this.bottomOffset = newBottom;
         },
 
         stopDrag() {
-            this.isDragging = false
-            window.removeEventListener('mousemove', this.onDrag)
-            window.removeEventListener('mouseup', this.stopDrag)
+            this.isDragging = false;
+            window.removeEventListener('mousemove', this.onDrag);
+            window.removeEventListener('mouseup', this.stopDrag);
             
-            // Re-enable click after a short delay so the click event doesn't trigger toggleChat immediately
-            setTimeout(() => {
-                this.hasDragged = false
-            }, 100)
+            // Lưu vị trí
+            localStorage.setItem('chat_bottom_pos', this.bottomOffset.toString());
         },
 
         triggerFileSelect() {
@@ -268,6 +308,9 @@ export default defineComponent({
             }
 
             target.value = ''
+            nextTick(() => {
+                (this.$refs.chatInput as HTMLInputElement)?.focus()
+            })
         },
 
         removeFile() {
@@ -293,25 +336,14 @@ export default defineComponent({
                 }
             }
 
-            // Push File Message
-            if (file) {
-                this.messages.push({
-                    id: Date.now() + 1,
-                    role: 'user',
-                    text: `[File: ${file.name}]`,
-                    isFile: true,
-                    fileName: file.name
-                } as any)
-            }
-            
-            // Push Text Message
-            if (userText) {
-                this.messages.push({
-                    id: Date.now() + 2,
-                    role: 'user',
-                    text: userText,
-                })
-            }
+            // Push Message (Combined File + Text)
+            this.messages.push({
+                id: Date.now(),
+                role: 'user',
+                text: userText || (file ? `Đã gửi tệp: ${file.name}` : ''),
+                isFile: !!file,
+                fileName: file?.name
+            })
 
             this.messageText = ''
             this.selectedFile = null
@@ -333,14 +365,20 @@ export default defineComponent({
                     formData.append('file', file)
                 }
                 formData.append('history', JSON.stringify(historyToDBSend))
+                if (this.conversationId) {
+                    formData.append('conversation_id', String(this.conversationId))
+                }
+                formData.append('session_id', this.sessionId)
 
-                const res = await api.post('/chat/', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                    timeout: 60000 // 60s timeout for LLM
-                })
+                const res = await sendChatMessage(formData)
 
                 // Remove typing indicator
                 this.messages = this.messages.filter(m => m.id !== -1)
+                
+                // Lưu conversation_id từ server
+                if (res.data.conversation_id) {
+                    this.conversationId = res.data.conversation_id
+                }
                 
                 // Add AI Message
                 this.messages.push({
@@ -372,12 +410,50 @@ export default defineComponent({
             }
         },
 
-        formatMessage(text: string) {
+        formatMessage(text: string, role: string) {
             if (!text) return ''
-            // Basic escape HTML tags to prevent XSS
-            let safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;")
-            // Parse Markdown links [text](url) -> <a href="url" target="_blank" class="text-purple-600 underline font-medium">text</a>
-            return safeText.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-purple-300 underline font-medium hover:text-purple-400">$1</a>')
+            
+            // 1. Escape HTML
+            let safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            // Color constants based on role
+            const isAI = role === 'ai';
+            const boldClass = isAI ? 'font-bold text-gray-900' : 'font-bold text-white underline decoration-blue-300';
+            const italicClass = isAI ? 'italic text-gray-600' : 'italic text-blue-100';
+            const linkClass = isAI ? 'text-blue-600 underline font-bold hover:text-blue-800' : 'text-white underline font-bold opacity-90 hover:opacity-100';
+            
+            // 2. Bold: **text**
+            safeText = safeText.replace(/\*\*(.*?)\*\*/g, `<b class="${boldClass}">$1</b>`);
+            
+            // 3. Italic: *text* or _text_
+            safeText = safeText.replace(/\*(.*?)\*/g, `<i class="${italicClass}">$1</i>`);
+            safeText = safeText.replace(/_(.*?)_/g, `<i class="${italicClass}">$1</i>`);
+            
+            // 4. Newlines: \n to <br>
+            safeText = safeText.replace(/\n/g, '<br>');
+            
+            // 5. Lists (simple)
+            const lines = safeText.split('<br>');
+            const formattedLines = lines.map(line => {
+                const trimmed = line.trim();
+                // Bullet points
+                if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                    return `<div class="pl-4 mt-1 flex items-start"><span class="mr-2 opacity-60">•</span><span>${trimmed.substring(2)}</span></div>`;
+                }
+                // Numbered points
+                const numMatch = trimmed.match(/^(\d+)\. (.*)/);
+                if (numMatch) {
+                    return `<div class="pl-4 mt-1 flex items-start"><span class="mr-2 font-medium opacity-60">${numMatch[1]}.</span><span>${numMatch[2]}</span></div>`;
+                }
+                return line;
+            });
+            
+            safeText = formattedLines.join('<div class="h-1"></div>');
+
+            // 6. Links [text](url)
+            safeText = safeText.replace(/\[([^\]]+)\]\(([^)]+)\)/g, `<a href="$2" target="_blank" class="${linkClass}">$1</a>`);
+            
+            return safeText;
         }
     },
 })

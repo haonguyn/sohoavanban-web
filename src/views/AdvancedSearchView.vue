@@ -80,13 +80,13 @@
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
                                             <span class="text-xs text-gray-500">Từ ngày</span>
-                                            <input type="date" v-model="filters.issued_from"
-                                                class="mt-1 block w-full px-2 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500" />
+                                            <AppDatePicker v-model="filters.issued_from"
+                                                inputClass="mt-1 text-xs" />
                                         </div>
                                         <div>
                                             <span class="text-xs text-gray-500">Đến ngày</span>
-                                            <input type="date" v-model="filters.issued_to"
-                                                class="mt-1 block w-full px-2 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500" />
+                                            <AppDatePicker v-model="filters.issued_to"
+                                                inputClass="mt-1 text-xs" />
                                         </div>
                                     </div>
                                 </div>
@@ -98,13 +98,13 @@
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
                                             <span class="text-xs text-gray-500">Từ ngày</span>
-                                            <input type="date" v-model="filters.effective_start_from"
-                                                class="mt-1 block w-full px-2 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500" />
+                                            <AppDatePicker v-model="filters.effective_start_from"
+                                                inputClass="mt-1 text-xs" />
                                         </div>
                                         <div>
                                             <span class="text-xs text-gray-500">Đến ngày</span>
-                                            <input type="date" v-model="filters.effective_start_to"
-                                                class="mt-1 block w-full px-2 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500" />
+                                            <AppDatePicker v-model="filters.effective_start_to"
+                                                inputClass="mt-1 text-xs" />
                                         </div>
                                     </div>
                                 </div>
@@ -116,13 +116,13 @@
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
                                             <span class="text-xs text-gray-500">Từ ngày</span>
-                                            <input type="date" v-model="filters.effective_end_from"
-                                                class="mt-1 block w-full px-2 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500" />
+                                            <AppDatePicker v-model="filters.effective_end_from"
+                                                inputClass="mt-1 text-xs" />
                                         </div>
                                         <div>
                                             <span class="text-xs text-gray-500">Đến ngày</span>
-                                            <input type="date" v-model="filters.effective_end_to"
-                                                class="mt-1 block w-full px-2 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500" />
+                                            <AppDatePicker v-model="filters.effective_end_to"
+                                                inputClass="mt-1 text-xs" />
                                         </div>
                                     </div>
                                 </div>
@@ -194,10 +194,10 @@
                                             </p>
 
                                             <div class="flex gap-6 text-sm text-gray-500">
-                                                <span><i class="fas fa-calendar"></i> Ban hành: {{ doc.issued_date
+                                                <span><i class="fas fa-calendar"></i> Ban hành: {{ formatDate(doc.issued_date)
                                                     }}</span>
                                                 <span><i class="fas fa-calendar"></i> Bắt đầu hiệu lực: {{
-                                                    doc.effective_start_date }}</span>
+                                                    formatDate(doc.effective_start_date) }}</span>
                                             </div>
                                         </div>
 
@@ -293,12 +293,14 @@ import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
 import ToastNotification from "../components/ToastNotification.vue";
 import LoadingComponent from "../components/LoadingComponent.vue";
+import AppDatePicker from "../components/AppDatePicker.vue";
 import { filterDocuments } from "../api/documentApi";
 import { fetchAttachmentsByDoc } from "../api/attachmentApi";
 import {
     base64ToBlob,
     downloadFile,
     getDocumentEffectiveStatus,
+    formatDate,
 } from "../utils/fileUtils";
 import { getStatusClass, truncate } from "../utils/textUtils";
 import type { Doc } from "../types/DocumentTypes";
@@ -310,6 +312,7 @@ export default defineComponent({
         Footer,
         ToastNotification,
         LoadingComponent,
+        AppDatePicker,
     },
     data() {
         return {
@@ -438,6 +441,7 @@ export default defineComponent({
             const blob = base64ToBlob(att.file_base64);
             downloadFile(blob, att.filename);
         },
+        formatDate,
         getStatusClass,
         truncate,
     },

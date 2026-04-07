@@ -28,9 +28,9 @@
                         <!-- username -->
                         <div>
                             <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
-                                Username
+                                Tên đăng nhập
                             </label>
-                            <input id="username" v-model="username" placeholder="username" required
+                            <input id="username" v-model="username" placeholder="Nhập tên đăng nhập" required
                                 class="mt-1 block w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm" />
                         </div>
 

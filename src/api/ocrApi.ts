@@ -10,3 +10,9 @@ export const processOCR = async (file: File) => {
     },
   });
 };
+
+export const downloadOCRDocx = async (positions: any[], pages: any[], filename: string) => {
+  return await api.post("/ocr/download-docx/", { positions, pages, filename }, {
+    responseType: 'blob'
+  });
+};

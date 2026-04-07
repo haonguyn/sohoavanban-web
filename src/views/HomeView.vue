@@ -178,8 +178,8 @@
                             </div>
 
                             <div class="mt-4 sm:mt-0 sm:text-right text-sm text-gray-500">
-                                <p>Ban hành: {{ doc.issued_date }}</p>
-                                <p v-if="doc.effective_start_date">Bắt đầu hiệu lực: {{ doc.effective_start_date }}</p>
+                                <p>Ban hành: {{ formatDate(doc.issued_date) }}</p>
+                                <p v-if="doc.effective_start_date">Bắt đầu hiệu lực: {{ formatDate(doc.effective_start_date) }}</p>
                                 <a @click="goDetail(doc.id)"
                                     class="inline-block mt-2 text-indigo-600 hover:underline cursor-pointer">
                                     Xem chi tiết →
@@ -208,7 +208,7 @@ import Footer from "../components/layout/Footer.vue";
 import type { Doc } from "../types/DocumentTypes";
 import { fetchFeaturedDocs } from "../api/documentApi";
 import { getStatusClass, truncate } from "../utils/textUtils";
-import { getDocumentEffectiveStatus } from "../utils/fileUtils";
+import { getDocumentEffectiveStatus, formatDate } from "../utils/fileUtils";
 
 export default defineComponent({
     name: "HomeView",
@@ -263,6 +263,7 @@ export default defineComponent({
                 console.error("Lỗi tải văn bản mới:", e);
             }
         },
+        formatDate,
         getStatusClass,
         truncate,
     },

@@ -16,7 +16,25 @@ export default defineComponent({
       nextId: 0
     }
   },
+  mounted() {
+    window.addEventListener('global-toast', this.handleGlobalToast as EventListener)
+  },
+  beforeUnmount() {
+    window.removeEventListener('global-toast', this.handleGlobalToast as EventListener)
+  },
   methods: {
+    handleGlobalToast(event: Event) {
+      // Chặn duplicate toast từ nhiều instance (nếu có các trang gắn 2 component Toast cùng lúc)
+      const detail = (event as CustomEvent).detail
+      if (!detail) return;
+      
+      const cacheKey = detail.title + detail.message;
+      if ((window as any).__lastToastCache === cacheKey) return;
+      (window as any).__lastToastCache = cacheKey;
+      setTimeout(() => { if ((window as any).__lastToastCache === cacheKey) (window as any).__lastToastCache = "" }, 500);
+
+      this.show(detail.type || 'info', detail.title, detail.message, detail.duration || 3000)
+    },
     show(type: 'success' | 'error' | 'warning' | 'info', title: string, message: string, duration = 3000) {
       const id = this.nextId++
       const toast: ToastItem = { id, title, message, type }
