@@ -141,10 +141,22 @@
                         Chủ đề được quan tâm gần đây
                     </h3>
                 </div>
-                <div class="flex flex-wrap justify-center gap-3 md:gap-4 max-w-5xl mx-auto">
-                    <a v-for="topic in trendingTopics" :key="topic" @click="searchByTopic(topic)"
-                        class="px-5 py-2 text-sm md:text-base font-medium rounded-full bg-white text-gray-700 border border-gray-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-300 shadow-sm hover:shadow-lg cursor-pointer">
-                        #{{ topic }}
+                <div class="flex flex-wrap items-center justify-center gap-4 md:gap-5 max-w-4xl mx-auto py-6">
+                    <a v-for="topic in trendingTopics" :key="topic.name" @click="searchByTopic(topic.name)"
+                        :style="{ 
+                            fontSize: (13 + Math.min(1, topic.searches / 1500) * 14) + 'px',
+                            opacity: 0.6 + Math.min(1, topic.searches / 1500) * 0.4,
+                            '--tag-color': topic.color,
+                            '--tag-bg': topic.lightBg,
+                        }"
+                        :class="topic.searches > 1000 ? 'is-hot shadow-md font-bold' : 'is-normal shadow-sm font-medium'"
+                        class="topic-tag px-5 py-2.5 rounded-full border transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer relative group">
+                        #{{ topic.name }}
+                        <!-- Tooltip indicator -->
+                        <span class="absolute -top-3 -right-2 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm pointer-events-none"
+                              :style="{ backgroundColor: topic.color }">
+                            {{ topic.searches > 1000 ? (topic.searches / 1000).toFixed(1) + 'k' : topic.searches }} view
+                        </span>
                     </a>
                 </div>
             </div>
@@ -207,6 +219,7 @@ import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
 import type { Doc } from "../types/DocumentTypes";
 import { fetchFeaturedDocs } from "../api/documentApi";
+import { fetchTopics, TrendingTopic } from "../api/topicApi";
 import { getStatusClass, truncate } from "../utils/textUtils";
 import { getDocumentEffectiveStatus, formatDate } from "../utils/fileUtils";
 
@@ -219,16 +232,7 @@ export default defineComponent({
     data() {
         return {
             searchQuery: "",
-            trendingTopics: [
-                "Thuế VAT mới",
-                "Luật đất đai 2024",
-                "Chính sách tiền lương",
-                "Thủ tục hành chính",
-                "Đấu thầu qua mạng",
-                "Đầu tư công",
-                "Quy định về hóa đơn điện tử",
-                "Bảo hiểm xã hội",
-            ],
+            trendingTopics: [] as TrendingTopic[],
             featuredDocs: [] as Doc[],
         };
     },
@@ -263,12 +267,21 @@ export default defineComponent({
                 console.error("Lỗi tải văn bản mới:", e);
             }
         },
+        async fetchTopicsData() {
+            try {
+                const res = await fetchTopics();
+                this.trendingTopics = res.data.filter(t => t.is_active);
+            } catch (e) {
+                console.error("Lỗi lấy danh sách topic:", e);
+            }
+        },
         formatDate,
         getStatusClass,
         truncate,
     },
     mounted() {
         this.fetchFeaturedDocs();
+        this.fetchTopicsData();
         const keyword = this.$route.query.keyword as string;
         if (keyword) {
             this.searchQuery = keyword;
@@ -310,5 +323,23 @@ export default defineComponent({
 
 .animate-fade-in-up {
     animation: fade-in-up 0.6s ease-out both;
+}
+
+/* Custom styles for topic tags inspired by dynamic word cloud */
+.topic-tag.is-normal {
+    color: #475569;
+    border-color: #e2e8f0;
+    background-color: #ffffff;
+}
+.topic-tag.is-hot {
+    color: var(--tag-color);
+    border-color: var(--tag-color);
+    background-color: var(--tag-bg);
+}
+.topic-tag:hover {
+    background-color: var(--tag-color) !important;
+    color: #ffffff !important;
+    border-color: var(--tag-color) !important;
+    opacity: 1 !important;
 }
 </style>

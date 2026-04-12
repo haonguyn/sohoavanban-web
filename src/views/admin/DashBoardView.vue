@@ -3,7 +3,13 @@
         <Navbar />
         <main class="flex-1 overflow-hidden relative bg-slate-50">
             <div class="p-6 h-full overflow-y-auto">
-                <h2 class="text-2xl font-bold mb-6 text-slate-800">Dashboard Tổng Quan</h2>
+                <!-- Header -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 gap-4">
+                  <div>
+                    <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Dashboard Tổng Quan</h1>
+                    <p class="text-sm text-slate-500 mt-1">Theo dõi và phân tích các chỉ số hoạt động cốt lõi của hệ thống.</p>
+                  </div>
+                </div>
 
                 <!-- KPI Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

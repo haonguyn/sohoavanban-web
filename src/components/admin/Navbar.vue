@@ -75,16 +75,17 @@
         </div>
       </div>
       <RouterLink to="/"
-        class="flex items-center justify-center w-full gap-2 text-sm font-bold text-slate-500 hover:text-emerald-600 py-2 hover:bg-emerald-50 rounded-lg transition overflow-hidden"
-        :class="isCollapsed ? 'mt-4' : 'mt-2'" :title="isCollapsed ? 'Trang chủ' : ''">
-        <i class="fas fa-house w-4 h-4 shrink-0 text-center"></i>
+        class="flex items-center w-full gap-3 text-sm font-bold text-slate-500 hover:text-emerald-600 py-2.5 px-3 hover:bg-emerald-50 rounded-lg transition overflow-hidden"
+        :class="isCollapsed ? 'mt-4 justify-center' : 'mt-2 justify-start'" :title="isCollapsed ? 'Trang chủ' : ''">
+        <i class="fas fa-house w-4 h-4 shrink-0 flex items-center justify-center"></i>
         <span v-show="!isCollapsed" class="whitespace-nowrap">Trang chủ</span>
       </RouterLink>
       
       <button @click="handleLogout"
-        class="flex items-center justify-center w-full gap-2 text-sm font-bold text-slate-500 hover:text-rose-600 py-2 hover:bg-rose-50 rounded-lg transition overflow-hidden mt-1"
+        class="flex items-center w-full gap-3 text-sm font-bold text-slate-500 hover:text-rose-600 py-2.5 px-3 hover:bg-rose-50 rounded-lg transition overflow-hidden mt-1"
+        :class="isCollapsed ? 'justify-center' : 'justify-start'"
         :title="isCollapsed ? 'Đăng xuất' : ''">
-        <i class="fas fa-right-from-bracket w-4 h-4 shrink-0 text-center"></i>
+        <i class="fas fa-right-from-bracket w-4 h-4 shrink-0 flex items-center justify-center"></i>
         <span v-show="!isCollapsed" class="whitespace-nowrap">Đăng xuất</span>
       </button>
     </div>
@@ -108,6 +109,7 @@ export default defineComponent({
         { to: '/admin/manager', icon: 'fas fa-file-alt', label: 'Kho văn bản' },
       ],
       manages: [
+        { to: '/admin/topics', icon: 'fas fa-tags', label: 'Quản lý chủ đề' },
         { to: '/admin/report', icon: 'fas fa-chart-bar', label: 'Báo cáo' },
         { to: '/admin/system-user', icon: 'fas fa-cog', label: 'Hệ thống & User' },
       ]

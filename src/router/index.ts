@@ -64,6 +64,12 @@ const routes = [
     meta: { requiresAuth: true, roles: ["admin"] },
   },
   {
+    path: "/admin/topics",
+    name: "topic-manager",
+    component: () => import("../views/admin/TopicManager.vue"),
+    meta: { requiresAuth: true, roles: ["admin", "employee"] },
+  },
+  {
     path: "/admin/manager",
     name: "manager",
     component: () => import("../views/admin/ManageDocsView.vue"),
