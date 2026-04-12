@@ -3,22 +3,26 @@
     <Navbar />
     <main class="flex-1 overflow-hidden relative bg-slate-50">
       <div class="p-6 h-full overflow-y-auto">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold text-slate-800">Báo cáo & Thống kê</h2>
-          <div class="flex gap-2">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 gap-4">
+          <div>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Báo cáo & Thống kê</h1>
+            <p class="text-sm text-slate-500 mt-1">Xem, xuất báo cáo và phân tích dữ liệu hoạt động của hệ thống.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
             <!-- Chọn tháng -->
-            <select v-model="selectedMonth" @change="fetchDataByMonthYear" class="border rounded px-3 py-2 text-sm">
+            <select v-model="selectedMonth" @change="fetchDataByMonthYear" class="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
               <option v-for="m in months" :key="m.value" :value="m.value">{{ m.label }}</option>
             </select>
 
             <!-- Chọn năm -->
-            <select v-model="selectedYear" @change="fetchDataByMonthYear" class="border rounded px-3 py-2 text-sm">
+            <select v-model="selectedYear" @change="fetchDataByMonthYear" class="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
               <option v-for="y in years" :key="y" :value="y">Năm {{ y }}</option>
             </select>
 
             <!-- Xuất Excel -->
             <button @click="exportExcel"
-              class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
+              class="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm transition-all hover:scale-105 active:scale-95">
               <i class="fas fa-download"></i> Xuất Excel
             </button>
           </div>

@@ -17,8 +17,121 @@
             </div>
         </div>
         
-        <div class="h-[550px] w-full border border-slate-100 rounded-lg bg-slate-50 relative overflow-hidden">
-            <v-chart ref="graphChart" class="w-full h-full" :option="networkOptions" :autoresize="true" />
+        <div class="h-[550px] w-full border border-slate-100 rounded-lg bg-slate-50 relative flex overflow-hidden">
+            <!-- Bảng danh sách lề trái (Connected Papers style) -->
+            <div class="w-[300px] h-full bg-white border-r border-slate-200 flex flex-col z-10 shrink-0">
+                <div class="p-4 border-b border-slate-100">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input v-model="searchQuery" type="text" placeholder="Tìm kiếm văn bản..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto scrollbar-thin py-2">
+                    <div v-for="group in groupedNodes" :key="group.name" class="mb-1">
+                        <!-- Folder Header -->
+                        <div @click="toggleGroup(group.name)" 
+                             @dblclick="startEditGroup(group.name, $event)"
+                             class="flex items-center gap-2 px-4 py-2 hover:bg-slate-100 cursor-pointer transition select-none group">
+                            <i class="fas text-[10px] w-3 text-slate-400 group-hover:text-slate-700 transition text-center" 
+                               :class="expandedGroups[group.name] === false ? 'fa-chevron-right' : 'fa-chevron-down'"></i>
+                            <i class="fas fa-folder text-indigo-400 text-sm"></i>
+                            
+                            <input v-if="editingGroup === group.name"
+                                   id="edit_group_input"
+                                   v-model="editGroupText"
+                                   @blur="saveEditGroup(group.name)"
+                                   @keyup.enter="saveEditGroup(group.name)"
+                                   @click.stop
+                                   class="text-[13px] font-semibold text-slate-800 bg-white border border-indigo-400 rounded px-1.5 outline-none py-0.5 w-[160px] shadow-[0_0_0_2px_rgba(99,102,241,0.2)]" />
+                            <span v-else class="text-[13px] font-semibold text-slate-700 truncate" :title="customGroupNames[group.name] || group.name">{{ customGroupNames[group.name] || group.name }}</span>
+
+                            <span class="text-[10px] font-bold bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-auto shrink-0">{{ group.nodes.length }}</span>
+                        </div>
+
+                        <!-- Nested Items -->
+                        <div v-show="expandedGroups[group.name] !== false" class="pl-5">
+                            <div class="border-l border-slate-200 ml-3 pl-3 py-1 space-y-1">
+                                <template v-for="node in group.nodes" :key="node.id">
+                                    <div @mouseenter="highlightNode(node.id)" 
+                                         @mouseleave="downplayNode"
+                                         @click="handleListNodeClick(node.id)"
+                                         class="flex items-start gap-2 p-2 rounded-lg cursor-pointer transition group/item"
+                                         :class="selectedDoc && selectedDoc.id == node.id ? 'bg-indigo-50 ring-1 ring-indigo-200 shadow-[0_0_8px_rgba(99,102,241,0.2)]' : 'hover:bg-indigo-50/50'">
+                                        <i class="fas fa-file-alt mt-0.5 transition text-sm"
+                                           :class="selectedDoc && selectedDoc.id == node.id ? 'text-indigo-500' : 'text-slate-300 group-hover/item:text-indigo-400'"></i>
+                                        <div class="flex-1">
+                                            <h4 class="text-[12.5px] font-medium transition line-clamp-2 leading-snug"
+                                                :class="selectedDoc && selectedDoc.id == node.id ? 'text-indigo-800' : 'text-slate-700 group-hover/item:text-indigo-800'">{{ node.name }}</h4>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="filteredNodes.length === 0" class="p-6 text-center text-slate-500 text-sm">
+                        Không tìm thấy văn bản nào
+                    </div>
+                </div>
+            </div>
+
+            <!-- Block Đồ thị Echarts -->
+            <div class="flex-1 relative">
+                <v-chart ref="graphChart" class="w-full h-full" :option="networkOptions" :autoresize="true" @click="handleNodeClick" />
+            </div>
+
+            <!-- Bảng chi tiết lề phải (Connected Papers style) -->
+            <!-- Bảng chi tiết lề phải (Connected Papers style) -->
+            <transition name="slide-fade">
+                <div v-if="showSidePanel" class="w-[360px] bg-white shadow-[-8px_0_20px_rgba(0,0,0,0.06)] h-full flex flex-col absolute right-0 top-0 z-10 border-l border-slate-100">
+                    <div v-if="isLoadingDoc" class="flex-1 w-full flex justify-center items-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
+                    </div>
+
+                    <div v-else-if="selectedDoc" class="flex-1 overflow-y-auto p-7 text-sm flex flex-col">
+                        <!-- Header actions (close) -->
+                        <div class="flex justify-end mb-2">
+                            <button @click="closePanel" class="text-slate-400 hover:text-slate-800 transition">
+                                <i class="fas fa-times text-lg"></i>
+                            </button>
+                        </div>
+
+                        <!-- Title -->
+                        <h2 class="text-[20px] font-bold text-slate-900 leading-[1.3] mb-3">
+                            {{ selectedDoc.title }}
+                        </h2>
+
+                        <!-- Authors & Doc Number -->
+                        <div class="flex flex-wrap items-center gap-2 mb-2">
+                            <span class="text-slate-600 text-[13.5px] font-medium">{{ selectedDoc.signer || 'Khuyết tên người ký' }}</span>
+                            <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[11px] font-semibold" v-if="selectedDoc.doc_number">
+                                {{ selectedDoc.doc_number }}
+                            </span>
+                        </div>
+
+                        <!-- Year & Publisher -->
+                        <div class="text-slate-500 text-[13px] mb-6 font-medium">
+                            {{ selectedDoc.issued_date ? selectedDoc.issued_date.substring(0, 4) : '2026' }}, {{ selectedDoc.issued_by || 'Khuyết cơ quan' }}
+                            <span class="mx-1">•</span> <span class="capitalize">{{ selectedDoc.doc_type || 'Văn bản' }}</span>
+                        </div>
+
+                        <!-- Actions Row -->
+                        <div class="flex items-center mb-6 pb-4 border-b border-slate-100">
+                            <div class="flex items-center gap-3 text-slate-500">
+                                <span class="text-[12.5px] font-medium">Mở xem chi tiết:</span>
+                                <router-link :to="`/document-detail/${selectedDoc.id}`" class="hover:text-slate-900 transition flex items-center gap-1 group outline-none" title="Mở toàn văn tài liệu">
+                                    <i class="fas fa-external-link-alt text-base group-hover:scale-110 transition-transform"></i>
+                                </router-link>
+                            </div>
+                        </div>
+
+                        <!-- Summary -->
+                        <div class="text-[14px] text-slate-700 leading-relaxed">
+                            <span class="font-bold text-slate-900 mr-2">Trích yếu:</span>{{ selectedDoc.summary || 'Văn bản này hiện chưa có nội dung trích yếu hoặc tóm tắt.' }}
+                        </div>
+                    </div>
+                </div>
+            </transition>
         </div>
     </div>
 </template>
@@ -31,6 +144,8 @@ import { TitleComponent, TooltipComponent, LegendComponent } from "echarts/compo
 import { CanvasRenderer } from "echarts/renderers";
 import VChart, { THEME_KEY } from "vue-echarts";
 import { getNetworkGraphData } from "../../api/dashboardApi";
+import { getDocumentDetail } from "../../api/documentApi";
+import type { Doc } from "../../types/DocumentTypes";
 
 use([GraphChart, TitleComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
@@ -46,12 +161,146 @@ export default defineComponent({
         return {
             networkOptions: {} as Record<string, any>,
             currentZoom: 1 as number,
+            showSidePanel: false,
+            isLoadingDoc: false,
+            selectedDoc: null as Doc | null,
+            rawNodes: [] as any[],
+            searchQuery: '',
+            expandedGroups: {} as Record<string, boolean>,
+            editingGroup: null as string | null,
+            editGroupText: '',
+            customGroupNames: {} as Record<string, string>,
         };
     },
+    computed: {
+        filteredNodes(): any[] {
+            if (!this.searchQuery) return this.rawNodes;
+            const query = this.searchQuery.toLowerCase();
+            return this.rawNodes.filter(n => 
+                (n.name && n.name.toLowerCase().includes(query)) ||
+                (n.category && n.category.toString().toLowerCase().includes(query))
+            );
+        },
+        groupedNodes(): { name: string, nodes: any[] }[] {
+            const groups: Record<string, any[]> = {};
+            this.filteredNodes.forEach(node => {
+                const cat = node.clusterId || 'Chưa phân nhóm';
+                if (!groups[cat]) groups[cat] = [];
+                groups[cat].push(node);
+            });
+            // Định dạng sắp xếp: Các cụm lên trên, nhóm văn bản độc lập xuống dưới
+            return Object.keys(groups).sort((a, b) => {
+                if (a === 'Các văn bản độc lập') return 1;
+                if (b === 'Các văn bản độc lập') return -1;
+                return a.localeCompare(b);
+            }).map(key => ({
+                name: key,
+                nodes: groups[key]
+            }));
+        }
+    },
     mounted() {
+        const savedNames = localStorage.getItem('networkGroupNames');
+        if (savedNames) {
+            try {
+                this.customGroupNames = JSON.parse(savedNames);
+            } catch (e) {
+                console.error("Lỗi khi đọc tên Thư mục đã lưu", e);
+            }
+        }
         this.fetchNetworkGraph();
     },
     methods: {
+        toggleGroup(name: string) {
+            this.expandedGroups[name] = this.expandedGroups[name] === false ? true : false;
+        },
+        startEditGroup(name: string, event: Event) {
+            if (name === 'Các văn bản độc lập') return;
+            this.editingGroup = name;
+            this.editGroupText = this.customGroupNames[name] || name;
+            this.$nextTick(() => {
+                const input = document.getElementById('edit_group_input');
+                if (input) input.focus();
+            });
+        },
+        saveEditGroup(name: string) {
+            if (this.editingGroup === name) {
+                if (this.editGroupText.trim()) {
+                    this.customGroupNames[name] = this.editGroupText.trim();
+                    localStorage.setItem('networkGroupNames', JSON.stringify(this.customGroupNames));
+                }
+                this.editingGroup = null;
+            }
+        },
+        highlightNode(id: string) {
+            const index = this.rawNodes.findIndex(n => n.id === id);
+            if (index !== -1 && this.$refs.graphChart) {
+                const chart = this.$refs.graphChart as any;
+                chart.dispatchAction({
+                    type: 'highlight',
+                    seriesIndex: 0,
+                    dataIndex: index
+                });
+                chart.dispatchAction({
+                    type: 'showTip',
+                    seriesIndex: 0,
+                    dataIndex: index
+                });
+            }
+        },
+        downplayNode() {
+            if (this.$refs.graphChart) {
+                const chart = this.$refs.graphChart as any;
+                chart.dispatchAction({
+                    type: 'downplay',
+                    seriesIndex: 0,
+                });
+                chart.dispatchAction({
+                    type: 'hideTip'
+                });
+            }
+        },
+        handleListNodeClick(id: string) {
+            this.handleNodeClick({ dataType: 'node', data: { id: id } });
+        },
+        async handleNodeClick(params: any) {
+            if (params.dataType === 'node') {
+                const docId = params.data.id;
+                
+                const index = this.rawNodes.findIndex(n => n.id === docId);
+                if (index !== -1 && this.$refs.graphChart) {
+                    const chart = this.$refs.graphChart as any;
+                    chart.dispatchAction({
+                        type: 'select',
+                        seriesIndex: 0,
+                        dataIndex: index
+                    });
+                }
+
+                this.showSidePanel = true;
+                this.isLoadingDoc = true;
+                try {
+                    const response = await getDocumentDetail(parseInt(docId));
+                    // getDocumentDetail trả về response (axios), dữ liệu thực nằm ở .data
+                    this.selectedDoc = response.data;
+                } catch (error) {
+                    console.error("Lỗi lấy chi tiết văn bản", error);
+                } finally {
+                    this.isLoadingDoc = false;
+                }
+            }
+        },
+        closePanel() {
+            this.showSidePanel = false;
+            this.selectedDoc = null;
+            if (this.$refs.graphChart) {
+                const chart = this.$refs.graphChart as any;
+                chart.dispatchAction({
+                    type: 'unselect',
+                    seriesIndex: 0
+                });
+            }
+        },
         zoomIn() {
             this.currentZoom *= 1.2;
             this.updateChartZoom();
@@ -73,6 +322,7 @@ export default defineComponent({
         async fetchNetworkGraph() {
             try {
                 const data = await getNetworkGraphData();
+                this.rawNodes = data.nodes;
                 const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#ec4899', '#14b8a6'];
                 
                 data.categories.forEach((c: any, i: number) => {
@@ -112,6 +362,17 @@ export default defineComponent({
                     }
                 });
 
+                let clusterCount = 0;
+                const mapClusterName = new Map();
+                components.forEach((comp, idx) => {
+                    if (comp.length > 1) {
+                        clusterCount++;
+                        mapClusterName.set(idx, `Cụm liên kết số ${clusterCount}`);
+                    } else {
+                        mapClusterName.set(idx, `Các văn bản độc lập`);
+                    }
+                });
+
                 const yearCounts: Record<string, number> = {};
 
                 data.nodes.forEach((node: any) => {
@@ -120,6 +381,7 @@ export default defineComponent({
                     node.x = xIndex * 380; 
 
                     const cIndex = components.findIndex(c => c.includes(node.id));
+                    node.clusterId = mapClusterName.get(cIndex);
                     
                     const key = `${cIndex}_${year}`;
                     if (!yearCounts[key]) yearCounts[key] = 0;
@@ -200,8 +462,27 @@ export default defineComponent({
                             zoom: this.currentZoom,
                             edgeSymbol: ['circle', 'arrow'],
                             edgeSymbolSize: [5, 12],
+                            selectedMode: 'single',
+                            select: {
+                                itemStyle: {
+                                    borderColor: '#ffffff',
+                                    borderWidth: 5,
+                                    shadowBlur: 40,
+                                    shadowColor: 'rgba(59, 130, 246, 1)'
+                                },
+                                label: {
+                                    fontWeight: 'bold',
+                                    color: '#1d4ed8'
+                                }
+                            },
                             emphasis: {
                                 focus: 'adjacency',
+                                itemStyle: {
+                                    borderColor: '#ffffff',
+                                    borderWidth: 4,
+                                    shadowBlur: 35,
+                                    shadowColor: 'rgba(59, 130, 246, 0.85)'
+                                },
                                 lineStyle: { width: 4, color: '#3b82f6' }
                             }
                         }
@@ -214,3 +495,16 @@ export default defineComponent({
     }
 });
 </script>
+
+<style scoped>
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+</style>

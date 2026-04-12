@@ -3,7 +3,13 @@
     <Navbar />
     <main class="flex-1 overflow-hidden relative bg-slate-50">
       <div class="p-6 h-full overflow-y-auto">
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">Quản trị hệ thống</h2>
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 gap-4">
+          <div>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Quản trị hệ thống</h1>
+            <p class="text-sm text-slate-500 mt-1">Cấu hình bảo mật, phân quyền tài khoản người dùng và xem thông báo nhật ký.</p>
+          </div>
+        </div>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <div class="flex justify-between items-center mb-6">

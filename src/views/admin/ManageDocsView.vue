@@ -5,14 +5,17 @@
         <main class="flex-1 overflow-hidden relative bg-slate-50">
             <div class="p-6 h-full flex flex-col">
 
-                <!-- HEADER SEARCH -->
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-slate-800">Danh sách văn bản</h2>
-                    <div class="relative">
-                        <i data-lucide="search" class="absolute left-3 top-2.5 text-slate-400 w-4 h-4"></i>
-                        <input v-model="listFilter" type="text" placeholder="Tìm kiếm số hiệu, trích yếu..."
-                            class="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 shadow-sm">
-                    </div>
+                <!-- Header -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 gap-4">
+                  <div>
+                    <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Danh sách văn bản</h1>
+                    <p class="text-sm text-slate-500 mt-1">Quản lý, duyệt và kiểm soát kho tài liệu lưu trữ của hệ thống.</p>
+                  </div>
+                  <div class="relative w-full sm:w-auto mt-2 sm:mt-0">
+                      <i data-lucide="search" class="absolute left-3 top-2.5 text-slate-400 w-4 h-4"></i>
+                      <input v-model="listFilter" type="text" placeholder="Tìm kiếm số hiệu, trích yếu..."
+                          class="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64 shadow-sm">
+                  </div>
                 </div>
 
                 <!-- LIST TABLE -->
