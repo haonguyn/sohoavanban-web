@@ -1,8 +1,9 @@
 import api from "./axios";
 
-export const processOCR = async (file: File) => {
+export const processOCR = async (file: File, extractionMode: string = 'ai') => {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("extraction_mode", extractionMode);
 
   return await api.post("/ocr/process/", formData, {
     headers: {

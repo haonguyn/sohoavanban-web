@@ -218,7 +218,7 @@
         </main>
 
         <!-- MODAL CHI TIẾT VĂN BẢN (VIEW & EDIT) -->
-        <div v-if="selectedDoc" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+        <div v-if="selectedDoc || isDetailLoading" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
             aria-modal="true">
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 bg-gray-800 bg-opacity-75 transition-opacity backdrop-blur-sm"
@@ -229,6 +229,17 @@
                 <div
                     class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl w-full">
 
+                    <!-- Loading state while fetching detail -->
+                    <div v-if="isDetailLoading" class="flex flex-col items-center justify-center py-24 px-6">
+                        <svg class="animate-spin h-10 w-10 text-blue-500 mb-4" viewBox="0 0 24 24" fill="none">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        <p class="text-gray-500 font-medium">Đang tải thông tin văn bản...</p>
+                        <button @click="closeDetailModal" class="mt-4 text-sm text-gray-400 hover:text-gray-600">Hủy</button>
+                    </div>
+
+                    <template v-else-if="selectedDoc">
                     <!-- Modal Header -->
                     <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-start">
                         <div>
@@ -493,12 +504,14 @@
                                                 <label class="block text-xs font-medium text-gray-500 mb-1">Loại liên kết</label>
                                                 <select v-model="linkForm.link_type" class="w-full border-gray-300 rounded border p-2 text-sm">
                                                     <option value="auto">✨ AI Tự nhận diện (Khuyên dùng)</option>
-                                                    <option value="thay_the_1_phan">Thay thế 1 phần</option>
-                                                    <option value="thay_the_toan_phan">Thay thế toàn phần</option>
-                                                    <option value="bai_bo_1_phan">Bãi bỏ 1 phần</option>
-                                                    <option value="bai_bo_toan_phan">Bãi bỏ toàn phần</option>
-                                                    <option value="huy_bo">Hủy bỏ</option>
-                                                    <option value="dinh_chinh">Đính chính</option>
+                                                    <option value="can_cu">Văn bản căn cứ</option>
+                                                    <option value="thay_the">Văn bản thay thế</option>
+                                                    <option value="bi_thay_the">Văn bản bị thay thế</option>
+                                                    <option value="sua_doi">Văn bản sửa đổi, bổ sung</option>
+                                                    <option value="bi_sua_doi">Văn bản bị sửa đổi, bổ sung</option>
+                                                    <option value="het_hieu_luc">Văn bản hết hiệu lực</option>
+                                                    <option value="het_hieu_luc_1_phan">Văn bản hết hiệu lực 1 phần</option>
+                                                    <option value="dinh_chinh">Văn bản đính chính</option>
                                                 </select>
                                             </div>
                                             <button @click="handleAddLink" type="button" :disabled="!linkForm.target_doc_number || !linkForm.link_type" class="w-full bg-blue-600 text-white rounded text-sm font-medium py-2 hover:bg-blue-700 disabled:bg-gray-400">
@@ -557,6 +570,7 @@
                             </button>
                         </div>
                     </div>
+                    </template><!-- end v-else-if selectedDoc -->
                 </div>
             </div>
         </div>
@@ -606,7 +620,7 @@ import { defineComponent } from 'vue';
 import type { Doc } from '../types/DocumentTypes';
 import Header from '../components/layout/Header.vue';
 import Footer from '../components/layout/Footer.vue';
-import { deleteDocument, fetchDocuments, updateDocument, getDocumentLinks, createDocumentLink, deleteDocumentLink } from '../api/documentApi';
+import { deleteDocument, fetchDocuments, updateDocument, getDocumentLinks, createDocumentLink, deleteDocumentLink, getDocumentDetail } from '../api/documentApi';
 import { base64ToBlob, downloadFile, formatDate, formatFileSize } from '../utils/fileUtils';
 import { hasRole } from '../utils/authUtils';
 import ToastNotification from '../components/ToastNotification.vue';
@@ -638,6 +652,7 @@ export default defineComponent({
             documents: [] as Doc[],
             relatedDocs: [] as any[],
             linkForm: { target_doc_number: "", link_type: "auto" },
+            isDetailLoading: false,
 
             currentPage: 1,
             pageSize: 10,
@@ -722,15 +737,19 @@ export default defineComponent({
         },
 
         async openDetailModal(doc: Doc) {
+            this.isDetailLoading = true;
+            this.selectedDoc = null;
+            this.relatedDocs = [];
             try {
                 this.isEditing = false;
-                const [attachRes, linksRes] = await Promise.all([
+                const [detailRes, attachRes, linksRes] = await Promise.all([
+                    getDocumentDetail(Number(doc.id)),
                     fetchAttachmentsByDoc(doc.id),
                     getDocumentLinks(doc.id).catch(() => ({ data: [] }))
                 ]);
                 const lastAttachment = attachRes.data.length > 0 ? attachRes.data[attachRes.data.length - 1] : null;
                 this.selectedDoc = {
-                    ...doc,
+                    ...detailRes.data,
                     attachments: lastAttachment,
                 };
                 
@@ -745,6 +764,8 @@ export default defineComponent({
                 });
             } catch (e: any) {
                 console.error("Lỗi lấy thông tin văn bản", e);
+            } finally {
+                this.isDetailLoading = false;
             }
         },
 

@@ -467,11 +467,13 @@ export default defineComponent({
         formatLinkType(type: string) {
             const raw = type.replace(" (Nhận)", "");
             const mapping: Record<string, string> = {
-                'thay_the_1_phan': 'Thay thế 1 phần',
-                'thay_the_toan_phan': 'Thay thế toàn phần',
-                'bai_bo_1_phan': 'Bãi bỏ 1 phần',
-                'bai_bo_toan_phan': 'Bãi bỏ toàn phần',
-                'huy_bo': 'Hủy bỏ',
+                'can_cu': 'Văn bản căn cứ',
+                'thay_the': 'Văn bản thay thế',
+                'bi_thay_the': 'Văn bản bị thay thế',
+                'sua_doi': 'Sửa đổi, bổ sung',
+                'bi_sua_doi': 'Bị sửa đổi, bổ sung',
+                'het_hieu_luc': 'Hết hiệu lực',
+                'het_hieu_luc_1_phan': 'Hết hiệu lực 1 phần',
                 'dinh_chinh': 'Đính chính',
             };
             const label = mapping[raw] || raw;

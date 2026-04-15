@@ -88,7 +88,17 @@
                 </div>
 
                 <!-- DETAIL TAB -->
-                <div v-if="selectedDoc" class="p-4 overflow-auto h-full flex flex-col bg-slate-50">
+                <div v-if="selectedDoc || isDetailLoading" class="p-4 overflow-auto h-full flex flex-col bg-slate-50">
+                    <!-- Loading spinner -->
+                    <div v-if="isDetailLoading" class="flex flex-col items-center justify-center flex-1 py-20">
+                        <svg class="animate-spin h-10 w-10 text-blue-500 mb-4" viewBox="0 0 24 24" fill="none">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        <p class="text-slate-500 font-medium">Đang tải thông tin văn bản...</p>
+                        <button @click="goBack" class="mt-4 text-sm text-slate-400 hover:text-slate-600">Hủy</button>
+                    </div>
+                    <template v-else-if="selectedDoc">
                     <div class="flex justify-between items-center mb-4">
                         <button @click="goBack"
                             class="flex items-center text-slate-500 hover:text-blue-600 font-medium">
@@ -195,30 +205,76 @@
                                     <textarea v-model="editForm.full_text"
                                         class="w-full border p-2 rounded h-64 font-mono text-sm"></textarea>
                                 </div>
-                                <!-- Thêm phần Liên kết văn bản -->
-                                <div class="col-span-2 border-t border-slate-200 mt-4 pt-4">
-                                    <h4 class="text-sm font-bold text-slate-700 mb-3">Tạo liên kết văn bản (Tuỳ chọn)</h4>
-                                    <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                                        <div>
-                                            <label class="text-xs font-bold text-slate-500">Số ký hiệu văn bản bị liên kết</label>
-                                            <input v-model="linkForm.target_doc_number" list="docNumbersList" placeholder="Nhập chữ/số để tìm kiếm..." autocomplete="off" class="w-full border p-2 rounded mt-1" />
-                                            <datalist id="docNumbersList">
-                                                <option v-for="d in docs" :key="d.id" :value="d.doc_number">{{ d.title }}</option>
-                                            </datalist>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Loại liên kết</label>
-                                            <select v-model="linkForm.link_type" class="w-full border-gray-300 rounded-md border p-2 text-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
-                                                <option value="auto">✨ AI Tự nhận diện (Khuyên dùng)</option>
-                                                <option value="thay_the_1_phan">Thay thế 1 phần</option>
-                                                <option value="thay_the_toan_phan">Thay thế toàn phần</option>
-                                                <option value="bai_bo_1_phan">Bãi bỏ 1 phần</option>
-                                                <option value="bai_bo_toan_phan">Bãi bỏ toàn phần</option>
-                                                <option value="huy_bo">Hủy bỏ</option>
-                                                <option value="dinh_chinh">Đính chính</option>
-                                            </select>
+                                <!-- Liên kết văn bản -->
+                                <div class="col-span-2 border-t border-slate-200 mt-6 pt-6">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Quản lý liên kết văn bản</h4>
+                                        <button @click="addLinkRow" type="button"
+                                            class="text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-100 transition border border-indigo-100 flex items-center gap-1.5">
+                                            <i class="fas fa-plus"></i> Thêm liên kết mới
+                                        </button>
+                                    </div>
+
+                                    <!-- Danh sách liên kết hiện tại (trong chế độ sửa) -->
+                                    <div v-if="existingLinks.length > 0" class="mb-6 space-y-2">
+                                        <p class="text-[11px] font-bold text-slate-400 uppercase mb-2">Liên kết hiện có:</p>
+                                        <div v-for="link in existingLinks" :key="link.id" 
+                                            class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl group">
+                                            <div class="flex items-center gap-3">
+                                                <div class="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-500 uppercase">
+                                                    {{ link.link_type }}
+                                                </div>
+                                                <span class="text-sm font-semibold text-slate-700">
+                                                    {{ link.target_document_number || link.source_document_number }}
+                                                </span>
+                                            </div>
+                                            <button @click="handleDeleteLink(link.id)" type="button"
+                                                class="text-slate-300 hover:text-rose-500 transition-colors p-1.5 hover:bg-rose-50 rounded-lg">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
                                         </div>
                                     </div>
+
+                                    <!-- Danh sách hàng liên kết mới đang chờ lưu -->
+                                    <div class="space-y-3">
+                                        <div v-for="(link, index) in pendingLinks" :key="index" 
+                                            class="grid grid-cols-[1fr_1fr_auto] gap-3 bg-indigo-50/30 p-4 rounded-xl border border-indigo-100 animate-fade-in">
+                                            <div>
+                                                <label class="text-[10px] font-bold text-indigo-400 uppercase block mb-1">Số ký hiệu văn bản</label>
+                                                <input v-model="link.target_doc_number" list="docNumbersList" placeholder="Nhập để tìm kiếm..." autocomplete="off" class="w-full border-slate-200 p-2 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                                            </div>
+                                            <div>
+                                                <label class="text-[10px] font-bold text-indigo-400 uppercase block mb-1">Loại liên kết</label>
+                                                <select v-model="link.link_type" class="w-full border-slate-200 rounded-lg border p-2 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none">
+                                                    <option value="auto">✨ AI Tự nhận diện</option>
+                                                    <option value="can_cu">Văn bản căn cứ</option>
+                                                    <option value="thay_the">Văn bản thay thế</option>
+                                                    <option value="bi_thay_the">Văn bản bị thay thế</option>
+                                                    <option value="sua_doi">Sửa đổi, bổ sung</option>
+                                                    <option value="bi_sua_doi">Bị sửa đổi, bổ sung</option>
+                                                    <option value="het_hieu_luc">Hết hiệu lực</option>
+                                                    <option value="het_hieu_luc_1_phan">Hết hiệu lực 1 phần</option>
+                                                    <option value="dinh_chinh">Đính chính</option>
+                                                </select>
+                                            </div>
+                                            <div class="flex items-end">
+                                                <button @click="removeLinkRow(index)" type="button"
+                                                    class="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div v-if="pendingLinks.length === 0 && existingLinks.length === 0" 
+                                            class="py-10 text-center border-2 border-dashed border-slate-100 rounded-2xl">
+                                            <div class="text-slate-300 mb-2"><i class="fas fa-link text-3xl"></i></div>
+                                            <p class="text-sm text-slate-400 italic">Chưa có liên kết nào cho văn bản này</p>
+                                        </div>
+                                    </div>
+
+                                    <datalist id="docNumbersList">
+                                        <option v-for="d in docs" :key="d.id" :value="d.doc_number">{{ d.title }}</option>
+                                    </datalist>
                                 </div>
                             </div>
 
@@ -254,9 +310,34 @@
                                         <p class="font-medium text-slate-700 mt-1">{{ selectedDoc.summary }}</p>
                                     </div>
                                 </div>
+                                
+                                <!-- Hiển thị liên kết văn bản trong View mode -->
+                                <div v-if="existingLinks.length > 0" class="border-t border-slate-200 pt-6">
+                                    <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                        <i class="fas fa-link text-blue-500 w-4 h-4"></i> Các liên kết hiện tại
+                                    </h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div v-for="link in existingLinks" :key="link.id" 
+                                            class="flex flex-col p-3 bg-white border border-blue-50 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                                            <div class="flex items-center justify-between mb-1.5">
+                                                <span class="text-[10px] font-bold text-blue-500 uppercase px-2 py-0.5 bg-blue-50 rounded border border-blue-100">
+                                                    {{ link.link_type }}
+                                                </span>
+                                            </div>
+                                            <p class="text-[13px] font-bold text-slate-700 mb-1">
+                                                {{ link.target_document_number || link.source_document_number }}
+                                            </p>
+                                            <p class="text-[11px] text-slate-500 line-clamp-1 italic">
+                                                {{ link.target_document_title || link.source_document_title }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div>
                                     <h4 class="font-bold text-slate-800 mb-2 flex items-center gap-2"><i
                                             data-lucide="file-text" class="w-4 h-4"></i> Nội dung OCR</h4>
+
                                     <div
                                         class="bg-slate-50 p-4 rounded-lg border border-slate-200 h-64 overflow-y-auto">
                                         <p class="text-sm text-slate-700 whitespace-pre-wrap font-mono leading-relaxed">
@@ -302,6 +383,7 @@
                             </div>
                         </div>
                     </div>
+                    </template><!-- end v-else-if selectedDoc -->
                 </div>
 
             </div>
@@ -315,7 +397,7 @@
 import { defineComponent } from "vue";
 import Navbar from "../../components/admin/Navbar.vue";
 import type { Doc } from "../../types/DocumentTypes";
-import { deleteDocument, fetchDocuments, updateDocument, createDocumentLink } from "../../api/documentApi";
+import { deleteDocument, fetchDocuments, updateDocument, createDocumentLink, getDocumentDetail, getDocumentLinks, deleteDocumentLink } from "../../api/documentApi";
 import LoadingComponent from "../../components/LoadingComponent.vue";
 import ToastNotification from "../../components/ToastNotification.vue";
 import AppDatePicker from "../../components/AppDatePicker.vue";
@@ -335,7 +417,9 @@ export default defineComponent({
             isPublic: false,
             editForm: {} as Partial<Doc>,
             docs: [] as Doc[],
-            linkForm: { target_doc_number: '', link_type: 'auto' },
+            pendingLinks: [] as { target_doc_number: string; link_type: string }[],
+            existingLinks: [] as any[],
+            isDetailLoading: false,
         };
     },
     mounted() {
@@ -420,22 +504,62 @@ export default defineComponent({
             }
         },
         async viewDetail(doc: Doc) {
+            this.isDetailLoading = true;
+            this.selectedDoc = null;
             try {
-                this.isEditing = false;
-                const res = await fetchAttachmentsByDoc(doc.id);
-                const lastAttachment = res.data.length > 0 ? res.data[res.data.length - 1] : null;
+                const [detailRes, attachRes] = await Promise.all([
+                    getDocumentDetail(Number(doc.id)),
+                    fetchAttachmentsByDoc(doc.id)
+                ]);
+                const lastAttachment = attachRes.data.length > 0 ? attachRes.data[attachRes.data.length - 1] : null;
                 this.selectedDoc = {
-                    ...doc,
+                    ...detailRes.data,
                     attachments: lastAttachment,
                 };
-                this.linkForm = { target_doc_number: '', link_type: 'auto' };
+                this.pendingLinks = [];
+                await this.fetchExistingLinks(Number(doc.id));
             } catch (e: any) {
                 console.error("Lỗi lấy thông tin văn bản", e);
-                this.linkForm = { target_doc_number: '', link_type: 'auto' };
+                this.pendingLinks = [];
+            } finally {
+                this.isDetailLoading = false;
             }
         },
-        startEditing() { if (!this.selectedDoc) return; this.isEditing = true; this.editForm = { ...this.selectedDoc }; this.linkForm = { target_doc_number: "", link_type: "auto" }; },
-        cancelEditing() { this.isEditing = false; this.editForm = {}; this.linkForm = { target_doc_number: "", link_type: "auto" }; },
+        async fetchExistingLinks(docId: number) {
+            try {
+                const res = await getDocumentLinks(docId);
+                this.existingLinks = res.data;
+            } catch (e) {
+                console.error("Lỗi lấy danh sách liên kết hiện tại:", e);
+            }
+        },
+        addLinkRow() {
+            this.pendingLinks.push({ target_doc_number: "", link_type: "auto" });
+        },
+        removeLinkRow(index: number) {
+            this.pendingLinks.splice(index, 1);
+        },
+        async handleDeleteLink(linkId: number) {
+            if (!confirm("Bạn có chắc chắn muốn xóa liên kết này?")) return;
+            try {
+                await deleteDocumentLink(linkId);
+                this.existingLinks = this.existingLinks.filter(l => l.id !== linkId);
+                (this.$refs.myToast as any).success("Thành công", "Đã xóa liên kết.");
+            } catch (e) {
+                (this.$refs.myToast as any).error("Lỗi", "Không thể xóa liên kết.");
+            }
+        },
+        startEditing() { 
+            if (!this.selectedDoc) return; 
+            this.isEditing = true; 
+            this.editForm = { ...this.selectedDoc }; 
+            this.pendingLinks = []; 
+        },
+        cancelEditing() { 
+            this.isEditing = false; 
+            this.editForm = {}; 
+            this.pendingLinks = []; 
+        },
         goBack() {
             this.selectedDoc = null;
             this.getDocuments();
@@ -458,16 +582,24 @@ export default defineComponent({
                     this.docs.splice(index, 1, updatedDoc);
                 }
                 this.selectedDoc = updatedDoc;
-
-                if (this.linkForm.target_doc_number && this.linkForm.link_type) {
-                    try {
-                        await createDocumentLink({
-                            source_doc_id: Number(this.selectedDoc.id),
-                            target_doc_number: this.linkForm.target_doc_number,
-                            link_type: this.linkForm.link_type
-                        });
-                    } catch (e: any) {
-                        (this.$refs.myToast as any).error("Lỗi liên kết", e.response?.data?.detail || "Không thể tạo liên kết.");
+                
+                // Save all pending links
+                if (this.pendingLinks.length > 0) {
+                    const promises = this.pendingLinks
+                        .filter(l => l.target_doc_number.trim())
+                        .map(l => createDocumentLink({
+                            source_doc_id: Number(this.selectedDoc!.id),
+                            target_doc_number: l.target_doc_number,
+                            link_type: l.link_type
+                        }));
+                    
+                    if (promises.length > 0) {
+                        try {
+                            await Promise.all(promises);
+                            await this.fetchExistingLinks(Number(this.selectedDoc.id));
+                        } catch (e: any) {
+                             (this.$refs.myToast as any).error("Lỗi liên kết", "Một hoặc nhiều liên kết không thể khởi tạo.");
+                        }
                     }
                 }
 
@@ -483,7 +615,7 @@ export default defineComponent({
                 console.error("Lỗi cập nhật văn bản:", e);
             } finally {
                 this.isEditing = false;
-                this.linkForm = { target_doc_number: "", link_type: "auto" };
+                this.pendingLinks = [];
                 (this.$refs.loadingRef as any).hide();
             }
         },

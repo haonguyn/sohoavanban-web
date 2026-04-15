@@ -47,11 +47,17 @@
         <!-- Phần Tính năng -->
         <section class="py-16 bg-gray-50">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12">
-                    <h2 class="text-2xl font-bold text-gray-800">Tính năng nổi bật</h2>
-                    <p class="text-gray-600">
-                        Các công cụ mạnh mẽ giúp bạn làm việc với văn bản
+                <div class="text-center mb-16 relative">
+                    <div class="inline-block px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold uppercase tracking-[0.2em] mb-4 shadow-sm border border-blue-100/50 animate-pulse-slow">
+                        Hệ sinh thái thông minh
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
+                        Tính năng <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">nổi bật</span>
+                    </h2>
+                    <p class="text-gray-500 mt-4 max-w-2xl mx-auto text-lg leading-relaxed">
+                        Các công cụ mạnh mẽ được tối ưu hóa để giúp bạn giải quyết công việc với văn bản nhanh chóng và chính xác nhất.
                     </p>
+                    <div class="w-24 h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 mx-auto mt-6 rounded-full shadow-lg shadow-blue-200"></div>
                 </div>
 
                 <div class="grid md:grid-cols-3 gap-8">
@@ -133,41 +139,125 @@
             </div>
         </section>
 
-        <section class="py-16 bg-white border-b border-gray-200">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-10">
-                    <span class="text-gray-500 font-semibold uppercase tracking-widest text-sm">Tra cứu nhanh</span>
-                    <h3 class="text-3xl font-extrabold text-gray-900 mt-1">
-                        Chủ đề được quan tâm gần đây
-                    </h3>
+    <section class="py-16 bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-14 relative">
+                <div class="inline-block px-4 py-1.5 bg-purple-50 text-purple-600 rounded-full text-xs font-bold uppercase tracking-[0.2em] mb-4 shadow-sm border border-purple-100/50 animate-pulse-slow">
+                    Khám phá & Gợi ý
                 </div>
-                <div class="flex flex-wrap items-center justify-center gap-4 md:gap-5 max-w-4xl mx-auto py-6">
-                    <a v-for="topic in trendingTopics" :key="topic.name" @click="searchByTopic(topic.name)"
-                        :style="{ 
-                            fontSize: (13 + Math.min(1, topic.searches / 1500) * 14) + 'px',
-                            opacity: 0.6 + Math.min(1, topic.searches / 1500) * 0.4,
-                            '--tag-color': topic.color,
-                            '--tag-bg': topic.lightBg,
-                        }"
-                        :class="topic.searches > 1000 ? 'is-hot shadow-md font-bold' : 'is-normal shadow-sm font-medium'"
-                        class="topic-tag px-5 py-2.5 rounded-full border transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer relative group">
-                        #{{ topic.name }}
-                        <!-- Tooltip indicator -->
-                        <span class="absolute -top-3 -right-2 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm pointer-events-none"
-                              :style="{ backgroundColor: topic.color }">
-                            {{ topic.searches > 1000 ? (topic.searches / 1000).toFixed(1) + 'k' : topic.searches }} view
-                        </span>
-                    </a>
+                <h3 class="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
+                    Tiêu điểm & <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Xu hướng</span>
+                </h3>
+                <p class="text-gray-500 mt-4 max-w-2xl mx-auto text-lg leading-relaxed">
+                    Theo dõi những chủ đề được quan tâm nhiều nhất và các từ khóa đang dẫn đầu xu hướng tìm kiếm.
+                </p>
+                <div class="w-24 h-1.5 bg-gradient-to-r from-purple-500 to-pink-500 mx-auto mt-6 rounded-full shadow-lg shadow-purple-200"></div>
+            </div>
+
+            <!-- Nền Aura Glow (Decorative Glows) -->
+            <div class="relative max-w-6xl mx-auto">
+                <div class="absolute -top-20 -left-20 w-80 h-80 bg-blue-200/40 rounded-full blur-[100px] -z-10"></div>
+                <div class="absolute -bottom-20 -right-20 w-80 h-80 bg-purple-200/40 rounded-full blur-[100px] -z-10"></div>
+
+                <div class="grid lg:grid-cols-2 gap-10">
+                <!-- Cột 1: Chủ đề Admin đề xuất -->
+                <div class="glass-card p-8 rounded-[2rem] border border-white/40 shadow-2xl relative overflow-hidden group">
+                    <div class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-200/50 rounded-full blur-2xl group-hover:bg-indigo-300/50 transition-all duration-700"></div>
+                    
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl shadow-lg shadow-indigo-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581a2.25 2.25 0 0 0 3.182 0l4.318-4.318a2.25 2.25 0 0 0 0-3.182L11.159 3.659A2.25 2.25 0 0 0 9.568 3Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-gray-900">Chủ đề đề xuất</h4>
+                            <p class="text-xs text-gray-400 mt-0.5">Dựa trên xu hướng quan tâm</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-4 items-center justify-center min-h-[160px]">
+                        <a v-for="(topic, index) in trendingTopics" :key="topic.name" @click="searchByTopic(topic.name)"
+                            :style="{ 
+                                fontSize: (14 + Math.min(1, topic.searches / 1500) * 10) + 'px',
+                                opacity: 0.85 + Math.min(1, topic.searches / 1500) * 0.15,
+                                '--tag-color': topic.color,
+                                '--tag-bg': topic.light_bg,
+                                'animation-delay': (index * 0.2) + 's'
+                            }"
+                            class="premium-tag px-6 py-3 rounded-2xl border cursor-pointer hover:scale-110 active:scale-95">
+                            <span class="opacity-60 mr-1">#</span>{{ topic.name }}
+                        </a>
+                        <div v-if="trendingTopics.length === 0" class="flex flex-col items-center gap-2 py-10">
+                             <div class="w-12 h-1 bg-gray-200 rounded-full animate-pulse"></div>
+                             <p class="text-gray-400 text-sm italic">Chưa có chủ đề đề xuất</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột 2: Xu hướng tìm kiếm -->
+                <div class="glass-card p-8 rounded-[2rem] border border-white/40 shadow-2xl relative overflow-hidden group">
+                     <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-orange-100/50 rounded-full blur-2xl group-hover:bg-orange-200/50 transition-all duration-700"></div>
+
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="p-3 bg-gradient-to-br from-orange-400 to-pink-500 text-white rounded-2xl shadow-lg shadow-orange-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m-.921 5.972 3.277-3.277-3.277-3.277" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-gray-900">Xu hướng tìm kiếm</h4>
+                            <p class="text-xs text-gray-400 mt-0.5">Top tiêu điểm trong tuần</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3">
+                        <a v-for="(item, index) in topSearches" :key="item.id" @click="searchByTopic(item.keyword)"
+                            class="flex items-center group/item p-3 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 hover:border-orange-200 hover:bg-orange-50/50 transition-all duration-500 cursor-pointer shadow-sm">
+                            <div class="relative mr-4">
+                                <div class="w-8 h-8 flex items-center justify-center rounded-xl text-sm font-bold transition-all duration-300"
+                                     :class="index < 3 ? 'bg-orange-500 text-white shadow-md shadow-orange-200 scale-110' : 'bg-gray-100 text-gray-500'">
+                                    {{ index + 1 }}
+                                </div>
+                                <div v-if="index < 3" class="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-ping"></div>
+                            </div>
+                            
+                            <div class="flex-grow">
+                                <span class="text-sm font-semibold text-gray-800 group-hover/item:text-orange-700 transition-colors">{{ item.keyword }}</span>
+                            </div>
+
+                            <div class="text-[11px] font-bold text-gray-400 bg-gray-100/50 px-2 py-1 rounded-lg group-hover/item:bg-orange-100 group-hover/item:text-orange-500 transition-all">
+                                {{ item.count.toLocaleString() }}
+                            </div>
+                        </a>
+                        <div v-if="topSearches.length === 0" class="flex flex-col items-center gap-4 py-10">
+                            <div class="flex gap-1">
+                                <div class="w-2 h-2 bg-orange-300 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                <div class="w-2 h-2 bg-orange-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                <div class="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
+                            </div>
+                            <p class="text-gray-400 text-sm italic">Đang cập nhật xu hướng...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </div>
+</section>
 
         <!-- Danh sách văn bản (mới/xem nhiều) -->
         <section class="py-16 bg-gray-100">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">
-                    Văn bản mới cập nhật
-                </h2>
+                <div class="mb-12 relative">
+                    <div class="inline-block px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold uppercase tracking-[0.2em] mb-4 shadow-sm border border-emerald-100/50 animate-pulse-slow">
+                        Cập nhật mới nhất
+                    </div>
+                    <h2 class="text-4xl font-black text-gray-900 tracking-tight">
+                        Văn bản <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">mới cập nhật</span>
+                    </h2>
+                    <div class="w-16 h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 mt-6 rounded-full shadow-lg shadow-emerald-200"></div>
+                </div>
 
                 <div class="space-y-4">
                     <!-- Mockup item văn bản -->
@@ -219,7 +309,7 @@ import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
 import type { Doc } from "../types/DocumentTypes";
 import { fetchFeaturedDocs } from "../api/documentApi";
-import { fetchTopics, TrendingTopic } from "../api/topicApi";
+import { fetchTopics, type TrendingTopic, fetchTopSearches, type SearchKeyword } from "../api/topicApi";
 import { getStatusClass, truncate } from "../utils/textUtils";
 import { getDocumentEffectiveStatus, formatDate } from "../utils/fileUtils";
 
@@ -233,6 +323,7 @@ export default defineComponent({
         return {
             searchQuery: "",
             trendingTopics: [] as TrendingTopic[],
+            topSearches: [] as SearchKeyword[],
             featuredDocs: [] as Doc[],
         };
     },
@@ -268,11 +359,20 @@ export default defineComponent({
             }
         },
         async fetchTopicsData() {
+            // Fetch topics independently
             try {
-                const res = await fetchTopics();
-                this.trendingTopics = res.data.filter(t => t.is_active);
+                const topicsRes = await fetchTopics();
+                this.trendingTopics = topicsRes.data.filter(t => t.is_active);
             } catch (e) {
                 console.error("Lỗi lấy danh sách topic:", e);
+            }
+
+            // Fetch top searches independently
+            try {
+                const topSearchesRes = await fetchTopSearches();
+                this.topSearches = topSearchesRes.data;
+            } catch (e) {
+                console.error("Lỗi lấy xu hướng tìm kiếm:", e);
             }
         },
         formatDate,
@@ -325,21 +425,50 @@ export default defineComponent({
     animation: fade-in-up 0.6s ease-out both;
 }
 
-/* Custom styles for topic tags inspired by dynamic word cloud */
-.topic-tag.is-normal {
-    color: #475569;
-    border-color: #e2e8f0;
-    background-color: #ffffff;
+/* Aesthetic Upgrade Styles */
+.glass-card {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.topic-tag.is-hot {
+
+.glass-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.55);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+.premium-tag {
     color: var(--tag-color);
-    border-color: var(--tag-color);
-    background-color: var(--tag-bg);
+    background: white;
+    border-color: rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.06);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: float 6s ease-in-out infinite;
+    font-weight: 600;
 }
-.topic-tag:hover {
-    background-color: var(--tag-color) !important;
-    color: #ffffff !important;
-    border-color: var(--tag-color) !important;
-    opacity: 1 !important;
+
+.premium-tag:hover {
+    background: var(--tag-color);
+    color: white !important;
+    border-color: var(--tag-color);
+    box-shadow: 0 10px 25px -5px var(--tag-color);
+    transform: translateY(-5px) scale(1.1) rotate(1deg);
+    z-index: 10;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
 }
 </style>

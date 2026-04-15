@@ -27,11 +27,22 @@
                     </div>
                 </div>
                 <div class="flex-1 overflow-y-auto scrollbar-thin py-2">
+                    <!-- Nút "Tất cả" -->
+                    <div @click="selectCluster(null)" 
+                         class="flex items-center gap-2 px-4 py-2.5 cursor-pointer transition select-none border-l-[3px] mb-1"
+                         :class="selectedCluster === null ? 'bg-indigo-50 border-indigo-500' : 'border-transparent hover:bg-slate-50'">
+                        <i class="fas fa-layer-group text-sm" :class="selectedCluster === null ? 'text-indigo-500' : 'text-slate-400'"></i>
+                        <span class="text-[13px] font-semibold" :class="selectedCluster === null ? 'text-indigo-700' : 'text-slate-600'">Tất cả</span>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ml-auto shrink-0"
+                              :class="selectedCluster === null ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-200 text-slate-600'">{{ rawNodes.length }}</span>
+                    </div>
+
                     <div v-for="group in groupedNodes" :key="group.name" class="mb-1">
                         <!-- Folder Header -->
-                        <div @click="toggleGroup(group.name)" 
+                        <div @click="selectCluster(group.name)" 
                              @dblclick="startEditGroup(group.name, $event)"
-                             class="flex items-center gap-2 px-4 py-2 hover:bg-slate-100 cursor-pointer transition select-none group">
+                             class="flex items-center gap-2 px-4 py-2 cursor-pointer transition select-none group border-l-[3px]"
+                             :class="selectedCluster === group.name ? 'bg-indigo-50 border-indigo-500' : 'border-transparent hover:bg-slate-100'">
                             <i class="fas text-[10px] w-3 text-slate-400 group-hover:text-slate-700 transition text-center" 
                                :class="expandedGroups[group.name] === false ? 'fa-chevron-right' : 'fa-chevron-down'"></i>
                             <i class="fas fa-folder text-indigo-400 text-sm"></i>
@@ -165,6 +176,11 @@ export default defineComponent({
             isLoadingDoc: false,
             selectedDoc: null as Doc | null,
             rawNodes: [] as any[],
+            chartNodes: [] as any[],
+            allProcessedNodes: [] as any[],
+            allProcessedEdges: [] as any[],
+            allCategories: [] as any[],
+            selectedCluster: null as string | null,
             searchQuery: '',
             expandedGroups: {} as Record<string, boolean>,
             editingGroup: null as string | null,
@@ -214,6 +230,50 @@ export default defineComponent({
         toggleGroup(name: string) {
             this.expandedGroups[name] = this.expandedGroups[name] === false ? true : false;
         },
+        selectCluster(clusterName: string | null) {
+            if (clusterName === null) {
+                if (this.selectedCluster === null) return;
+                this.selectedCluster = null;
+                this.updateChartFilter();
+                this.closePanel();
+                return;
+            }
+            if (this.selectedCluster === clusterName) {
+                // Same folder clicked - just toggle expand/collapse
+                this.toggleGroup(clusterName);
+                return;
+            }
+            // New folder selected
+            this.selectedCluster = clusterName;
+            this.expandedGroups[clusterName] = true;
+            this.updateChartFilter();
+            this.closePanel();
+        },
+        updateChartFilter() {
+            let nodes = this.allProcessedNodes;
+            let edges = this.allProcessedEdges;
+
+            if (this.selectedCluster) {
+                nodes = nodes.filter((n: any) => n.clusterId === this.selectedCluster);
+                const nodeIds = new Set(nodes.map((n: any) => n.id));
+                edges = edges.filter((e: any) => nodeIds.has(e.source) && nodeIds.has(e.target));
+            }
+
+            const visibleYears = new Set(nodes.map((n: any) => n.category));
+            const categories = this.allCategories.filter((c: any) => visibleYears.has(c.name));
+
+            this.chartNodes = nodes;
+            this.currentZoom = 1;
+
+            if (this.networkOptions.series && this.networkOptions.series.length > 0) {
+                this.networkOptions.series[0].data = nodes;
+                this.networkOptions.series[0].links = edges;
+                this.networkOptions.series[0].categories = categories;
+                this.networkOptions.series[0].force.repulsion = Math.max(2000, 1000 + nodes.length * 15);
+                this.networkOptions.legend[0].data = categories.map((c: any) => c.name);
+                this.networkOptions = { ...this.networkOptions };
+            }
+        },
         startEditGroup(name: string, event: Event) {
             if (name === 'Các văn bản độc lập') return;
             this.editingGroup = name;
@@ -233,7 +293,7 @@ export default defineComponent({
             }
         },
         highlightNode(id: string) {
-            const index = this.rawNodes.findIndex(n => n.id === id);
+            const index = this.chartNodes.findIndex(n => n.id === id);
             if (index !== -1 && this.$refs.graphChart) {
                 const chart = this.$refs.graphChart as any;
                 chart.dispatchAction({
@@ -267,7 +327,7 @@ export default defineComponent({
             if (params.dataType === 'node') {
                 const docId = params.data.id;
                 
-                const index = this.rawNodes.findIndex(n => n.id === docId);
+                const index = this.chartNodes.findIndex(n => n.id === docId);
                 if (index !== -1 && this.$refs.graphChart) {
                     const chart = this.$refs.graphChart as any;
                     chart.dispatchAction({
@@ -329,18 +389,15 @@ export default defineComponent({
                     c.itemStyle = { color: colors[i % colors.length] };
                 });
 
-                const uniqueYears = Array.from(new Set(data.nodes.map((n: any) => n.value))).sort() as number[];
-                
+                // --- Cluster detection (giữ nguyên) ---
                 const adj: Record<string, string[]> = {};
                 data.nodes.forEach((n: any) => adj[n.id] = []);
                 data.edges.forEach((e: any) => {
                     if (adj[e.source]) adj[e.source].push(e.target);
                     if (adj[e.target]) adj[e.target].push(e.source);
                 });
-
                 const visited = new Set();
                 const components: string[][] = [];
-
                 data.nodes.forEach((n: any) => {
                     if (!visited.has(n.id)) {
                         const comp: string[] = [];
@@ -361,7 +418,6 @@ export default defineComponent({
                         components.push(comp);
                     }
                 });
-
                 let clusterCount = 0;
                 const mapClusterName = new Map();
                 components.forEach((comp, idx) => {
@@ -373,118 +429,184 @@ export default defineComponent({
                     }
                 });
 
-                const yearCounts: Record<string, number> = {};
-
+                // --- Node styling (Connected Papers style) ---
                 data.nodes.forEach((node: any) => {
-                    const year = node.value;
-                    const xIndex = uniqueYears.indexOf(year);
-                    node.x = xIndex * 380; 
-
                     const cIndex = components.findIndex(c => c.includes(node.id));
                     node.clusterId = mapClusterName.get(cIndex);
                     
-                    const key = `${cIndex}_${year}`;
-                    if (!yearCounts[key]) yearCounts[key] = 0;
+                    const degree = (adj[node.id] || []).length;
+                    const nameLen = (node.name || "").length;
                     
-                    node.y = cIndex * 150 + (yearCounts[key] * 100); 
-                    yearCounts[key]++;
-                
-                    node.symbolSize = 45;
+                    // Elastic Sizing: Combine connectivity (Power Scale) and Text Length
+                    const sizeFromDegree = 45 + Math.pow(degree, 1.4) * 16;
+                    const sizeFromText = 40 + (nameLen * 3.8); 
+                    
+                    node.symbolSize = Math.max(sizeFromDegree, sizeFromText);
+                    node.draggable = false; // Disabled to keep layout stable as requested
+                    node.z = 10; // Ensure nodes are on top
+
                     node.itemStyle = {
-                        shadowBlur: 10,
-                        shadowColor: 'rgba(0,0,0,0.15)',
-                        borderColor: '#ffffff',
-                        borderWidth: 2
+                        opacity: 1, // Fully opaque to hide lines underneath
+                        // Stronger glow for central "hubs"
+                        shadowBlur: Math.min(70, 15 + degree * 12),
+                        shadowColor: degree > 2 ? 'rgba(99, 102, 241, 0.4)' : 'rgba(0,0,0,0.15)',
+                        borderColor: 'rgba(255,255,255,0.9)',
+                        borderWidth: 3
                     };
                     node.label = {
                         show: true,
-                        position: 'bottom',
-                        distance: 10,
-                        fontSize: 12,
-                        fontWeight: '600',
-                        color: '#1e293b',
-                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                        padding: [6, 10],
-                        borderRadius: 6,
-                        shadowBlur: 8,
-                        shadowColor: 'rgba(0,0,0,0.15)'
+                        position: 'inside',
+                        fontSize: node.symbolSize > 80 ? 11 : 9, // Adaptive font size
+                        fontWeight: '700',
+                        fontFamily: "'Outfit', sans-serif",
+                        color: '#ffffff', // High contrast on colored nodes
+                        textShadowBlur: 5,
+                        textShadowColor: 'rgba(0,0,0,0.3)',
+                        overflow: 'break',
+                        width: node.symbolSize * 0.8, // Dynamic width based on node size
                     };
                 });
+                
+                // --- Bảng màu cho từng loại liên kết ---
+                const LINK_COLORS: Record<string, string> = {
+                    'can_cu': '#64748b',
+                    'thay_the': '#ef4444',
+                    'bi_thay_the': '#f97316',
+                    'thay_the_1_phan': '#fb923c',
+                    'thay_the_toan_phan': '#dc2626',
+                    'sua_doi': '#8b5cf6',
+                    'bi_sua_doi': '#a78bfa',
+                    'het_hieu_luc': '#6b7280',
+                    'het_hieu_luc_1_phan': '#9ca3af',
+                    'bai_bo_1_phan': '#f59e0b',
+                    'bai_bo_toan_phan': '#d97706',
+                    'dinh_chinh': '#06b6d4',
+                    'huy_bo': '#be123c',
+                };
+
+                // --- Edge styling: hiển thị loại liên kết ---
+                const nodeSizeMap = new Map(data.nodes.map((n: any) => [n.id, n.symbolSize]));
                 
                 data.edges.forEach((edge: any) => {
+                    const linkColor = LINK_COLORS[edge.linkType] || '#94a3b8';
+                    const sourceSize = nodeSizeMap.get(edge.source) || 40;
+                    const targetSize = nodeSizeMap.get(edge.target) || 40;
+
+                    edge.z = 2; // Lines sit below nodes
+                    // Shell-to-shell connectivity using edgeSymbol constraints
+                    edge.symbol = ['none', 'none'];
+                    edge.symbolSize = [sourceSize, targetSize];
+                    
                     edge.lineStyle = {
-                        width: 2.5,
-                        color: '#94a3b8',
-                        curveness: 0
+                        width: 2.2,
+                        color: linkColor,
+                        curveness: 0, // Straight lines as requested
+                        opacity: 0.7,
                     };
                     edge.label = {
-                        show: true,
-                        fontSize: 12,
-                        fontWeight: 'bold',
-                        color: '#0f172a',
-                        formatter: '{c}',
-                        backgroundColor: 'rgba(255,255,255,0.95)',
-                        borderColor: '#cbd5e1',
-                        borderWidth: 1,
-                        padding: [4, 8],
-                        borderRadius: 6,
-                        shadowBlur: 4,
-                        shadowColor: 'rgba(0,0,0,0.1)',
+                        show: false, // Hidden as requested for a cleaner look
+                    };
+                    edge.emphasis = {
+                        label: { 
+                            show: true, 
+                            fontSize: 12, 
+                            fontWeight: '700', 
+                            fontFamily: "'Inter', sans-serif",
+                            color: '#0f172a', 
+                            backgroundColor: 'rgba(255, 255, 255, 0.98)', 
+                            padding: [5, 10], 
+                            borderColor: linkColor, 
+                            borderWidth: 1.5, 
+                            borderRadius: 6,
+                            shadowBlur: 15,
+                            shadowColor: 'rgba(0,0,0,0.1)'
+                        },
+                        lineStyle: { width: 4, color: linkColor, opacity: 1 }
                     };
                 });
                 
+                // Store all processed data for cluster filtering
+                this.allProcessedNodes = [...data.nodes];
+                this.allProcessedEdges = [...data.edges];
+                this.allCategories = [...data.categories];
+                this.chartNodes = [...data.nodes];
+
                 this.currentZoom = 1;
                 this.networkOptions = {
                     backgroundColor: 'transparent',
                     tooltip: {
+                        trigger: 'item',
+                        confine: true,
                         formatter: function (params: any) {
-                           if(params.dataType === 'node') return params.data.tooltip || params.name;
-                           if(params.dataType === 'edge') return params.data.value;
+                           if (params.dataType === 'node') return `<b>${params.name}</b><br/>Năm: ${params.data.value || ''}`;
+                           if (params.dataType === 'edge') return `<b style="color:${params.data.lineStyle?.color || '#333'}">${params.data.value || 'Liên kết'}</b>`;
                            return params.name;
                         },
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.97)',
                         borderColor: '#e2e8f0',
-                        textStyle: { color: '#0f172a' }
+                        padding: [8, 12],
+                        textStyle: { 
+                            color: '#0f172a', 
+                            fontSize: 14, 
+                            fontFamily: "'Inter', sans-serif",
+                            fontWeight: '500'
+                        }
                     },
                     legend: [{
                         data: data.categories.map((a: any) => a.name),
                         bottom: 0,
-                        icon: 'circle'
+                        icon: 'circle',
+                        textStyle: { 
+                            fontSize: 12, 
+                            color: '#64748b',
+                            fontFamily: "'Inter', sans-serif",
+                            fontWeight: '500'
+                        }
                     }],
                     series: [
                         {
                             type: 'graph',
-                            layout: 'none', 
+                            layout: 'force',
                             data: data.nodes,
                             links: data.edges,
                             categories: data.categories,
                             roam: true,
                             zoom: this.currentZoom,
-                            edgeSymbol: ['circle', 'arrow'],
-                            edgeSymbolSize: [5, 12],
+                            draggable: false, 
+                            edgeSymbol: ['none', 'none'],
+                            edgeSymbolSize: [0, 0],
                             selectedMode: 'single',
+                            force: {
+                                // High repulsion to ensure labels are visible in the gap
+                                repulsion: Math.max(2000, 1000 + data.nodes.length * 15), 
+                                gravity: 0.06,
+                                edgeLength: [260, 550], // Wide spacing
+                                friction: 0.4,
+                                layoutAnimation: true,
+                            },
                             select: {
                                 itemStyle: {
-                                    borderColor: '#ffffff',
-                                    borderWidth: 5,
-                                    shadowBlur: 40,
-                                    shadowColor: 'rgba(59, 130, 246, 1)'
+                                    opacity: 1,
+                                    borderColor: '#e11d48',
+                                    borderWidth: 3,
+                                    shadowBlur: 30,
+                                    shadowColor: 'rgba(225, 29, 72, 0.5)'
                                 },
-                                label: {
-                                    fontWeight: 'bold',
-                                    color: '#1d4ed8'
-                                }
+                                label: { fontWeight: 'bold', color: '#0f172a', fontSize: 13 }
                             },
                             emphasis: {
                                 focus: 'adjacency',
                                 itemStyle: {
+                                    opacity: 1,
                                     borderColor: '#ffffff',
-                                    borderWidth: 4,
-                                    shadowBlur: 35,
-                                    shadowColor: 'rgba(59, 130, 246, 0.85)'
+                                    borderWidth: 3,
+                                    shadowBlur: 25,
+                                    shadowColor: 'rgba(59, 130, 246, 0.6)'
                                 },
-                                lineStyle: { width: 4, color: '#3b82f6' }
-                            }
+                                lineStyle: { width: 3, opacity: 1 }
+                            },
+                            animationDuration: 1500,
+                            animationEasingUpdate: 'quinticInOut',
                         }
                     ]
                 };

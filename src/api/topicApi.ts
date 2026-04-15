@@ -11,6 +11,13 @@ export interface TrendingTopic {
   updated_at?: string;
 }
 
+export interface SearchKeyword {
+  id: number;
+  keyword: string;
+  count: number;
+  updated_at: string;
+}
+
 export const fetchTopics = () => {
     return apiClient.get<TrendingTopic[]>('/topics/');
 };
@@ -25,4 +32,8 @@ export const updateTopic = (id: number, data: Partial<TrendingTopic>) => {
 
 export const deleteTopic = (id: number) => {
     return apiClient.delete(`/topics/${id}/`);
+};
+
+export const fetchTopSearches = () => {
+    return apiClient.get<SearchKeyword[]>('/topics/top-searches/');
 };
