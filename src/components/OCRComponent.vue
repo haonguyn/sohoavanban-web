@@ -64,6 +64,27 @@
                                     lại</button>
                             </div>
                         </div>
+                        <div class="mt-4 mb-2">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Phương thức trích xuất:</label>
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <label class="flex-1 relative cursor-pointer border rounded-lg p-3 flex flex-col transition-all"
+                                    :class="extractionMode === 'ai' ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500' : 'border-gray-200 bg-white hover:bg-gray-50'">
+                                    <div class="flex items-center">
+                                        <input type="radio" v-model="extractionMode" value="ai" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                        <span class="ml-2 block text-sm font-bold text-gray-900">🤖 AI Gemini</span>
+                                    </div>
+                                    <p class="mt-1 ml-6 text-xs text-gray-500 leading-snug">Chính xác cao, linh hoạt. Phụ thuộc vào hạn mức API.</p>
+                                </label>
+                                <label class="flex-1 relative cursor-pointer border rounded-lg p-3 flex flex-col transition-all"
+                                    :class="extractionMode === 'local' ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-200 bg-white hover:bg-gray-50'">
+                                    <div class="flex items-center">
+                                        <input type="radio" v-model="extractionMode" value="local" class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300">
+                                        <span class="ml-2 block text-sm font-bold text-gray-900">⚡ Cục bộ (Thuật toán)</span>
+                                    </div>
+                                    <p class="mt-1 ml-6 text-xs text-green-600 font-medium leading-snug">Nhanh, MIỄN PHÍ. Hoạt động tốt với Văn bản nhà nước.</p>
+                                </label>
+                            </div>
+                        </div>
                         <button @click="startOCR" :disabled="!selectedFile || isLoading"
                             class="w-full mt-4 py-2.5 px-4 rounded-lg shadow-sm text-base font-semibold text-white transition-all bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center">
                             <span v-if="!isLoading" class="flex items-center">
@@ -199,12 +220,14 @@
                                         <label class="block text-xs font-bold text-gray-600 mb-1">Loại liên kết</label>
                                         <select v-model="linkForm.link_type" class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
                                             <option value="auto">✨ AI Tự nhận dạng (Khuyên dùng)</option>
-                                            <option value="thay_the_1_phan">Thay thế 1 phần</option>
-                                            <option value="thay_the_toan_phan">Thay thế toàn phần</option>
-                                            <option value="bai_bo_1_phan">Bãi bỏ 1 phần</option>
-                                            <option value="bai_bo_toan_phan">Bãi bỏ toàn phần</option>
-                                            <option value="huy_bo">Hủy bỏ</option>
-                                            <option value="dinh_chinh">Đính chính</option>
+                                            <option value="can_cu">Văn bản căn cứ</option>
+                                            <option value="thay_the">Văn bản thay thế</option>
+                                            <option value="bi_thay_the">Văn bản bị thay thế</option>
+                                            <option value="sua_doi">Văn bản sửa đổi, bổ sung</option>
+                                            <option value="bi_sua_doi">Văn bản bị sửa đổi, bổ sung</option>
+                                            <option value="het_hieu_luc">Văn bản hết hiệu lực</option>
+                                            <option value="het_hieu_luc_1_phan">Văn bản hết hiệu lực 1 phần</option>
+                                            <option value="dinh_chinh">Văn bản đính chính</option>
                                         </select>
                                     </div>
                                 </div>
@@ -277,26 +300,26 @@
                                 class="ocr-page shadow-2xl mb-4 mx-auto bg-white border border-gray-300 relative overflow-hidden shrink-0"
                                 :style="{
                                     width: '100%',
-                                    aspectRatio: `${getPageWidth(pIdx + 1)} / ${page.height}`,
-                                    maxWidth: (850 * zoomLevel * (getPageWidth(pIdx + 1) / page.width)) + 'px'
+                                    aspectRatio: `${cachedPageWidths[pIdx + 1] || page.width} / ${page.height}`,
+                                    maxWidth: (850 * zoomLevel * ((cachedPageWidths[pIdx + 1] || page.width) / page.width)) + 'px'
                                 }">
 
-                                <div v-for="(item, iIdx) in positions.filter(p => p.page === pIdx + 1)" :key="iIdx"
+                                <div v-for="(item, iIdx) in (positionsByPage[pIdx + 1] || [])" :key="item._uid || iIdx"
                                     class="absolute overflow-visible" :style="{
-                                        left: (item.x / getPageWidth(pIdx + 1) * 100) + '%',
+                                        left: (item.x / (cachedPageWidths[pIdx + 1] || page.width) * 100) + '%',
                                         top: (item.y / page.height * 100) + '%',
-                                        minWidth: (item.w / getPageWidth(pIdx + 1) * 100) + '%',
+                                        minWidth: (item.w / (cachedPageWidths[pIdx + 1] || page.width) * 100) + '%',
                                         maxWidth: '100%',
                                         height: 'auto',
-                                        zIndex: (editingBlockId === item.x + '-' + item.y || selectedBlockId === item.x + '-' + item.y) ? 60 : 10
+                                        zIndex: (editingBlockId === item._uid || selectedBlockId === item._uid) ? 60 : 10
                                     }">
-                                    <div :contenteditable="editingBlockId === item.x + '-' + item.y" tabindex="0"
+                                    <div :contenteditable="editingBlockId === item._uid" tabindex="0"
                                         class="ocr-text-block font-medium leading-tight outline-none transition-all rounded-sm px-1 flex items-center w-full h-full"
                                         :class="[
-                                            editingBlockId === item.x + '-' + item.y ? 'bg-white ring-2 ring-blue-500 shadow-lg cursor-text' : 'bg-white/60 hover:bg-white cursor-pointer border border-transparent hover:border-blue-200',
-                                            selectedBlockId === item.x + '-' + item.y ? 'ring-1 ring-red-400 bg-white shadow-md' : '',
-                                            activeField ? 'ring-2 ring-blue-400 animate-pulse bg-blue-50/50 z-40' : '',
-                                            { 'ocr-highlight-field': isFieldMatch(item.text) }
+                                            editingBlockId === item._uid ? 'bg-white ring-2 ring-blue-500 shadow-lg cursor-text' : 'bg-white/60 hover:bg-white cursor-pointer border border-transparent hover:border-blue-200',
+                                            selectedBlockId === item._uid ? 'ring-1 ring-red-400 bg-white shadow-md' : '',
+                                            activeField && matchedBlockIds.has(item._uid) ? 'ring-2 ring-blue-400 animate-pulse bg-blue-50/50 z-40' : '',
+                                            matchedBlockIds.has(item._uid) ? 'ocr-highlight-field' : ''
                                         ]" :style="{ fontSize: '1.7cqw', padding: '0.4cqw 0.3cqw' }"
                                         @click.stop="onBlockClick(item)" @dblclick.stop="onBlockDblClick(item, $event)"
                                         @blur="onBlockEdit($event, item); onBlockBlur(item)"
@@ -304,9 +327,9 @@
                                         <span class="w-full break-words">{{ item.text }}</span>
                                     </div>
 
-                                    <!-- Nút xóa (x) nằm ngoài viền và ngoài div editable -->
+                                    <!-- Nút xóa (x) -->
                                     <button
-                                        v-if="selectedBlockId === item.x + '-' + item.y && editingBlockId !== item.x + '-' + item.y"
+                                        v-if="selectedBlockId === item._uid && editingBlockId !== item._uid"
                                         @click.stop="removeBlock(item)"
                                         class="absolute -top-3 -right-3 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[11px] font-bold shadow-md hover:bg-red-600 transition-all z-[75] border-2 border-white">
                                         ✕
@@ -364,6 +387,7 @@ export default defineComponent({
             activeField: null as string | null,
             selectedBlockId: null as string | null,
             editingBlockId: null as string | null,
+            extractionMode: 'ai' as 'ai' | 'local',
             form: {
                 doc_number: "", title: "", doc_type: "", issued_date: "", issued_by: "", signer: "",
                 summary: "", full_text: "", effective_start_date: "", effective_end_date: "",
@@ -372,13 +396,64 @@ export default defineComponent({
         };
     },
     mounted() {
-        this.getDocuments();
+        // Không tải toàn bộ documents khi mount — dùng lazy search
     },
     computed: {
         fileType(): 'image' | 'pdf' | 'other' | null {
             if (!this.selectedFile) return null;
             return this.selectedFile.type.startsWith('image/') ? 'image' : (this.selectedFile.type === 'application/pdf' ? 'pdf' : 'other');
-        }
+        },
+        // Cache: nhóm positions theo số trang
+        positionsByPage(): Record<number, any[]> {
+            const map: Record<number, any[]> = {};
+            for (const pos of this.positions) {
+                const p = pos.page || 1;
+                if (!map[p]) map[p] = [];
+                map[p].push(pos);
+            }
+            return map;
+        },
+        // Cache: tính pageWidth 1 lần duy nhất cho mỗi trang
+        cachedPageWidths(): Record<number, number> {
+            const result: Record<number, number> = {};
+            if (!this.metadata.pages) return result;
+            for (let pIdx = 0; pIdx < this.metadata.pages.length; pIdx++) {
+                const pageNum = pIdx + 1;
+                const baseWidth = this.metadata.pages[pIdx]?.width || 1000;
+                const blocks = this.positionsByPage[pageNum] || [];
+                if (blocks.length === 0) {
+                    result[pageNum] = baseWidth;
+                    continue;
+                }
+                let maxRight = 0;
+                for (const b of blocks) {
+                    const r = b.x + b.w;
+                    if (r > maxRight) maxRight = r;
+                }
+                const margin = 80;
+                if (baseWidth - maxRight > baseWidth * 0.1) {
+                    result[pageNum] = Math.min(baseWidth, maxRight + margin);
+                } else {
+                    result[pageNum] = baseWidth;
+                }
+            }
+            return result;
+        },
+        // Cache: set các block ID khớp với form fields (O(1) lookup)
+        matchedBlockIds(): Set<string> {
+            const matched = new Set<string>();
+            const fields = [this.form.title, this.form.doc_number, this.form.issued_by, this.form.signer, this.form.doc_type, this.form.summary];
+            const fieldLower = fields.filter(Boolean).map((f: string) => f.toLowerCase());
+            if (fieldLower.length === 0) return matched;
+            for (const pos of this.positions) {
+                if (!pos.text || pos.text.length < 3) continue;
+                const needle = pos.text.toLowerCase().trim();
+                if (fieldLower.some(f => f.includes(needle))) {
+                    matched.add(pos._uid);
+                }
+            }
+            return matched;
+        },
     },
     watch: {
         selectedFile(newFile: File | null) {
@@ -389,6 +464,7 @@ export default defineComponent({
     },
     methods: {
         async getDocuments() {
+            // Lazy: chỉ tải khi user thực sự mở phần liên kết và bắt đầu gõ
             try {
                 const res = await fetchDocuments();
                 this.availableDocs = res.data;
@@ -437,13 +513,42 @@ export default defineComponent({
             if (!this.selectedFile) return;
             this.isLoading = true; this.isOcrDone = false;
             try {
-                const res = await processOCR(this.selectedFile);
+                const res = await processOCR(this.selectedFile, this.extractionMode);
                 const { data, accuracy, positions, metadata } = res.data;
-                this.positions = positions || []; this.metadata = metadata || { pages: [] };
+                // Gán _uid cho mỗi position để dùng làm key + so sánh nhanh
+                const taggedPositions = (positions || []).map((p: any, i: number) => ({
+                    ...p,
+                    _uid: `${p.x}-${p.y}-${i}`
+                }));
+                this.positions = taggedPositions;
+                this.metadata = metadata || { pages: [] };
                 this.syncAllText();
-                this.form = { ...this.form, doc_number: data.doc_number || "", title: data.title || "", doc_type: normalizeDocType(data.doc_type) || "", issued_by: data.issued_by || "", signer: data.signer || "", summary: data.summary || "", full_text: this.extractedText, issued_date: data.issued_date || "", note: "Từ tệp " + this.selectedFile.name, effective_start_date: data.effective_start_date || data.issued_date || "", effective_end_date: data.effective_end_date || "", page_count: Number(data.page_count) || 0, field: data.field || "" };
-                this.accuracy = accuracy; this.isOcrDone = true; this.showLayout = false;
-            } catch (err) { (this.$refs.myToast as any).error("Lỗi", "OCR thất bại."); } finally { this.isLoading = false; }
+                this.form = {
+                    ...this.form,
+                    doc_number: data.doc_number || "",
+                    title: data.title || "",
+                    doc_type: normalizeDocType(data.doc_type) || "",
+                    issued_by: data.issued_by || "",
+                    signer: data.signer || "",
+                    summary: data.summary || "",
+                    full_text: this.extractedText,
+                    issued_date: data.issued_date || "",
+                    note: "Từ tệp " + this.selectedFile.name,
+                    effective_start_date: data.effective_start_date || data.issued_date || "",
+                    effective_end_date: data.effective_end_date || "",
+                    page_count: Number(data.page_count) || 0,
+                    field: data.field || ""
+                };
+                this.accuracy = accuracy;
+                this.isOcrDone = true;
+                this.showLayout = false;
+                // Lazy load danh sách VB gợi ý (chỉ khi cần)
+                if (this.availableDocs.length === 0) this.getDocuments();
+            } catch (err) {
+                (this.$refs.myToast as any).error("Lỗi", "OCR thất bại.");
+            } finally {
+                this.isLoading = false;
+            }
         },
         async saveDocument() {
             if (!this.selectedFile) return;
@@ -491,12 +596,14 @@ export default defineComponent({
             }
         },
         copyText(text: string) { if (text) navigator.clipboard.writeText(text).then(() => (this.$refs.myToast as any).success("Đã copy", "")); },
-        handleOutsideClick() {
+        handleOutsideClick(event: MouseEvent) {
+            // Không blur nếu user đang click vào bên trong form
+            const target = event.target as HTMLElement;
+            if (target && target.closest('form')) {
+                return;
+            }
             if (this.activeField) {
                 this.activeField = null;
-                if (document.activeElement instanceof HTMLElement) {
-                    document.activeElement.blur();
-                }
             }
             this.selectedBlockId = null;
         },
@@ -507,11 +614,11 @@ export default defineComponent({
                 (this.form as any)[field] = currentVal ? `${currentVal} ${item.text}` : item.text;
                 return;
             }
-            this.selectedBlockId = item.x + '-' + item.y;
+            this.selectedBlockId = item._uid;
             this.editingBlockId = null;
         },
         onBlockDblClick(item: any, event: MouseEvent) {
-            this.editingBlockId = item.x + '-' + item.y;
+            this.editingBlockId = item._uid;
             this.selectedBlockId = null;
 
             // Lấy tọa độ click trước khi UI rác (nextTick) có thể làm thay đổi layout
@@ -551,7 +658,7 @@ export default defineComponent({
         onBlockBlur(item: any) {
             // Delay clear to allow click on 'x' button
             setTimeout(() => {
-                if (this.editingBlockId === item.x + '-' + item.y) {
+                if (this.editingBlockId === item._uid) {
                     this.editingBlockId = null;
                 }
             }, 200);
@@ -561,8 +668,7 @@ export default defineComponent({
                 event.preventDefault();
                 (event.target as HTMLElement)?.blur();
             } else if (event.key === 'Delete' || event.key === 'Backspace') {
-                // Chỉ xóa nếu KHÔNG đang trong chế độ soạn thảo văn bản
-                if (item && this.editingBlockId !== item.x + '-' + item.y) {
+                if (item && this.editingBlockId !== item._uid) {
                     event.preventDefault();
                     this.removeBlock(item);
                 }
@@ -583,30 +689,8 @@ export default defineComponent({
             }
         },
         syncAllText() { this.extractedText = this.positions.map(p => p.text).join(' '); this.form.full_text = this.extractedText; },
-        isFieldMatch(text: string): boolean {
-            if (!text || text.length < 3) return false;
-            const needle = text.toLowerCase().trim();
-            const fields = [this.form.title, this.form.doc_number, this.form.issued_by, this.form.signer, this.form.doc_type, this.form.summary];
-            return fields.some(f => f && f.toLowerCase().includes(needle));
-        },
-        getPageWidth(pageNumber: number): number {
-            const pageBlocks = this.positions.filter(p => p.page === pageNumber);
-            const baseWidth = this.metadata.pages[pageNumber - 1]?.width || 1000;
-            if (pageBlocks.length === 0) return baseWidth;
+        // isFieldMatch và getPageWidth đã chuyển sang computed cache
 
-            // Tìm điểm xa nhất bên phải của các khối chữ
-            const maxRight = Math.max(...pageBlocks.map(p => p.x + p.w));
-
-            // Biên an toàn (Margin)
-            const margin = 80;
-            const contentWidthWithMargin = maxRight + margin;
-
-            // Chỉ thu hẹp nếu lề phải thực sự quá lớn (>10% baseWidth)
-            if (baseWidth - maxRight > baseWidth * 0.1) {
-                return Math.min(baseWidth, contentWidthWithMargin);
-            }
-            return baseWidth;
-        },
         async handleDownloadDocx() {
             if (!this.positions || this.positions.length === 0) return;
             
