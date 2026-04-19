@@ -27,7 +27,14 @@
                     </div>
                 </div>
 
-                <!-- Charts -->
+                <!-- EDA Charts Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <DistributionWidget />
+                    <OCRHealthWidget />
+                    <SearchInsightWidget />
+                </div>
+
+                <!-- Existing Charts Row (Moved Bar Chart & Logs down) -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     <!-- Bar Chart -->
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 col-span-2">
@@ -83,6 +90,9 @@
 import { defineComponent } from "vue";
 import Navbar from "../../components/admin/Navbar.vue";
 import NetworkGraphWidget from "../../components/admin/NetworkGraphWidget.vue";
+import DistributionWidget from "../../components/admin/DistributionWidget.vue";
+import OCRHealthWidget from "../../components/admin/OCRHealthWidget.vue";
+import SearchInsightWidget from "../../components/admin/SearchInsightWidget.vue";
 import type { DashboardStat, LogItem } from "../../types/DashBoardTypes";
 import { getDashboardStats, getLogs, getYearChartData } from "../../api/dashboardApi";
 
@@ -90,7 +100,10 @@ export default defineComponent({
     name: "DashBoard",
     components: {
         Navbar,
-        NetworkGraphWidget
+        NetworkGraphWidget,
+        DistributionWidget,
+        OCRHealthWidget,
+        SearchInsightWidget
     },
     data() {
         return {

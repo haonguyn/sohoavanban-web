@@ -38,8 +38,10 @@
                                 <!-- Lọc theo từ khóa -->
                                 <div>
                                     <label for="keyword" class="block text-sm font-medium text-gray-700">Từ khóa</label>
-                                    <input type="text" id="keyword" v-model="filters.keyword"
+                                    <input type="search" id="keyword" v-model="filters.keyword"
                                         placeholder="Nhập số hiệu, tiêu đề..."
+                                        autocomplete="off"
+                                        enterkeyhint="search"
                                         class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                                 </div>
 
@@ -336,33 +338,57 @@ export default defineComponent({
             searchResults: [] as Doc[],
             sortBy: "newest",
             debounceTimer: null as ReturnType<typeof setTimeout> | null,
+            /** Tránh watcher từ khóa chạy khi bootstrap từ URL trong `created`. */
+            ignoreKeywordWatch: true,
         };
     },
 
     created() {
-        const keyword = this.$route.query.keyword as string;
-        if (keyword?.trim()) {
+        const keyword = (this.$route.query.keyword as string | undefined)?.trim() ?? "";
+        if (keyword) {
             this.filters.keyword = keyword;
-            this.loadDocuments(true);
-            return;
         }
-        this.loadDocuments(true);
+        const shouldLogTrend = keyword.length >= 2;
+        this.loadDocuments(true, { logTrend: shouldLogTrend, silent: false });
+    },
+
+    mounted() {
+        this.$nextTick(() => {
+            this.ignoreKeywordWatch = false;
+        });
+    },
+
+    beforeUnmount() {
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = null;
+        }
     },
 
     methods: {
-        buildParams() {
-            return {
+        buildParams(opts?: { recordTrend?: boolean }) {
+            const params: Record<string, unknown> = {
                 ...this.filters,
                 page: this.currentPage,
                 page_size: this.pageSize,
             };
+            if (opts?.recordTrend) {
+                params.record_trend = 1;
+            }
+            return params;
         },
 
-        async loadDocuments(resetPage = false) {
+        async loadDocuments(
+            resetPage = false,
+            opts: { logTrend?: boolean; silent?: boolean } = {}
+        ) {
             if (resetPage) this.currentPage = 1;
-            (this.$refs.loadingRef as any)?.show();
+            const showOverlay = !opts.silent;
+            if (showOverlay) (this.$refs.loadingRef as any)?.show();
             try {
-                const res = await filterDocuments(this.buildParams());
+                const res = await filterDocuments(
+                    this.buildParams({ recordTrend: !!opts.logTrend })
+                );
 
                 this.searchResults = res.data.results;
                 this.totalItems = res.data.pagination.total_items;
@@ -372,15 +398,24 @@ export default defineComponent({
             } catch (err) {
                 console.error("Lỗi load văn bản", err);
             } finally {
-                (this.$refs.loadingRef as any)?.hide();
+                if (showOverlay) (this.$refs.loadingRef as any)?.hide();
             }
         },
 
         applyFilters() {
-            this.loadDocuments(true);
+            if (this.debounceTimer) {
+                clearTimeout(this.debounceTimer);
+                this.debounceTimer = null;
+            }
+            const kw = this.filters.keyword?.trim() ?? "";
+            this.loadDocuments(true, { logTrend: kw.length >= 2, silent: false });
         },
 
         resetFilters() {
+            if (this.debounceTimer) {
+                clearTimeout(this.debounceTimer);
+                this.debounceTimer = null;
+            }
             Object.assign(this.filters, {
                 keyword: "",
                 doc_type: "",
@@ -393,7 +428,7 @@ export default defineComponent({
                 effective_end_to: "",
             });
 
-            this.loadDocuments(true);
+            this.loadDocuments(true, { logTrend: false, silent: false });
         },
         changePage(page: number) {
             if (page < 1 || page > this.totalPages) return;
@@ -451,15 +486,25 @@ export default defineComponent({
             this.sortLocalResults();
         },
         "filters.keyword"() {
+            if (this.ignoreKeywordWatch) return;
             if (this.debounceTimer) clearTimeout(this.debounceTimer);
             this.debounceTimer = setTimeout(() => {
-                this.loadDocuments(true);
-            }, 500);
+                const kw = this.filters.keyword?.trim() ?? "";
+                this.loadDocuments(true, {
+                    logTrend: kw.length >= 2,
+                    silent: true,
+                });
+            }, 650);
         },
         "$route.query.keyword"(val: string) {
-            if (!val?.trim()) return;
-            this.filters.keyword = val;
-            this.loadDocuments(true);
+            const kw = val?.trim() ?? "";
+            if (!kw) return;
+            this.ignoreKeywordWatch = true;
+            this.filters.keyword = kw;
+            this.loadDocuments(true, { logTrend: kw.length >= 2, silent: false });
+            this.$nextTick(() => {
+                this.ignoreKeywordWatch = false;
+            });
         },
     },
 

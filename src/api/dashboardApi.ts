@@ -22,3 +22,18 @@ export const getNetworkGraphData = async (): Promise<any> => {
   const res = await api.get("/dashboard/network-graph/");
   return res.data;
 };
+
+export const getDistributionData = async (): Promise<any[]> => {
+  const res = await api.get("/dashboard/distribution/");
+  return res.data;
+};
+
+export const getOcrHealthData = async (): Promise<any> => {
+  const res = await api.get("/dashboard/ocr-health/");
+  return res.data;
+};
+
+export const getSearchInsightsData = async (): Promise<any[]> => {
+  const res = await api.get("/dashboard/search-insights/");
+  return res.data;
+};
