@@ -3,6 +3,7 @@ import api from './axios'; // axios instance
 
 export const fetchDocuments = async () => await api.get<Doc[]>('/documents/');
 export const fetchFeaturedDocs = async () => await api.get<Doc[]>('/documents/latest/')
+export const fetchPopularDocs = async () => await api.get<Doc[]>('/documents/popular/')
 export const getDocumentDetail = async (id: number) => await api.get<Doc>(`/documents/${id}/`);
 export const createDocument = async (data: FormData) => await api.post('/documents/create/', data);
 export const updateDocument = async (id: number, data: any) => await api.put(`/documents/${id}/update/`, data);
