@@ -12,16 +12,33 @@
                 </div>
 
                 <!-- KPI Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
                     <div v-for="(kpi, idx) in dashboardStats" :key="idx"
-                        :class="`bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-${kpi.color}-500`">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <p class="text-slate-500 text-sm font-medium">{{ kpi.label }}</p>
-                                <h3 class="text-3xl font-bold text-slate-800 mt-1">{{ kpi.val }}</h3>
+                        class="group relative overflow-hidden bg-white p-6 rounded-3xl shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-slate-100">
+                        <!-- Decorative Background Gradient -->
+                        <div :class="`absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-700 bg-${kpi.color}-500`"></div>
+                        
+                        <div class="relative flex flex-col h-full justify-between">
+                            <div class="flex justify-between items-start mb-4">
+                                <div :class="`p-3 rounded-2xl bg-${kpi.color}-50 text-${kpi.color}-600 shadow-sm border border-${kpi.color}-100 group-hover:scale-110 transition-transform duration-300`">
+                                    <i :class="`${kpi.icon} text-xl`"></i>
+                                </div>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 py-1 bg-slate-50 rounded-lg">Realtime</span>
                             </div>
-                            <div :class="`p-3 rounded-full bg-${kpi.color}-50 text-${kpi.color}-600`">
-                                <i :class="`${kpi.icon}`"></i>
+                            
+                            <div>
+                                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">{{ kpi.label }}</p>
+                                <div class="flex items-baseline gap-2">
+                                    <h3 class="text-4xl font-black text-slate-900 tracking-tighter">{{ formatNumber(kpi.val) }}</h3>
+                                    <span v-if="kpi.label === 'Tổng lượt xem'" class="text-[10px] text-slate-400 font-bold">Lượt</span>
+                                    <span v-else class="text-[10px] text-slate-400 font-bold">{{ kpi.label === 'Người dùng' ? 'User' : 'File' }}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Progress Bar Decoration -->
+                            <div class="mt-5 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div :class="`h-full bg-${kpi.color}-500 transition-all duration-1000 ease-out`" 
+                                     :style="{ width: '70%', opacity: 0.6 }"></div>
                             </div>
                         </div>
                     </div>
@@ -95,6 +112,7 @@ import OCRHealthWidget from "../../components/admin/OCRHealthWidget.vue";
 import SearchInsightWidget from "../../components/admin/SearchInsightWidget.vue";
 import type { DashboardStat, LogItem } from "../../types/DashBoardTypes";
 import { getDashboardStats, getLogs, getYearChartData } from "../../api/dashboardApi";
+import { formatNumber } from "../../utils/fileUtils";
 
 export default defineComponent({
     name: "DashBoard",
@@ -172,7 +190,8 @@ export default defineComponent({
             } catch (error) {
                 console.error("Lỗi khi lấy logs:", error);
             }
-        }
+        },
+        formatNumber,
     }
 });
 </script>

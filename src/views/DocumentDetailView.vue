@@ -19,7 +19,7 @@
                     <!-- Actions -->
                     <div class="flex items-center space-x-3">
                         <div class="text-xs text-gray-500 mr-2 hidden sm:block">
-                            <span class="font-medium text-gray-900">1.205</span> lượt xem
+                            <span class="font-medium text-gray-900">{{ formatNumber(document.view_count) }}</span> lượt xem
                         </div>
                         <button v-if="document.attachments" @click="doDownloadFile(document)"
                             class="flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors shadow-sm">
@@ -29,14 +29,10 @@
                             </svg>
                             Tải về ({{ formatFileSize(document.attachments.file_size) }})
                         </button>
-                        <button
+                        <button @click="handlePrint"
                             class="flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors shadow-sm">
-                            <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                            </svg>
-                            In phiếu
+                            <i class="fa-solid fa-print w-4 h-4 mr-2 text-gray-500"></i>
+                            In File
                         </button>
                     </div>
                 </div>
@@ -315,7 +311,7 @@ import Footer from "../components/layout/Footer.vue";
 import type { Doc } from "../types/DocumentTypes";
 import { getDocumentDetail, getDocumentLinks } from "../api/documentApi";
 import { fetchAttachmentsByDoc } from "../api/attachmentApi";
-import { base64ToBlob, downloadFile, formatDate, formatFileSize, getDocumentEffectiveStatus } from "../utils/fileUtils";
+import { base64ToBlob, downloadFile, formatDate, formatFileSize, getDocumentEffectiveStatus, formatNumber } from "../utils/fileUtils";
 import ToastNotification from "../components/ToastNotification.vue";
 import { getStatusClass } from "../utils/textUtils";
 import LoadingComponent from "../components/LoadingComponent.vue";
@@ -494,6 +490,7 @@ export default defineComponent({
                 (this.$refs.myToast as any).error("Lỗi", "Không thể sao chép đường dẫn!");
             });
         },
+        formatNumber,
         formatFileSize,
         formatDate,
         getStatusClass,
@@ -520,6 +517,18 @@ export default defineComponent({
             } finally {
                 this.sendingFeedback = false;
             }
+        },
+        handlePrint() {
+            // Thông báo nhắc nhở kết nối máy in
+            (this.$refs.myToast as any).success(
+                "Đang chuẩn bị...", 
+                "Vui lòng đảm bảo máy in đã được kết nối và sẵn sàng."
+            );
+            
+            // Đợi một chút để người dùng đọc thông báo rồi mở hộp thoại in
+            setTimeout(() => {
+                window.print();
+            }, 1000);
         },
     },
 });

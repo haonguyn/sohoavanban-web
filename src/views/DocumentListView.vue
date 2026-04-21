@@ -100,6 +100,10 @@
                                         Ngày ban hành
                                     </th>
                                     <th scope="col"
+                                        class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                                        Lượt xem
+                                    </th>
+                                    <th scope="col"
                                         class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                                         Trạng thái
                                     </th>
@@ -148,6 +152,11 @@
                                     <!-- Ngày ban hành (issued_date) -->
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {{ formatDate(doc.issued_date) }}
+                                    </td>
+
+                                    <!-- Lượt xem -->
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 font-bold">
+                                        {{ doc.view_count || 0 }}
                                     </td>
 
                                     <!-- Trạng thái (status) -->
