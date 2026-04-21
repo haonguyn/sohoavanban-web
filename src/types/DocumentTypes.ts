@@ -26,6 +26,7 @@ export interface Doc {
   full_text?: string;
   field?: string;
   page_count?: number | null;
+  view_count?: number;
   attachments?: Attach | null;
   history?: Array<{ action: string; date: string; user: string }>;
 }

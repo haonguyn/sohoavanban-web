@@ -83,3 +83,8 @@ export function getDocumentEffectiveStatus(
   }
   return "Còn hiệu lực";
 }
+
+export function formatNumber(num: number | undefined | null): string {
+  if (num === undefined || num === null) return "0";
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
