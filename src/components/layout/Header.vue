@@ -110,7 +110,7 @@ export default defineComponent({
         { to: "/", label: "Trang chủ" },
         { to: "/tra-cuu", label: "Tra cứu" },
         { to: "/quan-ly", label: "Quản lý", roles: ["employee", "admin"] },
-        { to: "/ocr-vanban", label: "OCR Văn bản" },
+        { to: "/ocr-vanban", label: "OCR Văn bản", roles: ["employee", "admin"] },
       ],
       user: userInfo ? (JSON.parse(userInfo) as User) : null,
     };

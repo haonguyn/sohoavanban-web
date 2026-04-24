@@ -476,55 +476,104 @@
                                     </button>
                                 </div>
 
-                                <!-- Card Liên kết văn bản -->
-                                <div class="bg-white rounded-lg p-5 border border-gray-200 shadow-sm">
-                                    <h4 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 border-b pb-2">Liên kết văn bản</h4>
+                                <!-- Card Liên kết văn bản (RE-DESIGNED FOR MODAL) -->
+                                <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm relative overflow-hidden">
+                                    <!-- AI Sparkle Background effect -->
+                                    <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50 z-0"></div>
+
+                                    <div class="flex justify-between items-center mb-4 relative z-10">
+                                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                            <i class="fas fa-link text-indigo-500"></i> Liên kết văn bản
+                                        </h4>
+                                        <button v-if="isEditing" @click="getAiSuggestions" type="button" :disabled="isSuggesting"
+                                            class="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all border border-indigo-100" title="AI Gợi ý liên kết">
+                                            <i class="fas" :class="isSuggesting ? 'fa-spinner fa-spin' : 'fa-magic'"></i>
+                                        </button>
+                                    </div>
                                     
-                                    <div v-if="relatedDocs.length > 0" class="space-y-3 mb-4">
-                                        <div v-for="(link, idx) in relatedDocs" :key="idx" class="bg-gray-50 border border-gray-200 rounded p-3 relative">
-                                            <div class="flex justify-between items-start mb-1">
-                                                <span class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-200 uppercase tracking-wide">{{ formatLinkType(link.link_type) }}</span>
-                                                <button v-if="isEditing" @click="handleDeleteLink(link.id)" class="text-red-500 hover:text-red-700 p-1" title="Xóa liên kết">
-                                                    <i class="fa-solid fa-trash-can text-sm"></i>
-                                                </button>
+                                    <!-- List of existing/pending links -->
+                                    <div class="space-y-3 mb-5 relative z-10">
+                                        <div v-if="relatedDocs.length > 0 || pendingLinks.length > 0" class="space-y-2">
+                                            <!-- Existing -->
+                                            <div v-for="(link, idx) in relatedDocs" :key="'ex-'+idx" class="group bg-slate-50 border border-slate-200 rounded-xl p-3 hover:border-indigo-200 transition-all">
+                                                <div class="flex justify-between items-start mb-1.5">
+                                                    <span class="bg-white text-indigo-600 text-[9px] font-black px-2 py-0.5 rounded border border-indigo-100 uppercase tracking-tighter">
+                                                        {{ formatLinkType(link.link_type) }}
+                                                    </span>
+                                                    <button v-if="isEditing" @click="handleDeleteLink(link.id)" class="text-slate-300 hover:text-rose-500 p-1 transition-colors" title="Xóa liên kết">
+                                                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                                                    </button>
+                                                </div>
+                                                <a :href="'/document-detail/' + link.target_doc_id" target="_blank" class="font-bold text-xs text-indigo-700 hover:underline block truncate">
+                                                    {{ link.target_doc_number }}
+                                                </a>
                                             </div>
-                                            <a :href="'/document-detail/' + link.target_doc_id" target="_blank" class="font-bold text-sm text-blue-700 hover:underline block mb-1">
-                                                {{ link.target_doc_number }}
-                                            </a>
-                                            <p class="text-xs text-gray-600 line-clamp-2" :title="link.target_title">{{ link.target_title }}</p>
+
+                                            <!-- Pending (New) -->
+                                            <div v-for="(link, idx) in pendingLinks" :key="'pd-'+idx" class="bg-indigo-50/50 border border-indigo-200 border-dashed rounded-xl p-3 animate-pulse-slow">
+                                                <div class="flex justify-between items-start mb-1.5">
+                                                    <span class="bg-white text-indigo-600 text-[9px] font-black px-2 py-0.5 rounded border border-indigo-200 uppercase tracking-tighter">
+                                                        ✨ Chờ liên kết
+                                                    </span>
+                                                    <button @click="removePendingLink(idx)" class="text-indigo-300 hover:text-rose-500 p-1">
+                                                        <i class="fa-solid fa-circle-xmark text-[10px]"></i>
+                                                    </button>
+                                                </div>
+                                                <p class="font-bold text-xs text-indigo-700">{{ link.target_doc_number }}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div v-else class="text-center py-8 text-slate-400 text-xs italic bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                            <i class="fas fa-link-slash mb-2 opacity-30 text-2xl block"></i>
+                                            Không có liên kết nào.
                                         </div>
                                     </div>
-                                    <div v-else class="text-center py-4 text-gray-500 text-sm italic">
-                                        Không có liên kết nào.
+
+                                    <!-- AI Suggestions list -->
+                                    <div v-if="aiSuggestions.length > 0 && isEditing" class="mb-6 pt-4 border-t border-slate-100 animate-fade-in relative z-10">
+                                        <p class="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3">AI Đề xuất văn bản cũ:</p>
+                                        <div class="space-y-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+                                            <div v-for="s in aiSuggestions" :key="s.id" class="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl hover:border-indigo-300 hover:shadow-sm transition-all group">
+                                                <div class="min-w-0 flex-1 mr-2">
+                                                    <p class="text-[11px] font-black text-indigo-600 truncate">{{ s.doc_number }}</p>
+                                                    <p class="text-[10px] text-slate-500 truncate">{{ s.title }}</p>
+                                                </div>
+                                                <button @click="addSuggestedLink(s.doc_number)" type="button" class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all">
+                                                    <i class="fas fa-plus text-[10px]"></i>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <!-- Form Thêm Liên Kết (Khi Đang Edit) -->
-                                    <div v-if="isEditing" class="mt-4 border-t pt-4">
-                                        <h5 class="text-xs font-bold text-gray-700 mb-2">Thêm liên kết mới:</h5>
-                                        <div class="space-y-3 bg-gray-50 p-3 rounded border border-gray-200">
+                                    <div v-if="isEditing" class="mt-4 pt-5 border-t border-slate-100 relative z-10">
+                                        <h5 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Thêm liên kết mới:</h5>
+                                        <div class="space-y-4">
                                             <div>
-                                                <label class="block text-xs font-medium text-gray-500 mb-1">Số hiệu VB liên kết</label>
-                                                <input v-model="linkForm.target_doc_number" list="docNumbersListModal" placeholder="Tìm số hiệu..." autocomplete="off" class="w-full border-gray-300 rounded border p-2 text-sm">
+                                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1">Số hiệu VB liên kết</label>
+                                                <div class="relative">
+                                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
+                                                    <input v-model="linkForm.target_doc_number" list="docNumbersListModal" placeholder="Tìm số hiệu..." autocomplete="off" 
+                                                        class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-sm font-bold">
+                                                </div>
                                                 <datalist id="docNumbersListModal">
                                                     <option v-for="d in documents" :key="d.id" :value="d.doc_number">{{ d.title }}</option>
                                                 </datalist>
                                             </div>
                                             <div>
-                                                <label class="block text-xs font-medium text-gray-500 mb-1">Loại liên kết</label>
-                                                <select v-model="linkForm.link_type" class="w-full border-gray-300 rounded border p-2 text-sm">
+                                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1">Loại liên kết</label>
+                                                <select v-model="linkForm.link_type" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-sm font-bold appearance-none cursor-pointer">
                                                     <option value="auto">✨ AI Tự nhận diện (Khuyên dùng)</option>
                                                     <option value="can_cu">Văn bản căn cứ</option>
                                                     <option value="thay_the">Văn bản thay thế</option>
-                                                    <option value="bi_thay_the">Văn bản bị thay thế</option>
-                                                    <option value="sua_doi">Văn bản sửa đổi, bổ sung</option>
-                                                    <option value="bi_sua_doi">Văn bản bị sửa đổi, bổ sung</option>
-                                                    <option value="het_hieu_luc">Văn bản hết hiệu lực</option>
-                                                    <option value="het_hieu_luc_1_phan">Văn bản hết hiệu lực 1 phần</option>
-                                                    <option value="dinh_chinh">Văn bản đính chính</option>
+                                                    <option value="sua_doi">Sửa đổi, bổ sung</option>
+                                                    <option value="het_hieu_luc">Hết hiệu lực</option>
+                                                    <option value="dinh_chinh">Đính chính</option>
                                                 </select>
                                             </div>
-                                            <button @click="handleAddLink" type="button" :disabled="!linkForm.target_doc_number || !linkForm.link_type" class="w-full bg-blue-600 text-white rounded text-sm font-medium py-2 hover:bg-blue-700 disabled:bg-gray-400">
-                                                <i class="fa-solid fa-plus mr-1"></i> Thêm nhanh
+                                            <button @click="handleAddLink" type="button" :disabled="!linkForm.target_doc_number" 
+                                                class="w-full bg-slate-400 text-white rounded-2xl text-xs font-black py-3 hover:bg-indigo-600 transition-all shadow-lg shadow-slate-100 disabled:opacity-30 disabled:shadow-none flex items-center justify-center gap-2">
+                                                <i class="fa-solid fa-plus"></i> Thêm nhanh
                                             </button>
                                         </div>
                                     </div>
@@ -663,6 +712,11 @@ export default defineComponent({
             linkForm: { target_doc_number: "", link_type: "auto" },
             isDetailLoading: false,
 
+            // AI Suggestion State
+            isSuggesting: false,
+            aiSuggestions: [] as any[],
+            pendingLinks: [] as { target_doc_number: string; link_type: string }[],
+
             currentPage: 1,
             pageSize: 10,
         };
@@ -794,34 +848,72 @@ export default defineComponent({
             if (!this.selectedDoc || !this.tempDoc) return;
             (this.$refs.loadingRef as any).show();
             try {
+                // Update basic info
                 const res = await updateDocument(
                     Number(this.selectedDoc.id),
                     this.tempDoc
                 );
-                const updatedDoc: Doc = {
-                    ...this.selectedDoc,
-                    ...this.tempDoc,
-                };
 
-                const index = this.documents.findIndex(d => d.id === this.selectedDoc!.id);
-                if (index !== -1) {
-                    this.documents.splice(index, 1, updatedDoc);
+                // Create pending links if any
+                if (this.pendingLinks.length > 0) {
+                    const linkPromises = this.pendingLinks.map(link => 
+                        createDocumentLink({
+                            source_doc_id: Number(this.selectedDoc!.id),
+                            target_doc_number: link.target_doc_number,
+                            link_type: link.link_type
+                        })
+                    );
+                    await Promise.all(linkPromises);
                 }
-                this.selectedDoc = updatedDoc;
+
                 (this.$refs.myToast as any).success(
-                    "Cập nhật",
-                    `${res.data?.message} ${this.selectedDoc.doc_number}`
+                    "Thành công",
+                    `Đã cập nhật văn bản ${this.tempDoc.doc_number}`
                 );
-            } catch (e: any) {
-                (this.$refs.myToast as any).error(
-                    "Lỗi",
-                    `${e.response?.data || e.detail}`
-                );
-                console.error("Lỗi cập nhật văn bản:", e);
-            } finally {
+                
                 this.isEditing = false;
+                this.getDocuments(); // Refresh list
+                this.openDetailModal(this.selectedDoc); // Refresh detail/links
+            } catch (e: any) {
+                (this.$refs.myToast as any).error("Lỗi", "Không thể lưu thay đổi.");
+            } finally {
                 (this.$refs.loadingRef as any).hide();
             }
+        },
+
+        // NEW AI SUGGESTION METHODS
+        async getAiSuggestions() {
+            if (!this.selectedDoc) return;
+            this.isSuggesting = true;
+            this.aiSuggestions = [];
+            try {
+                const response = await (this as any).$axios.get(`/api/documents/${this.selectedDoc.id}/suggestions/`);
+                this.aiSuggestions = response.data;
+                if (this.aiSuggestions.length === 0) {
+                    (this.$refs.myToast as any).info("Thông báo", "AI không tìm thấy văn bản nào liên quan.");
+                }
+            } catch (e) {
+                (this.$refs.myToast as any).error("Lỗi", "Không thể phân tích gợi ý AI.");
+            } finally {
+                this.isSuggesting = false;
+            }
+        },
+
+        addSuggestedLink(docNumber: string) {
+            this.pendingLinks.push({ target_doc_number: docNumber, link_type: "auto" });
+            this.aiSuggestions = this.aiSuggestions.filter(s => s.doc_number !== docNumber);
+            (this.$refs.myToast as any).success("Đã thêm", `Văn bản ${docNumber} đã được thêm vào hàng chờ.`);
+        },
+
+        removePendingLink(index: number) {
+            this.pendingLinks.splice(index, 1);
+        },
+
+        handleAddLink() {
+            if (!this.linkForm.target_doc_number.trim()) return;
+            this.pendingLinks.push({ ...this.linkForm });
+            this.linkForm.target_doc_number = "";
+            this.linkForm.link_type = "auto";
         },
 
         closeDetailModal() {
@@ -830,6 +922,8 @@ export default defineComponent({
             }
             this.selectedDoc = null;
             this.isEditing = false;
+            this.pendingLinks = [];
+            this.aiSuggestions = [];
         },
 
         openPublicView(doc: Doc) {
@@ -859,10 +953,7 @@ export default defineComponent({
                     );
                     this.docToDelete = null;
                 } catch (error) {
-                    (this.$refs.myToast as any).error(
-                        "Lỗi",
-                        `${error}`
-                    );
+                    (this.$refs.myToast as any).error("Lỗi", "Không thể xóa văn bản.");
                 }
             }
         },
@@ -870,73 +961,50 @@ export default defineComponent({
         async doDownloadFile() {
             const att = this.selectedDoc?.attachments;
             if (!att || !att.file_base64) {
-                (this.$refs.myToast as any).error(
-                    "Lỗi",
-                    `Xảy ra lỗi khi yêu cầu tải file xuống`
-                );
+                (this.$refs.myToast as any).error("Lỗi", `Xảy ra lỗi khi yêu cầu tải file xuống`);
                 return;
             }
             const blob = base64ToBlob(att.file_base64);
             downloadFile(blob, att.filename);
         },
+
         formatLinkType(type: string) {
             if (!type) return '';
             const raw = type.replace(" (Nhận)", "");
             const mapping: Record<string, string> = {
-                'thay_the_1_phan': 'Thay thế 1 phần',
-                'thay_the_toan_phan': 'Thay thế toàn phần',
-                'bai_bo_1_phan': 'Bãi bỏ 1 phần',
-                'bai_bo_toan_phan': 'Bãi bỏ toàn phần',
-                'huy_bo': 'Hủy bỏ',
+                'can_cu': 'Văn bản căn cứ',
+                'thay_the': 'Văn bản thay thế',
+                'sua_doi': 'Sửa đổi, bổ sung',
+                'het_hieu_luc': 'Hết hiệu lực',
                 'dinh_chinh': 'Đính chính',
             };
             const label = mapping[raw] || raw;
             return type.includes("(Nhận)") ? label + " (Tới)" : label;
         },
-        async handleAddLink() {
-            if (!this.selectedDoc || !this.linkForm.target_doc_number || !this.linkForm.link_type) return;
-            (this.$refs.loadingRef as any).show();
-            try {
-                await createDocumentLink({
-                    source_doc_id: Number(this.selectedDoc.id),
-                    target_doc_number: this.linkForm.target_doc_number,
-                    link_type: this.linkForm.link_type
-                });
-                (this.$refs.myToast as any).success("Thành công", "Đã thêm liên kết.");
-                this.linkForm = { target_doc_number: "", link_type: "auto" };
-                await this.refreshLinks(Number(this.selectedDoc.id));
-            } catch (e: any) {
-                (this.$refs.myToast as any).error("Lỗi", e.response?.data?.detail || "Không thể tạo liên kết.");
-            } finally {
-                (this.$refs.loadingRef as any).hide();
-            }
-        },
+
         async handleDeleteLink(linkId: number) {
             if (!confirm("Bạn có chắc muốn xoá liên kết này?")) return;
             (this.$refs.loadingRef as any).show();
             try {
                 await deleteDocumentLink(linkId);
                 (this.$refs.myToast as any).success("Thành công", "Đã xoá liên kết.");
-                await this.refreshLinks(Number(this.selectedDoc!.id));
+                if (this.selectedDoc) {
+                    const linksRes = await getDocumentLinks(this.selectedDoc.id);
+                    const flatLinks = Array.isArray(linksRes.data) ? linksRes.data : [];
+                    this.relatedDocs = flatLinks.map((l: any) => {
+                        const isOutgoing = (l.source_document === this.selectedDoc!.id);
+                        if (isOutgoing) {
+                            return { id: l.id, target_doc_id: l.target_document, target_doc_number: l.target_document_number, target_title: l.target_document_title, link_type: l.link_type };
+                        } else {
+                            return { id: l.id, target_doc_id: l.source_document, target_doc_number: l.source_document_number, target_title: l.source_document_title, link_type: l.link_type + " (Nhận)" };
+                        }
+                    });
+                }
             } catch (e: any) {
-                (this.$refs.myToast as any).error("Lỗi", e.response?.data?.detail || "Không thể xoá liên kết.");
+                (this.$refs.myToast as any).error("Lỗi", "Không thể xoá liên kết.");
             } finally {
                 (this.$refs.loadingRef as any).hide();
             }
-        },
-        async refreshLinks(docId: number) {
-            try {
-                const linksRes = await getDocumentLinks(docId).catch(() => ({ data: [] }));
-                const flatLinks = Array.isArray(linksRes.data) ? linksRes.data : [];
-                this.relatedDocs = flatLinks.map((l: any) => {
-                    const isOutgoing = (l.source_document === docId);
-                    if (isOutgoing) {
-                        return { id: l.id, target_doc_id: l.target_document, target_doc_number: l.target_document_number, target_title: l.target_document_title, link_type: l.link_type };
-                    } else {
-                        return { id: l.id, target_doc_id: l.source_document, target_doc_number: l.source_document_number, target_title: l.source_document_title, link_type: l.link_type + " (Nhận)" };
-                    }
-                });
-            } catch (e) { console.error("Refresh links error", e); }
         }
     }
 });

@@ -23,8 +23,10 @@ export const getNetworkGraphData = async (): Promise<any> => {
   return res.data;
 };
 
-export const getDistributionData = async (): Promise<any[]> => {
-  const res = await api.get("/dashboard/distribution/");
+export const getDistributionData = async (mode: string = "category"): Promise<any[]> => {
+  const res = await api.get("/dashboard/distribution/", {
+    params: { mode }
+  });
   return res.data;
 };
 

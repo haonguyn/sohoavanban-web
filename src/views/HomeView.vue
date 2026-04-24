@@ -60,10 +60,10 @@
                     <div class="w-24 h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 mx-auto mt-6 rounded-full shadow-lg shadow-blue-200"></div>
                 </div>
 
-                <div class="grid md:grid-cols-3 gap-8">
+                <div class="flex flex-wrap justify-center gap-8">
                     <!-- Tính năng 1: Tra cứu -->
                     <RouterLink to="/tra-cuu"
-                        class="group bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 text-center relative overflow-hidden">
+                        class="group bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 text-center relative overflow-hidden w-full md:w-[calc(33.333%-2rem)] min-w-[300px]">
                         <div
                             class="absolute inset-0 bg-gradient-to-br from-indigo-50 to-transparent opacity-0 group-hover:opacity-100 transition">
                         </div>
@@ -87,8 +87,8 @@
                     </RouterLink>
 
                     <!-- Tính năng 2: Quản lý -->
-                    <RouterLink to="/quan-ly"
-                        class="group bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 text-center relative overflow-hidden">
+                    <RouterLink v-if="hasRole(['admin', 'employee'])" to="/quan-ly"
+                        class="group bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 text-center relative overflow-hidden w-full md:w-[calc(33.333%-2rem)] min-w-[300px]">
                         <div
                             class="absolute inset-0 bg-gradient-to-br from-indigo-50 to-transparent opacity-0 group-hover:opacity-100 transition">
                         </div>
@@ -112,8 +112,8 @@
                     </RouterLink>
 
                     <!-- Tính năng 3: OCR -->
-                    <RouterLink to="/ocr-vanban"
-                        class="group bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 text-center relative overflow-hidden">
+                    <RouterLink v-if="hasRole(['admin', 'employee'])" to="/ocr-vanban"
+                        class="group bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 text-center relative overflow-hidden w-full md:w-[calc(33.333%-2rem)] min-w-[300px]">
                         <div
                             class="absolute inset-0 bg-gradient-to-br from-indigo-50 to-transparent opacity-0 group-hover:opacity-100 transition">
                         </div>
@@ -424,6 +424,7 @@ import { fetchFeaturedDocs, fetchPopularDocs } from "../api/documentApi";
 import { fetchTopics, type TrendingTopic, fetchTopSearches, type SearchKeyword } from "../api/topicApi";
 import { getStatusClass, truncate } from "../utils/textUtils";
 import { getDocumentEffectiveStatus, formatDate } from "../utils/fileUtils";
+import { hasRole } from "../utils/authUtils";
 
 export default defineComponent({
     name: "HomeView",
@@ -499,6 +500,7 @@ export default defineComponent({
         formatDate,
         getStatusClass,
         truncate,
+        hasRole,
     },
     mounted() {
         this.fetchFeaturedDocs();

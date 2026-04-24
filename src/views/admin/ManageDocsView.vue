@@ -203,20 +203,6 @@
                                 <div class="col-span-2">
                                     <label class="text-xs font-bold text-slate-500">Nội dung</label>
                                     <textarea v-model="editForm.full_text"
-                                        class="w-full border p-2 rounded h-64 font-mono text-sm"></textarea>
-                                </div>
-                                <!-- Liên kết văn bản -->
-                                <div class="col-span-2 border-t border-slate-200 mt-6 pt-6">
-                                    <div class="flex justify-between items-center mb-4">
-                                        <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Quản lý liên kết văn bản</h4>
-                                        <button @click="addLinkRow" type="button"
-                                            class="text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-100 transition border border-indigo-100 flex items-center gap-1.5">
-                                            <i class="fas fa-plus"></i> Thêm liên kết mới
-                                        </button>
-                                    </div>
-
-                                    <!-- Danh sách liên kết hiện tại (trong chế độ sửa) -->
-                                    <div v-if="existingLinks.length > 0" class="mb-6 space-y-2">
                                         <p class="text-[11px] font-bold text-slate-400 uppercase mb-2">Liên kết hiện có:</p>
                                         <div v-for="link in existingLinks" :key="link.id" 
                                             class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl group">
@@ -420,6 +406,10 @@ export default defineComponent({
             pendingLinks: [] as { target_doc_number: string; link_type: string }[],
             existingLinks: [] as any[],
             isDetailLoading: false,
+            // AI Suggestion State
+            newLink: { target_doc_number: "", link_type: "auto" },
+            aiSuggestions: [] as any[],
+            isSuggesting: false,
         };
     },
     mounted() {
@@ -680,6 +670,39 @@ export default defineComponent({
             }
             const blob = base64ToBlob(att.file_base64);
             downloadFile(blob, att.filename);
+        },
+
+        // NEW LINKING METHODS
+        quickAddLink() {
+            if (!this.newLink.target_doc_number.trim()) return;
+            this.pendingLinks.push({ ...this.newLink });
+            this.newLink.target_doc_number = "";
+            this.newLink.link_type = "auto";
+        },
+        async getAiSuggestions() {
+            if (!this.selectedDoc) return;
+            this.isSuggesting = true;
+            this.aiSuggestions = [];
+            try {
+                const response = await (this as any).$axios.get(`/api/documents/${this.selectedDoc.id}/suggestions/`);
+                this.aiSuggestions = response.data;
+                if (this.aiSuggestions.length === 0) {
+                    (this.$refs.myToast as any).info("Thông báo", "AI không tìm thấy văn bản nào liên quan rõ rệt.");
+                } else {
+                    (this.$refs.myToast as any).success("Hoàn tất", `AI đã tìm thấy ${this.aiSuggestions.length} văn bản liên quan.`);
+                }
+            } catch (e) {
+                console.error("Lỗi lấy gợi ý AI:", e);
+                (this.$refs.myToast as any).error("Lỗi", "Không thể phân tích văn bản lúc này.");
+            } finally {
+                this.isSuggesting = false;
+            }
+        },
+        addSuggestedLink(docNumber: string) {
+            this.pendingLinks.push({ target_doc_number: docNumber, link_type: "auto" });
+            // Remove from suggestions list to avoid duplicate add
+            this.aiSuggestions = this.aiSuggestions.filter(s => s.doc_number !== docNumber);
+            (this.$refs.myToast as any).success("Đã thêm", `Đã thêm văn bản ${docNumber} vào danh sách chờ liên kết.`);
         }
     }
 });

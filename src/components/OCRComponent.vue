@@ -231,6 +231,53 @@
                                         </select>
                                     </div>
                                 </div>
+                                <button type="button" @click="addManualLink" class="w-full mt-2 py-1.5 border border-dashed border-blue-400 text-blue-600 text-xs font-bold rounded hover:bg-blue-50 transition-colors">
+                                    + Thêm vào danh sách liên kết
+                                </button>
+
+                                <!-- Danh sách các văn bản đã chọn để liên kết -->
+                                <div v-if="linkForm.selectedLinks.length > 0" class="mt-3 space-y-2">
+                                    <p class="text-[11px] font-bold text-gray-600 uppercase">Danh sách sẽ liên kết ({{ linkForm.selectedLinks.length }}):</p>
+                                    <div class="flex flex-col gap-2">
+                                        <div v-for="(link, idx) in linkForm.selectedLinks" :key="idx" class="flex items-center justify-between bg-blue-50 border border-blue-100 p-2 rounded-lg">
+                                            <div class="flex flex-col">
+                                                <span class="text-xs font-bold text-blue-800">{{ link.doc_number }}</span>
+                                                <span class="text-[10px] text-gray-500 italic">{{ link.type_label }}</span>
+                                            </div>
+                                            <button @click.prevent="linkForm.selectedLinks.splice(idx, 1)" class="text-red-500 hover:text-red-700 p-1">
+                                                <i class="fa-solid fa-trash-can text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Phần Gợi ý từ AI -->
+                                <div v-if="aiSuggestions.length > 0" class="mt-3 px-1">
+                                    <p class="text-[11px] font-bold text-blue-600 mb-2 flex items-center">
+                                        <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> 
+                                        Gợi ý liên kết từ AI (Độ tương đồng cao):
+                                    </p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button 
+                                            v-for="s in aiSuggestions" 
+                                            :key="s.id" 
+                                            @click.prevent="toggleAISuggestion(s)"
+                                            class="group relative flex items-center gap-2 bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-400 px-2 py-1.5 rounded-lg transition-all shadow-sm hover:shadow-md active:scale-95"
+                                            :title="s.title"
+                                        >
+                                            <div class="flex flex-col items-start leading-tight">
+                                                <span class="text-[10px] font-extrabold text-blue-700">{{ s.doc_number }}</span>
+                                                <span class="text-[9px] text-gray-500 truncate max-w-[150px]">{{ s.title }}</span>
+                                            </div>
+                                            <div class="flex items-center text-[9px] font-bold text-blue-500 bg-blue-50 px-1 rounded border border-blue-100">
+                                                {{ Math.round(s.similarity * 100) }}%
+                                            </div>
+                                            <!-- Indicator if already in list -->
+                                            <div v-if="linkForm.selectedLinks.some(l => l.doc_number === s.doc_number)" class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border border-white flex items-center justify-center">
+                                                <i class="fa-solid fa-check text-[7px] text-white"></i>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                             <button type="submit" class="w-full inline-flex justify-center py-2.5 px-4 border border-transparent font-bold rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors shadow-md mt-4">
                                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -378,8 +425,9 @@ export default defineComponent({
             extractedText: "",
             filePreviewUrl: null as string | null,
             accuracy: '',
-            linkForm: { target_doc_number: '', link_type: 'auto' },
+            linkForm: { target_doc_number: '', link_type: 'auto', selectedLinks: [] as any[] },
             availableDocs: [] as any[],
+            aiSuggestions: [] as any[],
             positions: [] as any[],
             metadata: { pages: [] as any[] },
             showLayout: true,
@@ -507,14 +555,15 @@ export default defineComponent({
                 field: "",
                 note: ""
             };
-            this.linkForm = { target_doc_number: "", link_type: "auto" };
+            this.linkForm = { target_doc_number: "", link_type: "auto", selectedLinks: [] };
         },
         async startOCR() {
             if (!this.selectedFile) return;
             this.isLoading = true; this.isOcrDone = false;
             try {
                 const res = await processOCR(this.selectedFile, this.extractionMode);
-                const { data, accuracy, positions, metadata } = res.data;
+                const { data, accuracy, positions, metadata, suggestions } = res.data;
+                this.aiSuggestions = suggestions || [];
                 // Gán _uid cho mỗi position để dùng làm key + so sánh nhanh
                 const taggedPositions = (positions || []).map((p: any, i: number) => ({
                     ...p,
@@ -561,22 +610,26 @@ export default defineComponent({
                     throw new Error("Không nhận được document_id từ server");
                 }
                 await uploadAttachment(documentId, this.selectedFile);
-
-                if (this.linkForm.target_doc_number && this.linkForm.link_type) {
-                    try {
-                        await createDocumentLink({
-                            source_doc_id: documentId,
-                            target_doc_number: this.linkForm.target_doc_number,
-                            link_type: this.linkForm.link_type
-                        });
+                
+                // Lưu hàng loạt các liên kết
+                if (this.linkForm.selectedLinks.length > 0) {
+                    let successCount = 0;
+                    for (const link of this.linkForm.selectedLinks) {
+                        try {
+                            await createDocumentLink({
+                                source_doc_id: documentId,
+                                target_doc_number: link.doc_number,
+                                link_type: link.link_type
+                            });
+                            successCount++;
+                        } catch (e) {
+                            console.error(`Lỗi tạo liên kết với ${link.doc_number}:`, e);
+                        }
+                    }
+                    if (successCount > 0) {
                         (this.$refs.myToast as any).success(
-                            "Thành công",
-                            "Tạo liên kết văn bản thành công."
-                        );
-                    } catch (e: any) {
-                        (this.$refs.myToast as any).error(
-                            "Lỗi liên kết",
-                            e.response?.data?.detail || "Không thể tạo liên kết."
+                            "Liên kết",
+                            `Đã tạo thành công ${successCount} liên kết văn bản.`
                         );
                     }
                 }
@@ -616,6 +669,37 @@ export default defineComponent({
             }
             this.selectedBlockId = item._uid;
             this.editingBlockId = null;
+        },
+        toggleAISuggestion(s: any) {
+            const index = this.linkForm.selectedLinks.findIndex((l: any) => l.doc_number === s.doc_number);
+            if (index > -1) {
+                this.linkForm.selectedLinks.splice(index, 1);
+            } else {
+                this.linkForm.selectedLinks.push({
+                    doc_number: s.doc_number,
+                    link_type: 'auto',
+                    type_label: '✨ AI Tự nhận dạng'
+                });
+            }
+        },
+        addManualLink() {
+            if (!this.linkForm.target_doc_number) return;
+            
+            // Tránh trùng lặp
+            if (this.linkForm.selectedLinks.some((l: any) => l.doc_number === this.linkForm.target_doc_number)) {
+                (this.$refs.myToast as any).warning("Trùng lặp", "Văn bản này đã có trong danh sách.");
+                return;
+            }
+
+            const selectEl = document.querySelector('select[v-model="linkForm.link_type"]') as HTMLSelectElement;
+            const typeLabel = selectEl ? selectEl.options[selectEl.selectedIndex].text : this.linkForm.link_type;
+
+            this.linkForm.selectedLinks.push({
+                doc_number: this.linkForm.target_doc_number,
+                link_type: this.linkForm.link_type,
+                type_label: typeLabel
+            });
+            this.linkForm.target_doc_number = "";
         },
         onBlockDblClick(item: any, event: MouseEvent) {
             this.editingBlockId = item._uid;
