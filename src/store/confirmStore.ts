@@ -9,17 +9,25 @@ export const useConfirmStore = defineStore("confirm", {
 
     actions: {
         open(message: string) {
-            return new Promise<void>((resolve) => {
+            return new Promise<boolean>((resolve) => {
                 this.message = message;
                 this.visible = true;
-                this.resolve = resolve;
+                this.resolve = resolve as any;
             });
         },
 
         confirm() {
             this.visible = false;
             if (this.resolve) {
-                this.resolve();
+                (this.resolve as any)(true);
+                this.resolve = null;
+            }
+        },
+
+        cancel() {
+            this.visible = false;
+            if (this.resolve) {
+                (this.resolve as any)(false);
                 this.resolve = null;
             }
         },

@@ -86,7 +86,9 @@ export default defineComponent({
         const fetchData = async () => {
             try {
                 const data = await getDistributionData(mode.value);
-                chartOption.value.series[0].data = data;
+                if (chartOption.value.series && chartOption.value.series[0]) {
+                    chartOption.value.series[0].data = data;
+                }
             } catch (err) {
                 console.error("Lỗi getDistributionData:", err);
             }

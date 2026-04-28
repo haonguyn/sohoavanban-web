@@ -49,19 +49,6 @@ export function formatDate(dateString: string | null | undefined): string {
   return `${d}-${m}-${y}`;
 }
 
-export function formatDateTime(dateString: string | null | undefined): string {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return dateString;
-  const d = String(date.getDate()).padStart(2, '0');
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const y = date.getFullYear();
-  const hs = String(date.getHours()).padStart(2, '0');
-  const ms = String(date.getMinutes()).padStart(2, '0');
-  const ss = String(date.getSeconds()).padStart(2, '0');
-  return `${d}-${m}-${y} ${hs}:${ms}:${ss}`;
-}
-
 export function getDocumentEffectiveStatus(
   {
     effective_start_date,

@@ -164,7 +164,7 @@ export default defineComponent({
           "Xuất excel thành công"
         );
       } catch (err) {
-        alert("Xuất Excel thất bại!");
+        (this.$refs.myToast as any).error("Lỗi", "Xuất Excel thất bại!");
         console.error(err);
       } finally {
         (this.$refs.loadingRef as any).hide();

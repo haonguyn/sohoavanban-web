@@ -5,40 +5,25 @@
             <LoadingComponent v-if="isLoading" />
             <div v-else class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Toolbar: Stats & Filter -->
-                <div class="mb-8 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 px-1">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-transform">
-                            <i class="fa-solid fa-folder-open text-xl"></i>
-                        </div>
-                        <div class="flex flex-col gap-0.5">
-                            <h2 class="text-3xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent tracking-tight">
-                                Danh sách văn bản
-                            </h2>
-                            <p class="text-[15px] text-slate-500 font-medium">
-                                Kho lưu trữ các văn bản đã được bóc tách dữ liệu AI.
-                            </p>
-                        </div>
+                <div class="mb-8 flex items-center gap-4 px-1">
+                    <div class="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-transform">
+                        <i class="fa-solid fa-folder-open text-xl"></i>
                     </div>
-                    
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fa-solid fa-search text-gray-400"></i>
-                            </span>
-                            <input type="text" v-model="searchQuery"
-                                class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:w-64 sm:text-sm"
-                                placeholder="Tìm số hiệu, tiêu đề...">
-                        </div>
-                        <select v-model="filterStatus"
-                            class="border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Tất cả trạng thái</option>
-                            <option value="approved">Đã duyệt</option>
-                            <option value="pending">Chờ duyệt</option>
-                            <option value="rejected">Từ chối</option>
-                        </select>
+                    <div class="flex flex-col gap-0.5">
+                        <h2 class="text-3xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent tracking-tight">
+                            Danh sách văn bản
+                        </h2>
+                        <p class="text-[15px] text-slate-500 font-medium">
+                            Kho lưu trữ các văn bản đã được bóc tách dữ liệu.
+                        </p>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+
+                <div class="mb-8">
+                    <NetworkGraphWidget />
+                </div>
+
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
                     <div class="bg-white overflow-hidden shadow rounded-lg">
                         <div class="px-4 py-5 sm:p-6">
                             <dt class="text-sm font-medium text-gray-500 truncate">Tổng số văn bản</dt>
@@ -75,7 +60,23 @@
 
                 </div>
 
-                <NetworkGraphWidget />
+                <div class="flex flex-col sm:flex-row gap-3 justify-end mb-4">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-search text-gray-400"></i>
+                        </span>
+                        <input type="text" v-model="searchQuery"
+                            class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:w-64 sm:text-sm"
+                            placeholder="Tìm số hiệu, tiêu đề...">
+                    </div>
+                    <select v-model="filterStatus"
+                        class="border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="approved">Đã duyệt</option>
+                        <option value="pending">Chờ duyệt</option>
+                        <option value="rejected">Từ chối</option>
+                    </select>
+                </div>
 
                 <!-- Main Data Table -->
                 <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
@@ -681,6 +682,7 @@ import Footer from '../components/layout/Footer.vue';
 import { deleteDocument, fetchDocuments, updateDocument, getDocumentLinks, createDocumentLink, deleteDocumentLink, getDocumentDetail } from '../api/documentApi';
 import { base64ToBlob, downloadFile, formatDate, formatFileSize } from '../utils/fileUtils';
 import { hasRole } from '../utils/authUtils';
+import { removeVietnameseTones } from '../utils/textUtils';
 import ToastNotification from '../components/ToastNotification.vue';
 import { fetchAttachmentsByDoc } from '../api/attachmentApi';
 import LoadingComponent from '../components/LoadingComponent.vue';
@@ -737,14 +739,16 @@ export default defineComponent({
 
     computed: {
         filteredDocuments(): Doc[] {
-            return this.documents.filter((doc) => {
-                const search = this.searchQuery.toLowerCase();
+            const queryTerms = removeVietnameseTones(this.searchQuery)
+                .split(' ')
+                .filter(term => term.trim() !== '');
 
-                const matchesSearch =
-                    (doc.doc_number &&
-                        doc.doc_number.toLowerCase().includes(search)) ||
-                    (doc.title &&
-                        doc.title.toLowerCase().includes(search));
+            return this.documents.filter((doc) => {
+                const targetText = removeVietnameseTones(
+                    [doc.title, doc.doc_number].filter(Boolean).join(' ')
+                );
+
+                const matchesSearch = queryTerms.length === 0 || queryTerms.every(term => targetText.includes(term));
 
                 const matchesStatus =
                     this.filterStatus === '' || doc.status === this.filterStatus;
@@ -849,7 +853,7 @@ export default defineComponent({
             (this.$refs.loadingRef as any).show();
             try {
                 // Update basic info
-                const res = await updateDocument(
+                await updateDocument(
                     Number(this.selectedDoc.id),
                     this.tempDoc
                 );

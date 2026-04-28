@@ -5,7 +5,6 @@ export const sendChatMessage = async (formData: FormData) => {
     headers: {
       "Content-Type": "multipart/form-data",
     },
-    timeout: 60000, // 60s timeout for LLM
   });
 };
 

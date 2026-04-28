@@ -1,11 +1,8 @@
 // src/utils/textUtils.ts
 
-export function truncate(text: string, length = 100): string {
-  return text.length <= length ? text : text.slice(0, length) + "...";
-}
-
-export function capitalize(text: string): string {
-  return text.charAt(0).toUpperCase() + text.slice(1);
+export function truncate(text: string, length = 100) {
+  if (!text) return "";
+  return text.length > length ? text.substring(0, length) + "..." : text;
 }
 
 export function normalizeDocType(text: string): string {
@@ -29,4 +26,14 @@ export function getStatusClass(status: string): string {
     default:
       return "bg-gray-100 text-gray-600";
   }
+}
+
+export function removeVietnameseTones(str: string): string {
+  if (!str) return "";
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase();
 }

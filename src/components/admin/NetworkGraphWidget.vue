@@ -40,7 +40,7 @@
                     <div v-for="group in groupedNodes" :key="group.name" class="mb-1">
                         <!-- Folder Header -->
                         <div @click="selectCluster(group.name)" 
-                             @dblclick="startEditGroup(group.name, $event)"
+                             @dblclick="startEditGroup(group.name)"
                              class="flex items-center gap-2 px-4 py-2 cursor-pointer transition select-none group border-l-[3px]"
                              :class="selectedCluster === group.name ? 'bg-indigo-50 border-indigo-500' : 'border-transparent hover:bg-slate-100'">
                             <i class="fas text-[10px] w-3 text-slate-400 group-hover:text-slate-700 transition text-center" 
@@ -211,7 +211,7 @@ export default defineComponent({
                 return a.localeCompare(b);
             }).map(key => ({
                 name: key,
-                nodes: groups[key]
+                nodes: groups[key] || []
             }));
         }
     },
@@ -274,7 +274,7 @@ export default defineComponent({
                 this.networkOptions = { ...this.networkOptions };
             }
         },
-        startEditGroup(name: string, event: Event) {
+        startEditGroup(name: string) {
             if (name === 'Các văn bản độc lập') return;
             this.editingGroup = name;
             this.editGroupText = this.customGroupNames[name] || name;
@@ -393,8 +393,8 @@ export default defineComponent({
                 const adj: Record<string, string[]> = {};
                 data.nodes.forEach((n: any) => adj[n.id] = []);
                 data.edges.forEach((e: any) => {
-                    if (adj[e.source]) adj[e.source].push(e.target);
-                    if (adj[e.target]) adj[e.target].push(e.source);
+                    adj[e.source]?.push(e.target);
+                    adj[e.target]?.push(e.source);
                 });
                 const visited = new Set();
                 const components: string[][] = [];

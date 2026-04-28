@@ -6,20 +6,60 @@
             <div class="p-6 h-full flex flex-col">
 
                 <!-- Header -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 gap-4">
+                <div v-show="!selectedDoc && !isDetailLoading" class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 gap-4">
                   <div>
                     <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Danh sách văn bản</h1>
                     <p class="text-sm text-slate-500 mt-1">Quản lý, duyệt và kiểm soát kho tài liệu lưu trữ của hệ thống.</p>
                   </div>
-                  <div class="relative w-full sm:w-auto mt-2 sm:mt-0">
-                      <i data-lucide="search" class="absolute left-3 top-2.5 text-slate-400 w-4 h-4"></i>
-                      <input v-model="listFilter" type="text" placeholder="Tìm kiếm số hiệu, trích yếu..."
-                          class="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64 shadow-sm">
+                  <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                      <div class="relative flex-1 min-w-[240px]">
+                          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                          <input v-model="searchQuery" type="text" placeholder="Số hiệu, tiêu đề, người ký..."
+                              class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all text-sm">
+                      </div>
+                      <div class="relative">
+                          <button @click="isStatusDropdownOpen = !isStatusDropdownOpen" class="w-full text-left pl-3 pr-8 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white min-w-[150px] cursor-pointer flex items-center justify-between">
+                              <span>{{ statusLabel }}</span>
+                              <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
+                          </button>
+                          
+                          <div v-if="pendingCount > 0" class="absolute -top-1.5 -right-1.5 flex h-4 w-4 pointer-events-none">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-4 w-4 bg-rose-500 text-[9px] text-white font-bold items-center justify-center">{{ pendingCount }}</span>
+                          </div>
+
+                          <!-- Overlay for click outside -->
+                          <div v-if="isStatusDropdownOpen" @click="isStatusDropdownOpen = false" class="fixed inset-0 z-40"></div>
+
+                          <!-- Custom Dropdown Menu -->
+                          <div v-if="isStatusDropdownOpen" class="absolute top-full left-0 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg z-50 py-1 overflow-hidden">
+                              <div @click="selectStatus('')" class="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer transition-colors" :class="{'bg-blue-50 font-bold text-blue-600': listFilter.status === ''}">Tất cả trạng thái</div>
+                              <div @click="selectStatus('pending')" class="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer transition-colors flex items-center justify-between" :class="{'bg-blue-50 font-bold text-blue-600': listFilter.status === 'pending'}">
+                                  <span>Chưa duyệt</span>
+                                  <div v-if="pendingCount > 0" class="flex h-4 min-w-[16px] px-1 pointer-events-none items-center justify-center relative">
+                                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                      <span class="relative inline-flex rounded-full h-4 min-w-[16px] px-1 bg-rose-500 text-[9px] text-white font-bold items-center justify-center">{{ pendingCount }}</span>
+                                  </div>
+                              </div>
+                              <div @click="selectStatus('approved')" class="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer transition-colors" :class="{'bg-blue-50 font-bold text-blue-600': listFilter.status === 'approved'}">Đã duyệt</div>
+                              <div @click="selectStatus('rejected')" class="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer transition-colors" :class="{'bg-blue-50 font-bold text-blue-600': listFilter.status === 'rejected'}">Từ chối</div>
+                          </div>
+                      </div>
+                      <div class="relative">
+                          <select v-model="listFilter.doc_type"
+                              class="pl-3 pr-8 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none bg-white min-w-[160px] cursor-pointer">
+                              <option value="">Tất cả loại văn bản</option>
+                              <option v-for="type in uniqueDocTypes" :key="type" :value="type">
+                                  {{ type }}
+                              </option>
+                          </select>
+                          <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
+                      </div>
                   </div>
                 </div>
 
                 <!-- LIST TABLE -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
+                <div v-show="!selectedDoc && !isDetailLoading" class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
                     <div class="overflow-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         <table class="w-full">
                             <thead class="bg-slate-50 sticky top-0 z-10">
@@ -47,7 +87,7 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{{ doc.signer }}</td>
-                                    <td class="px-4 py-3 text-sm text-slate-500">{{ doc.doc_type }}</td>
+                                    <td class="px-4 py-3 text-sm text-slate-500">{{ normalizeDocType(doc.doc_type || '') || 'Khác' }}</td>
                                     <td class="px-4 py-3 text-sm text-slate-500 max-w-[120px] truncate" :title="doc.note">{{ doc.note }}</td>
                                     <td class="px-4 py-3 text-sm text-slate-500">
                                         <span :class="doc.visibility === 'public' ? 'text-green-700 bg-green-100' : 'text-rose-700 bg-rose-100'"
@@ -75,14 +115,40 @@
                     </div>
 
                     <!-- PAGINATION -->
-                    <div
-                        class="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center text-sm text-slate-500">
-                        <span>Trang {{ currentPage }} / {{ totalPages }}</span>
-                        <div class="flex gap-2">
+                    <div class="p-4 border-t border-slate-200 bg-white flex flex-col sm:flex-row justify-center items-center gap-4 text-sm text-slate-500 relative">
+                        <div class="flex items-center gap-2 sm:absolute sm:left-4">
+                            <span>Hiển thị {{ paginatedDocs.length }} / {{ filteredDocs.length }} kết quả</span>
+                        </div>
+                        
+                        <div class="flex items-center gap-1 z-10">
+                            <!-- Nút Trước -->
                             <button @click="prevPage" :disabled="currentPage === 1"
-                                class="px-3 py-1 border rounded bg-white hover:bg-slate-100 disabled:opacity-50">Trước</button>
+                                class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-600">
+                                <i class="fas fa-chevron-left text-[10px]"></i>
+                            </button>
+
+                            <!-- Các số trang -->
+                            <div class="flex items-center gap-1">
+                                <template v-for="(p, idx) in visiblePages" :key="idx">
+                                    <button v-if="typeof p === 'number'"
+                                        @click="goToPage(p)"
+                                        :class="[
+                                            'w-8 h-8 flex items-center justify-center rounded-lg border text-xs font-bold transition-all',
+                                            currentPage === p 
+                                                ? 'bg-blue-600 border-blue-600 text-white shadow-sm' 
+                                                : 'border-slate-200 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600'
+                                        ]">
+                                        {{ p }}
+                                    </button>
+                                    <span v-else class="w-6 text-center text-slate-400">...</span>
+                                </template>
+                            </div>
+
+                            <!-- Nút Sau -->
                             <button @click="nextPage" :disabled="currentPage * itemsPerPage >= filteredDocs.length"
-                                class="px-3 py-1 border rounded bg-white hover:bg-slate-100 disabled:opacity-50">Sau</button>
+                                class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-600">
+                                <i class="fas fa-chevron-right text-[10px]"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -203,6 +269,20 @@
                                 <div class="col-span-2">
                                     <label class="text-xs font-bold text-slate-500">Nội dung</label>
                                     <textarea v-model="editForm.full_text"
+                                        class="w-full border p-2 rounded h-64 font-mono text-sm"></textarea>
+                                </div>
+                                <!-- Liên kết văn bản -->
+                                <div class="col-span-2 border-t border-slate-200 mt-6 pt-6">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Quản lý liên kết văn bản</h4>
+                                        <button @click="addLinkRow" type="button"
+                                            class="text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-100 transition border border-indigo-100 flex items-center gap-1.5">
+                                            <i class="fas fa-plus"></i> Thêm liên kết mới
+                                        </button>
+                                    </div>
+
+                                    <!-- Danh sách liên kết hiện tại (trong chế độ sửa) -->
+                                    <div v-if="existingLinks.length > 0" class="mb-6 space-y-2">
                                         <p class="text-[11px] font-bold text-slate-400 uppercase mb-2">Liên kết hiện có:</p>
                                         <div v-for="link in existingLinks" :key="link.id" 
                                             class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl group">
@@ -274,10 +354,7 @@
                                             BH</span>
                                         <p class="font-semibold text-slate-800">{{ formatDate(selectedDoc.issued_date) }}</p>
                                     </div>
-                                    <div><span class="text-slate-400 text-xs uppercase font-bold tracking-wider">Loại
-                                            VB</span>
-                                        <p class="font-semibold text-blue-600">{{ selectedDoc.doc_type || 'Khác' }}</p>
-                                    </div>
+                                        <p class="font-semibold text-blue-600">{{ normalizeDocType(selectedDoc.doc_type || '') || 'Khác' }}</p>
                                     <div><span class="text-slate-400 text-xs uppercase font-bold tracking-wider">Cơ quan
                                             ban hành</span>
                                         <p class="font-semibold text-slate-800">{{ selectedDoc.issued_by }}</p>
@@ -383,19 +460,25 @@
 import { defineComponent } from "vue";
 import Navbar from "../../components/admin/Navbar.vue";
 import type { Doc } from "../../types/DocumentTypes";
-import { deleteDocument, fetchDocuments, updateDocument, createDocumentLink, getDocumentDetail, getDocumentLinks, deleteDocumentLink } from "../../api/documentApi";
+import { deleteDocument, fetchDocuments, updateDocument, createDocumentLink, getDocumentDetail, getDocumentLinks, deleteDocumentLink, getDocumentMetadata } from "../../api/documentApi";
+import { useConfirmStore } from "../../store/confirmStore";
 import LoadingComponent from "../../components/LoadingComponent.vue";
 import ToastNotification from "../../components/ToastNotification.vue";
 import AppDatePicker from "../../components/AppDatePicker.vue";
 import { fetchAttachmentsByDoc } from "../../api/attachmentApi";
 import { base64ToBlob, downloadFile, formatDate } from "../../utils/fileUtils";
+import { normalizeDocType, removeVietnameseTones } from "../../utils/textUtils";
 
 export default defineComponent({
     name: "DocumentList",
     components: { Navbar, LoadingComponent, ToastNotification, AppDatePicker },
     data() {
         return {
-            listFilter: "",
+            listFilter: {
+                doc_type: "",
+                status: "",
+            },
+            searchQuery: "",
             currentPage: 1,
             itemsPerPage: 8,
             selectedDoc: null as Doc | null,
@@ -403,6 +486,7 @@ export default defineComponent({
             isPublic: false,
             editForm: {} as Partial<Doc>,
             docs: [] as Doc[],
+            uniqueDocTypes: [] as string[],
             pendingLinks: [] as { target_doc_number: string; link_type: string }[],
             existingLinks: [] as any[],
             isDetailLoading: false,
@@ -410,20 +494,64 @@ export default defineComponent({
             newLink: { target_doc_number: "", link_type: "auto" },
             aiSuggestions: [] as any[],
             isSuggesting: false,
+            isStatusDropdownOpen: false,
         };
     },
-    mounted() {
-        this.getDocuments();
+    async mounted() {
+        (this.$refs.loadingRef as any)?.show();
+        await Promise.all([
+            this.getDocuments(),
+            this.fetchMetadata()
+        ]);
+        (this.$refs.loadingRef as any)?.hide();
     },
     computed: {
+        statusLabel(): string {
+            switch (this.listFilter.status) {
+                case 'pending': return 'Chưa duyệt';
+                case 'approved': return 'Đã duyệt';
+                case 'rejected': return 'Từ chối';
+                default: return 'Tất cả trạng thái';
+            }
+        },
+        pendingCount(): number {
+            return this.docs.filter(doc => doc.status === 'pending').length;
+        },
         filteredDocs(): Doc[] {
-            const key = this.listFilter.trim().toLowerCase();
-            if (!key) return this.docs;
-            return this.docs.filter(d =>
-                (d.doc_number ?? "").toLowerCase().includes(key) ||
-                (d.title ?? "").toLowerCase().includes(key) ||
-                (d.signer ?? "").toLowerCase().includes(key)
-            );
+            const queryTerms = removeVietnameseTones(this.searchQuery)
+                .split(' ')
+                .filter(term => term.trim() !== '');
+
+            const filtered = this.docs.filter(doc => {
+                const targetText = removeVietnameseTones(
+                    [doc.title, doc.doc_number, doc.signer].filter(Boolean).join(' ')
+                );
+
+                const matchesSearch = queryTerms.length === 0 || queryTerms.every(term => targetText.includes(term));
+
+                const docTypeNorm = doc.doc_type ? normalizeDocType(doc.doc_type) : "";
+                const matchesType = !this.listFilter.doc_type || docTypeNorm === this.listFilter.doc_type;
+                const matchesStatus = !this.listFilter.status || doc.status === this.listFilter.status;
+
+                return matchesSearch && matchesType && matchesStatus;
+            });
+
+            const statusOrder: Record<string, number> = {
+                'pending': 1,
+                'approved': 2,
+                'rejected': 3
+            };
+
+            return filtered.sort((a, b) => {
+                const orderA = statusOrder[a.status || ''] || 4;
+                const orderB = statusOrder[b.status || ''] || 4;
+                if (orderA !== orderB) {
+                    return orderA - orderB;
+                }
+                const dateA = new Date(a.issued_date || 0).getTime();
+                const dateB = new Date(b.issued_date || 0).getTime();
+                return dateB - dateA;
+            });
         },
 
         paginatedDocs(): Doc[] {
@@ -433,10 +561,51 @@ export default defineComponent({
         totalPages(): number {
             return Math.ceil(this.filteredDocs.length / this.itemsPerPage);
         },
+        visiblePages(): (number | string)[] {
+            const pages: (number | string)[] = [];
+            const threshold = 1; // Số trang hiển thị xung quanh trang hiện tại
+
+            if (this.totalPages <= 7) {
+                for (let i = 1; i <= this.totalPages; i++) pages.push(i);
+                return pages;
+            }
+
+            // Luôn hiển thị trang 1
+            pages.push(1);
+
+            if (this.currentPage > threshold + 2) {
+                pages.push('...');
+            }
+
+            // Hiển thị các trang xung quanh trang hiện tại
+            const start = Math.max(2, this.currentPage - threshold);
+            const end = Math.min(this.totalPages - 1, this.currentPage + threshold);
+
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+
+            if (this.currentPage < this.totalPages - threshold - 1) {
+                pages.push('...');
+            }
+
+            // Luôn hiển thị trang cuối
+            if (this.totalPages > 1) {
+                pages.push(this.totalPages);
+            }
+
+            return pages;
+        }
     },
     watch: {
-        listFilter() {
-            this.currentPage = 1; // reset page khi filter thay đổi
+        listFilter: {
+            deep: true,
+            handler() {
+                this.currentPage = 1;
+            }
+        },
+        searchQuery() {
+            this.currentPage = 1;
         },
         selectedDoc: {
             immediate: true,
@@ -448,7 +617,28 @@ export default defineComponent({
         },
     },
     methods: {
+        selectStatus(status: string) {
+            this.listFilter.status = status;
+            this.isStatusDropdownOpen = false;
+        },
+        async fetchMetadata() {
+            try {
+                const res = await getDocumentMetadata();
+                const { doc_types } = res.data;
+                this.uniqueDocTypes = this.processMetadataList(doc_types);
+            } catch (err) {
+                // Fallback nếu không có endpoint metadata
+                const types = this.docs.map(d => d.doc_type).filter((t): t is string => !!t);
+                this.uniqueDocTypes = this.processMetadataList(types);
+            }
+        },
+        processMetadataList(list: string[]): string[] {
+            return Array.from(new Set(list.map(t => normalizeDocType(t))))
+                .filter(Boolean)
+                .sort((a, b) => a.localeCompare(b, 'vi'));
+        },
         formatDate,
+        normalizeDocType,
         getStatusColor(status: string) {
             switch (status) {
                 case "approved": return "bg-emerald-100 text-emerald-700";
@@ -488,6 +678,9 @@ export default defineComponent({
             }
         },
         prevPage() { if (this.currentPage > 1) this.currentPage--; },
+        goToPage(p: number) {
+            this.currentPage = p;
+        },
         nextPage() {
             if (this.currentPage < this.totalPages) {
                 this.currentPage++;
@@ -496,6 +689,7 @@ export default defineComponent({
         async viewDetail(doc: Doc) {
             this.isDetailLoading = true;
             this.selectedDoc = null;
+            this.isEditing = false;
             try {
                 const [detailRes, attachRes] = await Promise.all([
                     getDocumentDetail(Number(doc.id)),
@@ -530,7 +724,9 @@ export default defineComponent({
             this.pendingLinks.splice(index, 1);
         },
         async handleDeleteLink(linkId: number) {
-            if (!confirm("Bạn có chắc chắn muốn xóa liên kết này?")) return;
+            const confirmStore = useConfirmStore();
+            const isConfirmed = await confirmStore.open("Bạn có chắc chắn muốn xóa liên kết này?");
+            if (!isConfirmed) return;
             try {
                 await deleteDocumentLink(linkId);
                 this.existingLinks = this.existingLinks.filter(l => l.id !== linkId);
@@ -551,6 +747,7 @@ export default defineComponent({
             this.pendingLinks = []; 
         },
         goBack() {
+            this.cancelEditing();
             this.selectedDoc = null;
             this.getDocuments();
         },
@@ -610,7 +807,9 @@ export default defineComponent({
             }
         },
         async handleDeleteDocument(docId: number) {
-            if (!confirm("Bạn có chắc chắn muốn xoá document này?")) return;
+            const confirmStore = useConfirmStore();
+            const isConfirmed = await confirmStore.open("Bạn có chắc chắn muốn xoá document này?");
+            if (!isConfirmed) return;
             try {
                 await deleteDocument(docId);
                 const index = this.docs.findIndex(d => d.id === docId);

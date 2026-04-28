@@ -45,35 +45,26 @@
                                         class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                                 </div>
 
-                                <!-- Lọc theo loại văn bản -->
-                                <div>
-                                    <label for="docType" class="block text-sm font-medium text-gray-700">Loại văn
-                                        bản</label>
-                                    <select id="docType" v-model="filters.doc_type"
-                                        class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                        <option value="">Tất cả</option>
-                                        <option value="Nghị định">Nghị định</option>
-                                        <option value="Thông tư">Thông tư</option>
-                                        <option value="Luật">Luật</option>
-                                        <option value="Quyết định">Quyết định</option>
-                                        <option value="Chỉ thị">Chỉ thị</option>
-                                    </select>
+                                <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100/50 mb-4">
+                                  <label for="docType" class="block text-[11px] font-bold text-blue-500 uppercase tracking-wider mb-2">Loại văn bản</label>
+                                  <select id="docType" v-model="filters.doc_type"
+                                      class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                                      <option value="">Tất cả loại văn bản</option>
+                                      <option v-for="type in uniqueDocTypes" :key="type" :value="type">
+                                          {{ type }}
+                                      </option>
+                                  </select>
                                 </div>
 
-                                <!-- Lọc theo cơ quan ban hành -->
-                                <div>
-                                    <label for="issuer" class="block text-sm font-medium text-gray-700">Cơ quan ban
-                                        hành</label>
-                                    <select id="issuer" v-model="filters.issued_by"
-                                        class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                        <option value="">Tất cả</option>
-                                        <option value="quoc-hoi">Quốc hội</option>
-                                        <option value="chinh-phu">Chính phủ</option>
-                                        <option value="bo-tai-chinh">Bộ Tài chính</option>
-                                        <option value="nhnn">Ngân hàng Nhà nước</option>
-                                        <option value="bo-cong-an">Bộ Công an</option>
-                                        <option value="bo-y-te">Bộ Y tế</option>
-                                    </select>
+                                <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100/50 mb-4">
+                                  <label for="issuer" class="block text-[11px] font-bold text-indigo-500 uppercase tracking-wider mb-2">Cơ quan ban hành</label>
+                                  <select id="issuer" v-model="filters.issued_by"
+                                      class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-blue-500 outline-none transition-all">
+                                      <option value="">Tất cả cơ quan</option>
+                                      <option v-for="issuer in uniqueIssuers" :key="issuer" :value="issuer">
+                                          {{ issuer }}
+                                      </option>
+                                  </select>
                                 </div>
 
                                 <!-- Lọc theo ngày ban hành -->
@@ -183,7 +174,7 @@
                                                     {{ effectiveStatus(doc) }}
                                                 </span>
                                                 <span class="text-xs bg-gray-100 px-2 py-0.5 rounded">
-                                                    {{ doc.doc_type }}
+                                                    {{ normalizeDocType(doc.doc_type || '') || 'Khác' }}
                                                 </span>
                                             </div>
 
@@ -296,7 +287,7 @@ import Footer from "../components/layout/Footer.vue";
 import ToastNotification from "../components/ToastNotification.vue";
 import LoadingComponent from "../components/LoadingComponent.vue";
 import AppDatePicker from "../components/AppDatePicker.vue";
-import { filterDocuments } from "../api/documentApi";
+import { filterDocuments, getDocumentMetadata, fetchDocuments } from "../api/documentApi";
 import { fetchAttachmentsByDoc } from "../api/attachmentApi";
 import {
     base64ToBlob,
@@ -304,7 +295,7 @@ import {
     getDocumentEffectiveStatus,
     formatDate,
 } from "../utils/fileUtils";
-import { getStatusClass, truncate } from "../utils/textUtils";
+import { getStatusClass, truncate, normalizeDocType } from "../utils/textUtils";
 import type { Doc } from "../types/DocumentTypes";
 
 export default defineComponent({
@@ -336,6 +327,8 @@ export default defineComponent({
             },
 
             searchResults: [] as Doc[],
+            uniqueDocTypes: [] as string[],
+            uniqueIssuers: [] as string[],
             sortBy: "newest",
             debounceTimer: null as ReturnType<typeof setTimeout> | null,
             /** Tránh watcher từ khóa chạy khi bootstrap từ URL trong `created`. */
@@ -350,6 +343,7 @@ export default defineComponent({
         }
         const shouldLogTrend = keyword.length >= 2;
         this.loadDocuments(true, { logTrend: shouldLogTrend, silent: false });
+        this.fetchMetadata();
     },
 
     mounted() {
@@ -476,9 +470,44 @@ export default defineComponent({
             const blob = base64ToBlob(att.file_base64);
             downloadFile(blob, att.filename);
         },
+        async fetchMetadata() {
+            try {
+                // Thử lấy từ endpoint metadata chuyên dụng
+                const res = await getDocumentMetadata();
+                const { doc_types, issuers } = res.data;
+                console.log("metadata", res.data);
+                
+                this.uniqueDocTypes = this.processMetadataList(doc_types, true);
+                this.uniqueIssuers = this.processMetadataList(issuers, true);
+            } catch (err) {
+                console.warn("Endpoint /metadata/ không tồn tại hoặc lỗi, thực hiện fallback...");
+                try {
+                    // Fallback: Lấy từ danh sách tất cả văn bản
+                    const res = await fetchDocuments();
+                    const docs = res.data || [];
+                    const types = docs.map(d => d.doc_type).filter((t): t is string => !!t);
+                    const issuers = docs.map(d => d.issued_by).filter((i): i is string => !!i);
+                    
+                    this.uniqueDocTypes = this.processMetadataList(types, true);
+                    this.uniqueIssuers = this.processMetadataList(issuers, true);
+                } catch (fallbackErr) {
+                    console.error("Lỗi fallback fetch metadata", fallbackErr);
+                }
+            }
+        },
+        processMetadataList(list: string[], shouldNormalize: boolean): string[] {
+            const processed = list.map(item => {
+                const trimmed = (item || "").trim();
+                return shouldNormalize ? normalizeDocType(trimmed) : trimmed;
+            });
+            return Array.from(new Set(processed))
+                .filter(Boolean)
+                .sort((a, b) => a.localeCompare(b, 'vi'));
+        },
         formatDate,
         getStatusClass,
         truncate,
+        normalizeDocType,
     },
 
     watch: {

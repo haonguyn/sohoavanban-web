@@ -135,6 +135,11 @@
                             </p>
                         </div>
 
+                        <!-- Audio Reader Section -->
+                        <div v-if="document.full_text" class="px-6 sm:px-8 border-b border-gray-100 bg-white">
+                            <AudioReader :text="document.full_text" />
+                        </div>
+
                         <!-- File Preview Viewer Section -->
                         <div class="flex-grow bg-gray-200 relative min-h-[600px] sm:min-h-[800px] flex justify-center items-center p-1">
                             <!-- Loading State -->
@@ -308,9 +313,10 @@
 import { defineComponent } from "vue";
 import Header from "../components/layout/Header.vue";
 import Footer from "../components/layout/Footer.vue";
+import AudioReader from "../components/AudioReader.vue";
 import type { Doc } from "../types/DocumentTypes";
 import { getDocumentDetail, getDocumentLinks } from "../api/documentApi";
-import { fetchAttachmentsByDoc } from "../api/attachmentApi";
+import { fetchAttachmentsByDoc, fetchAttachmentDetail } from "../api/attachmentApi";
 import { base64ToBlob, downloadFile, formatDate, formatFileSize, getDocumentEffectiveStatus, formatNumber } from "../utils/fileUtils";
 import ToastNotification from "../components/ToastNotification.vue";
 import { getStatusClass } from "../utils/textUtils";
@@ -326,6 +332,7 @@ export default defineComponent({
         Footer,
         ToastNotification,
         LoadingComponent,
+        AudioReader,
     },
     data() {
         return {
@@ -442,15 +449,31 @@ export default defineComponent({
         },
         async doDownloadFile(document: any) {
             const att = document?.attachments;
-            if (!att || !att.file_base64) {
-                (this.$refs.myToast as any).error(
-                    "Lỗi",
-                    `Xảy ra lỗi khi yêu cầu tải file xuống`
-                );
+            if (!att) {
+                (this.$refs.myToast as any).error("Lỗi", "Không tìm thấy file đính kèm");
                 return;
             }
-            const blob = base64ToBlob(att.file_base64);
-            downloadFile(blob, att.filename);
+
+            // Nếu chưa có dữ liệu file (do đã tối ưu lúc load trang), tiến hành tải về ngay bây giờ
+            (this.$refs.loadingRef as any).show();
+            try {
+                let fileData = att.file_base64;
+                if (!fileData) {
+                    const res = await fetchAttachmentDetail(att.id);
+                    fileData = res.data.file_base64;
+                }
+
+                if (!fileData) {
+                    throw new Error("Không thể lấy dữ liệu file");
+                }
+
+                const blob = base64ToBlob(fileData);
+                downloadFile(blob, att.filename);
+            } catch (err) {
+                (this.$refs.myToast as any).error("Lỗi", "Không thể tải file xuống lúc này");
+            } finally {
+                (this.$refs.loadingRef as any).hide();
+            }
         },
         formatAiText(text: string) {
             if (!text) return '';

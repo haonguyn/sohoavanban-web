@@ -218,7 +218,7 @@
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-gray-600 mb-1">Loại liên kết</label>
-                                        <select v-model="linkForm.link_type" class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
+                                        <select ref="linkTypeSelect" v-model="linkForm.link_type" class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
                                             <option value="auto">✨ AI Tự nhận dạng (Khuyên dùng)</option>
                                             <option value="can_cu">Văn bản căn cứ</option>
                                             <option value="thay_the">Văn bản thay thế</option>
@@ -648,7 +648,6 @@ export default defineComponent({
                 );
             }
         },
-        copyText(text: string) { if (text) navigator.clipboard.writeText(text).then(() => (this.$refs.myToast as any).success("Đã copy", "")); },
         handleOutsideClick(event: MouseEvent) {
             // Không blur nếu user đang click vào bên trong form
             const target = event.target as HTMLElement;
@@ -691,8 +690,14 @@ export default defineComponent({
                 return;
             }
 
-            const selectEl = document.querySelector('select[v-model="linkForm.link_type"]') as HTMLSelectElement;
-            const typeLabel = selectEl ? selectEl.options[selectEl.selectedIndex].text : this.linkForm.link_type;
+            const selectEl = this.$refs.linkTypeSelect as HTMLSelectElement | undefined;
+            let typeLabel = this.linkForm.link_type;
+            if (selectEl && selectEl.selectedIndex !== -1) {
+                const option = selectEl.options[selectEl.selectedIndex];
+                if (option) {
+                    typeLabel = option.text;
+                }
+            }
 
             this.linkForm.selectedLinks.push({
                 doc_number: this.linkForm.target_doc_number,

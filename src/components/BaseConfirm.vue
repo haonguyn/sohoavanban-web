@@ -28,10 +28,14 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-gray-50/80 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-gray-100">
+                    <div class="bg-gray-50/80 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-gray-100 gap-2">
                         <button @click="confirm.confirm" type="button"
-                            class="inline-flex w-full justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 hover:shadow-md transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:w-full">
+                            class="inline-flex w-full justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 hover:shadow-md transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:w-1/2">
                             Đồng ý
+                        </button>
+                        <button @click="confirm.cancel" type="button"
+                            class="inline-flex w-full justify-center rounded-xl bg-white border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-all duration-200 sm:w-1/2">
+                            Hủy
                         </button>
                     </div>
                 </div>

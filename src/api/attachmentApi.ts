@@ -3,7 +3,13 @@ import api from "./axios";
 
 export const fetchAttachmentsByDoc = async (docId: number) => {
   return await api.get<Attach[]>("/attachments/", {
-    params: { doc_id: docId, include_file: 1 },
+    params: { doc_id: docId, include_file: 0 }, // Optimized: Do not fetch binary data by default
+  });
+};
+
+export const fetchAttachmentDetail = async (id: number | string) => {
+  return await api.get<Attach>(`/attachments/${id}/`, {
+    params: { include_file: 1 } // Only fetch binary data when specifically requested (e.g. download)
   });
 };
 

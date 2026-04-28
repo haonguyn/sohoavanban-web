@@ -6,4 +6,8 @@ import "./assets/styles/main.css"; // css toàn cục
 
 const pinia = createPinia();
 
-createApp(App).use(pinia).use(router).mount("#app");
+const app = createApp(App);
+app.use(pinia).use(router).mount("#app");
+
+// Initialize Lucide icons
+(window as any).lucide?.createIcons();

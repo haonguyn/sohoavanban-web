@@ -9,6 +9,7 @@ export const createDocument = async (data: FormData) => await api.post('/documen
 export const updateDocument = async (id: number, data: any) => await api.put(`/documents/${id}/update/`, data);
 export const deleteDocument = async (id: number) => await api.delete(`/documents/${id}/delete/`);
 export const filterDocuments = async (params: any) => await api.get('/documents/filter/', { params });
+export const getDocumentMetadata = async () => await api.get<{ doc_types: string[], issuers: string[] }>('/documents/metadata/');
 
 export const createDocumentLink = async (data: { source_doc_id: number; target_doc_number: string; link_type: string }) => await api.post('/documents/links/create/', data);
 export const getDocumentLinks = async (id: number) => await api.get(`/documents/${id}/links/`);

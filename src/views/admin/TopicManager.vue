@@ -135,19 +135,23 @@
     </div>
       </div>
     </main>
+    <ToastNotification ref="myToast" />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
 import Navbar from "../../components/admin/Navbar.vue";
-import { fetchTopics, createTopic, updateTopic, deleteTopic, TrendingTopic } from '../../api/topicApi';
+import ToastNotification from "../../components/ToastNotification.vue";
+import { fetchTopics, createTopic, updateTopic, deleteTopic } from '../../api/topicApi';
+import type { TrendingTopic } from '../../api/topicApi';
 import { useConfirmStore } from '../../store/confirmStore';
 
 export default defineComponent({
   name: "TopicManager",
   components: {
-    Navbar
+    Navbar,
+    ToastNotification
   },
   data() {
     return {
@@ -156,13 +160,13 @@ export default defineComponent({
       saving: false,
       showModal: false,
       form: {
-        id: undefined as number | undefined,
+        id: undefined,
         name: '',
         searches: 100,
         color: '#4f46e5',
         light_bg: '#eef2ff',
         is_active: true
-      },
+      } as TrendingTopic,
       palettes: [
         { color: "#ec4899", lightBg: "#fdf2f8" }, // pink
         { color: "#f43f5e", lightBg: "#fff1f2" }, // rose
@@ -188,16 +192,23 @@ export default defineComponent({
             const res = await fetchTopics();
             this.topics = res.data;
         } catch (e) {
-            alert("Lỗi tải danh sách chủ đề");
+            (this.$refs.myToast as any).error("Lỗi", "Lỗi tải danh sách chủ đề");
         } finally {
             this.loading = false;
         }
     },
     openModal(topic?: TrendingTopic) {
         if (topic) {
-            this.form = { ...topic };
+            this.form = { 
+                id: topic.id,
+                name: topic.name,
+                searches: topic.searches,
+                color: topic.color,
+                light_bg: topic.light_bg,
+                is_active: topic.is_active
+            };
         } else {
-            const randomPal = this.palettes[Math.floor(Math.random() * this.palettes.length)];
+            const randomPal = (this.palettes[Math.floor(Math.random() * this.palettes.length)] || this.palettes[0]) as { color: string; lightBg: string };
             this.form = { id: undefined, name: '', searches: 500, color: randomPal.color, light_bg: randomPal.lightBg, is_active: true };
         }
         this.showModal = true;
@@ -215,16 +226,16 @@ export default defineComponent({
         try {
             if (this.form.id) {
                 await updateTopic(this.form.id, this.form as Partial<TrendingTopic>);
-                alert("Cập nhật thành công!");
+                (this.$refs.myToast as any).success("Thành công", "Cập nhật thành công!");
             } else {
                 await createTopic(this.form as Partial<TrendingTopic>);
-                alert("Đã tạo chủ đề mới!");
+                (this.$refs.myToast as any).success("Thành công", "Đã tạo chủ đề mới!");
             }
             this.closeModal();
             this.loadData();
         } catch (e: any) {
             const msg = e.response?.data?.name ? "Tên chủ đề có thể đã tồn tại!" : "Có lỗi xảy ra";
-            alert(msg);
+            (this.$refs.myToast as any).error("Lỗi", msg);
         } finally {
             this.saving = false;
         }
@@ -234,7 +245,7 @@ export default defineComponent({
             await updateTopic(t.id!, { is_active: !t.is_active });
             t.is_active = !t.is_active;
         } catch (e) {
-            alert("Lỗi chuyển đổi trạng thái");
+            (this.$refs.myToast as any).error("Lỗi", "Lỗi chuyển đổi trạng thái");
         }
     },
     async confirmDelete(id: number) {
@@ -242,10 +253,10 @@ export default defineComponent({
         if (await confirm.open("Bạn có chắc chắn muốn xóa chủ đề này?")) {
             try {
                 await deleteTopic(id);
-                alert("Đã xóa chủ đề thành công!");
+                (this.$refs.myToast as any).success("Thành công", "Đã xóa chủ đề thành công!");
                 this.loadData();
             } catch (e) {
-                alert("Lỗi xóa");
+                (this.$refs.myToast as any).error("Lỗi", "Lỗi xóa");
             }
         }
     }
