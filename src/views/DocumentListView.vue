@@ -682,9 +682,9 @@ import Footer from '../components/layout/Footer.vue';
 import { deleteDocument, fetchDocuments, updateDocument, getDocumentLinks, createDocumentLink, deleteDocumentLink, getDocumentDetail } from '../api/documentApi';
 import { base64ToBlob, downloadFile, formatDate, formatFileSize } from '../utils/fileUtils';
 import { hasRole } from '../utils/authUtils';
-import { removeVietnameseTones } from '../utils/textUtils';
+import { removeVietnameseTones, formatLinkType, formatAiText } from '../utils/textUtils';
 import ToastNotification from '../components/ToastNotification.vue';
-import { fetchAttachmentsByDoc } from '../api/attachmentApi';
+import { fetchAttachmentsByDoc, fetchAttachmentDetail } from '../api/attachmentApi';
 import LoadingComponent from '../components/LoadingComponent.vue';
 import NetworkGraphWidget from '../components/admin/NetworkGraphWidget.vue';
 import AppDatePicker from '../components/AppDatePicker.vue';
@@ -824,9 +824,23 @@ export default defineComponent({
                 this.relatedDocs = flatLinks.map((l: any) => {
                     const isOutgoing = (l.source_document === doc.id);
                     if (isOutgoing) {
-                        return { id: l.id, target_doc_id: l.target_document, target_doc_number: l.target_document_number, target_title: l.target_document_title, link_type: l.link_type };
+                        return {
+                            id: l.id,
+                            target_doc_id: l.target_document,
+                            target_doc_number: l.target_document_number,
+                            target_title: l.target_document_title,
+                            link_type: l.link_type,
+                            direction: 'outgoing'
+                        };
                     } else {
-                        return { id: l.id, target_doc_id: l.source_document, target_doc_number: l.source_document_number, target_title: l.source_document_title, link_type: l.link_type + " (Nhận)" };
+                        return {
+                            id: l.id,
+                            target_doc_id: l.source_document,
+                            target_doc_number: l.source_document_number,
+                            target_title: l.source_document_title,
+                            link_type: l.link_type + " (Nhận)",
+                            direction: 'incoming'
+                        };
                     }
                 });
             } catch (e: any) {
@@ -964,28 +978,32 @@ export default defineComponent({
 
         async doDownloadFile() {
             const att = this.selectedDoc?.attachments;
-            if (!att || !att.file_base64) {
-                (this.$refs.myToast as any).error("Lỗi", `Xảy ra lỗi khi yêu cầu tải file xuống`);
+            if (!att) {
+                (this.$refs.myToast as any).error("Lỗi", "Không tìm thấy file đính kèm");
                 return;
             }
-            const blob = base64ToBlob(att.file_base64);
-            downloadFile(blob, att.filename);
-        },
 
-        formatLinkType(type: string) {
-            if (!type) return '';
-            const raw = type.replace(" (Nhận)", "");
-            const mapping: Record<string, string> = {
-                'can_cu': 'Văn bản căn cứ',
-                'thay_the': 'Văn bản thay thế',
-                'sua_doi': 'Sửa đổi, bổ sung',
-                'het_hieu_luc': 'Hết hiệu lực',
-                'dinh_chinh': 'Đính chính',
-            };
-            const label = mapping[raw] || raw;
-            return type.includes("(Nhận)") ? label + " (Tới)" : label;
-        },
+            (this.$refs.loadingRef as any).show();
+            try {
+                let fileData = att.file_base64;
+                if (!fileData) {
+                    const res = await fetchAttachmentDetail(att.id);
+                    fileData = res.data.file_base64;
+                }
 
+                if (!fileData) {
+                    throw new Error("Không thể lấy dữ liệu file");
+                }
+
+                const blob = base64ToBlob(fileData);
+                downloadFile(blob, att.filename);
+            } catch (err) {
+                console.error("Lỗi download:", err);
+                (this.$refs.myToast as any).error("Lỗi", "Không thể tải file lúc này");
+            } finally {
+                (this.$refs.loadingRef as any).hide();
+            }
+        },
         async handleDeleteLink(linkId: number) {
             if (!confirm("Bạn có chắc muốn xoá liên kết này?")) return;
             (this.$refs.loadingRef as any).show();
@@ -998,9 +1016,23 @@ export default defineComponent({
                     this.relatedDocs = flatLinks.map((l: any) => {
                         const isOutgoing = (l.source_document === this.selectedDoc!.id);
                         if (isOutgoing) {
-                            return { id: l.id, target_doc_id: l.target_document, target_doc_number: l.target_document_number, target_title: l.target_document_title, link_type: l.link_type };
+                            return {
+                                id: l.id,
+                                target_doc_id: l.target_document,
+                                target_doc_number: l.target_document_number,
+                                target_title: l.target_document_title,
+                                link_type: l.link_type,
+                                direction: 'outgoing'
+                            };
                         } else {
-                            return { id: l.id, target_doc_id: l.source_document, target_doc_number: l.source_document_number, target_title: l.source_document_title, link_type: l.link_type + " (Nhận)" };
+                            return {
+                                id: l.id,
+                                target_doc_id: l.source_document,
+                                target_doc_number: l.source_document_number,
+                                target_title: l.source_document_title,
+                                link_type: l.link_type + " (Nhận)",
+                                direction: 'incoming'
+                            };
                         }
                     });
                 }
@@ -1009,7 +1041,10 @@ export default defineComponent({
             } finally {
                 (this.$refs.loadingRef as any).hide();
             }
-        }
+        },
+
+        formatLinkType,
+        formatAiText,
     }
 });
 </script>

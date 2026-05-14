@@ -37,3 +37,40 @@ export function removeVietnameseTones(str: string): string {
     .replace(/Đ/g, "D")
     .toLowerCase();
 }
+
+export function formatLinkType(type: string): string {
+  if (!type) return "";
+
+  const parts = type.split("(");
+  const rawPart = parts[0] || "";
+  const raw = rawPart.trim().toLowerCase();
+  const isIncoming = type.includes("(Nhận)") || type.includes("(TOI)");
+
+  const mapping: Record<string, string> = {
+    can_cu: isIncoming ? "Là căn cứ của" : "Căn cứ vào",
+    thay_the: isIncoming ? "Được thay thế bởi" : "Thay thế cho",
+    thay_the_toan_phan: isIncoming ? "Bị thay thế toàn bộ bởi" : "Thay thế toàn bộ cho",
+    thay_the_1_phan: isIncoming ? "Bị thay thế một phần bởi" : "Thay thế một phần cho",
+    bi_thay_the: isIncoming ? "Thay thế cho" : "Bị thay thế bởi",
+    sua_doi: isIncoming ? "Được sửa đổi bởi" : "Sửa đổi, bổ sung cho",
+    sua_doi_bo_sung: isIncoming ? "Được sửa đổi bởi" : "Sửa đổi, bổ sung cho",
+    bi_sua_doi: isIncoming ? "Sửa đổi cho" : "Bị sửa đổi bởi",
+    het_hieu_luc: isIncoming ? "Bị bãi bỏ bởi" : "Làm hết hiệu lực văn bản",
+    het_hieu_luc_1_phan: isIncoming ? "Bị bãi bỏ một phần bởi" : "Làm hết hiệu lực một phần của",
+    het_hieu_luc_toan_bo: isIncoming ? "Bị bãi bỏ toàn bộ bởi" : "Làm hết hiệu lực toàn bộ của",
+    dinh_chinh: isIncoming ? "Được đính chính bởi" : "Đính chính cho",
+    huong_dan: isIncoming ? "Được hướng dẫn bởi" : "Hướng dẫn thi hành cho",
+    bi_dinh_chinh: isIncoming ? "Đính chính cho" : "Bị đính chính bởi",
+  };
+
+  return mapping[raw] || type;
+}
+
+export function formatAiText(text: string): string {
+  if (!text) return "";
+  let html = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
+  html = html.replace(/\n\s*-\s/g, "<br/>• ");
+  html = html.replace(/\n/g, "<br/>");
+  return html;
+}

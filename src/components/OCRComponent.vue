@@ -104,18 +104,21 @@
                                     <path class="opacity-75" fill="currentColor"
                                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                 </svg>
-                                Đang xử lý AI...
+                                {{ loadingMessage }}
                             </span>
                         </button>
                     </div>
 
                     <!-- Form Thông tin thuộc tính -->
                     <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 relative">
-                        <div v-if="isLoading"
-                            class="absolute inset-0 bg-white/60 z-10 flex items-center justify-center rounded-xl backdrop-blur-[1px]">
-                            <div class="text-center">
-                                <span class="text-sm font-semibold text-blue-600 animate-pulse">Đang trích xuất tự
-                                    động...</span>
+                        <div v-if="isLoading || isSaving"
+                            class="absolute inset-0 bg-white/70 z-10 flex flex-col items-center justify-center rounded-xl backdrop-blur-[1px]">
+                            <div class="ocr-loader mb-4" style="transform: scale(0.6)"></div>
+                            <div class="text-center px-4">
+                                <span class="text-sm font-bold animate-pulse block" :class="isSaving ? 'text-green-600' : 'text-blue-600'">
+                                    {{ isSaving ? 'Đang lưu vào hệ thống...' : loadingMessage }}
+                                </span>
+                                <span v-if="isLoading" class="text-[10px] text-gray-500 mt-1 font-medium italic">Bước {{ loadingStep }}/3: {{ loadingStep === 1 ? 'OCR' : loadingStep === 2 ? 'NLP' : 'RAG' }}</span>
                             </div>
                         </div>
                         <div class="flex justify-between items-center mb-4">
@@ -135,39 +138,43 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Tên văn bản<span
                                         class="text-red-500">*</span></label>
-                                <textarea v-model="form.title" @focus="activeField = 'title'" rows="1"
+                                <textarea ref="input_title" v-model="form.title" @focus="activeField = 'title'" rows="1"
                                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Trích yếu<span
                                         class="text-red-500">*</span></label>
-                                <textarea v-model="form.summary" @focus="activeField = 'summary'" rows="3"
+                                <textarea ref="input_summary" v-model="form.summary" @focus="activeField = 'summary'" rows="3"
                                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                     placeholder="VD: Quyết định về việc..."></textarea>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Số / Ký hiệu</label>
-                                    <input type="text" v-model="form.doc_number" @focus="activeField = 'doc_number'"
+                                    <label class="block text-sm font-medium text-gray-700">Số / Ký hiệu<span
+                                            class="text-red-500">*</span></label>
+                                    <input ref="input_doc_number" type="text" v-model="form.doc_number" @focus="activeField = 'doc_number'"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         placeholder="123/QĐ-..." />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Loại văn bản</label>
-                                    <input type="text" v-model="form.doc_type" @focus="activeField = 'doc_type'"
+                                    <label class="block text-sm font-medium text-gray-700">Loại văn bản<span
+                                            class="text-red-500">*</span></label>
+                                    <input ref="input_doc_type" type="text" v-model="form.doc_type" @focus="activeField = 'doc_type'"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         placeholder="Quyết Định,...." />
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Cơ quan ban hành</label>
-                                    <input type="text" v-model="form.issued_by" @focus="activeField = 'issued_by'"
+                                    <label class="block text-sm font-medium text-gray-700">Cơ quan ban hành<span
+                                            class="text-red-500">*</span></label>
+                                    <input ref="input_issued_by" type="text" v-model="form.issued_by" @focus="activeField = 'issued_by'"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Người ký</label>
-                                    <input type="text" v-model="form.signer" @focus="activeField = 'signer'"
+                                    <label class="block text-sm font-medium text-gray-700">Người ký<span
+                                            class="text-red-500">*</span></label>
+                                    <input ref="input_signer" type="text" v-model="form.signer" @focus="activeField = 'signer'"
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                                 </div>
                             </div>
@@ -187,8 +194,8 @@
                             </div>
                             <div
                                 class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                <div @focusin="activeField = 'issued_date'">
-                                    <label class="block text-xs font-bold text-gray-600 mb-1">Ngày ban hành</label>
+                                <div ref="input_issued_date" @focusin="activeField = 'issued_date'">
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Ngày ban hành<span class="text-red-500">*</span></label>
                                     <AppDatePicker v-model="form.issued_date" />
                                 </div>
                                 <div @focusin="activeField = 'effective_start_date'">
@@ -279,12 +286,12 @@
                                     </div>
                                 </div>
                             </div>
-                            <button type="submit" class="w-full inline-flex justify-center py-2.5 px-4 border border-transparent font-bold rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors shadow-md mt-4">
+                            <button type="submit" :disabled="isSaving" class="w-full inline-flex justify-center py-2.5 px-4 border border-transparent font-bold rounded-lg text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors shadow-md mt-4">
                                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                                 </svg>
-                                Lưu vào kho lưu trữ
+                                {{ isSaving ? 'Đang xử lý...' : 'Lưu vào kho lưu trữ' }}
                             </button>
                         </form>
                     </div>
@@ -335,9 +342,10 @@
                         class="flex-1 min-h-0 relative bg-gray-50 border-x border-b border-gray-200 rounded-b-lg overflow-hidden">
                         <!-- VIEW 3: Loading -->
                         <div v-if="isLoading"
-                            class="absolute inset-0 flex flex-col items-center justify-center bg-white/95 z-30">
-                            <div class="ocr-loader mb-6"></div>
-                            <p class="text-gray-900 font-bold text-xl animate-pulse">Đang trích xuất văn bản...</p>
+                            class="absolute inset-0 flex flex-col items-center justify-center bg-white/95 z-30 p-8 text-center">
+                            <div class="ocr-loader mb-8"></div>
+                            <p class="text-gray-900 font-bold text-xl animate-pulse">{{ loadingMessage }}</p>
+                            <p class="text-gray-500 mt-2 text-sm">Vui lòng đợi trong giây lát, AI đang xử lý tài liệu của bạn...</p>
                         </div>
 
                         <!-- VIEW 1: Giao diện sửa (OCR Layout) -->
@@ -406,8 +414,10 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import { mapActions } from "pinia";
+import { useConfirmStore } from "../store/confirmStore";
 import { processOCR, downloadOCRDocx } from "../api/ocrApi";
-import { createDocument, createDocumentLink, fetchDocuments } from "../api/documentApi";
+import { createDocument, updateDocument, createDocumentLink, fetchDocuments } from "../api/documentApi";
 import { uploadAttachment } from "../api/attachmentApi";
 import { normalizeDocType } from "../utils/textUtils";
 import ToastNotification from "./ToastNotification.vue";
@@ -421,6 +431,8 @@ export default defineComponent({
             isDragging: false,
             selectedFile: null as File | null,
             isLoading: false,
+            isSaving: false,
+            loadingStep: 0,
             isOcrDone: false,
             extractedText: "",
             filePreviewUrl: null as string | null,
@@ -502,6 +514,15 @@ export default defineComponent({
             }
             return matched;
         },
+        loadingMessage(): string {
+            if (this.isSaving) return "Đang lưu văn bản...";
+            switch(this.loadingStep) {
+                case 1: return "1. Đang trích xuất văn bản từ tệp...";
+                case 2: return "2. Đang phân tích nội dung & điền form...";
+                case 3: return "3. Đang so khớp & gợi ý liên kết thông minh...";
+                default: return "Đang xử lý tài liệu...";
+            }
+        }
     },
     watch: {
         selectedFile(newFile: File | null) {
@@ -511,6 +532,7 @@ export default defineComponent({
         },
     },
     methods: {
+        ...mapActions(useConfirmStore, { confirmOpen: 'open' }),
         async getDocuments() {
             // Lazy: chỉ tải khi user thực sự mở phần liên kết và bắt đầu gõ
             try {
@@ -559,9 +581,20 @@ export default defineComponent({
         },
         async startOCR() {
             if (!this.selectedFile) return;
-            this.isLoading = true; this.isOcrDone = false;
+            this.isLoading = true; 
+            this.isOcrDone = false;
+            this.loadingStep = 1;
+
+            // Giả lập chuyển đổi các bước loading để UX tốt hơn
+            const stepInterval = setInterval(() => {
+                if (this.loadingStep < 3) {
+                    this.loadingStep++;
+                }
+            }, 3000);
+
             try {
                 const res = await processOCR(this.selectedFile, this.extractionMode);
+                this.loadingStep = 3; // Nhảy đến bước cuối khi có phản hồi
                 const { data, accuracy, positions, metadata, suggestions } = res.data;
                 this.aiSuggestions = suggestions || [];
                 // Gán _uid cho mỗi position để dùng làm key + so sánh nhanh
@@ -596,16 +629,94 @@ export default defineComponent({
             } catch (err) {
                 (this.$refs.myToast as any).error("Lỗi", "OCR thất bại.");
             } finally {
+                clearInterval(stepInterval);
                 this.isLoading = false;
+                this.loadingStep = 0;
             }
         },
         async saveDocument() {
-            if (!this.selectedFile) return;
+            if (!this.selectedFile) {
+                (this.$refs.myToast as any).warning("Cảnh báo", "Vui lòng chọn hoặc kéo thả tệp tin trước khi lưu.");
+                return;
+            }
+
+            // Validation các trường bắt buộc
+            const requiredFields = [
+                { key: 'title', name: 'Tên văn bản' },
+                { key: 'summary', name: 'Trích yếu' },
+                { key: 'doc_number', name: 'Số / Ký hiệu' },
+                { key: 'doc_type', name: 'Loại văn bản' },
+                { key: 'issued_by', name: 'Cơ quan ban hành' },
+                { key: 'signer', name: 'Người ký' },
+                { key: 'issued_date', name: 'Ngày ban hành' }
+            ];
+
+            const missingFields = requiredFields.filter(field => !this.form[field.key] || this.form[field.key].toString().trim() === '');
+            
+            if (missingFields.length > 0) {
+                const missingNames = missingFields.map(f => f.name).join(', ');
+                (this.$refs.myToast as any).warning(
+                    "Thiếu thông tin",
+                    `Vui lòng điền các trường bắt buộc: ${missingNames}`
+                );
+
+                // Tự động focus vào trường đầu tiên bị thiếu
+                const firstMissing = missingFields[0];
+                if (!firstMissing) return;
+                const refName = 'input_' + firstMissing.key;
+                this.$nextTick(() => {
+                    const el = this.$refs[refName] as any;
+                    if (el) {
+                        if (typeof el.focus === 'function') {
+                            el.focus();
+                        } else if (el.$el && typeof el.$el.focus === 'function') {
+                            el.$el.focus();
+                        } else if (typeof el.scrollIntoView === 'function') {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            const inputNode = el.querySelector('input');
+                            if (inputNode) {
+                                inputNode.focus();
+                            }
+                        }
+                    }
+                });
+
+                return;
+            }
+            this.isSaving = true;
+            // Cập nhật danh sách văn bản mới nhất để kiểm tra trùng
+            await this.getDocuments();
+            const existingDoc = this.availableDocs.find(d => 
+                d.doc_number && 
+                d.doc_number.toLowerCase() === this.form.doc_number.toLowerCase()
+            );
+
+            let isUpdate = false;
+            let documentId = null;
+
+            if (existingDoc) {
+                const confirmUpdate = await this.confirmOpen(`Số hiệu văn bản "${this.form.doc_number}" đã tồn tại trên hệ thống. Bạn có muốn cập nhật (ghi đè) thông tin mới cho văn bản này không?`);
+                if (!confirmUpdate) {
+                    this.isSaving = false;
+                    return;
+                }
+                isUpdate = true;
+                documentId = existingDoc.id;
+            }
+
+            
             try {
                 const formData = new FormData();
                 Object.entries(this.form).forEach(([k, v]) => { if (v !== null) formData.append(k, String(v)); });
-                const res = await createDocument(formData);
-                const documentId = res.data?.data?.id; // ⭐ RẤT QUAN TRỌNG
+                
+                let res;
+                if (isUpdate && documentId) {
+                    res = await updateDocument(documentId, formData);
+                } else {
+                    res = await createDocument(formData);
+                    documentId = res.data?.data?.id; 
+                }
+
                 if (!documentId) {
                     throw new Error("Không nhận được document_id từ server");
                 }
@@ -646,6 +757,8 @@ export default defineComponent({
                     "Lỗi",
                     `Lưu văn bản hoặc upload file thất bại!`
                 );
+            } finally {
+                this.isSaving = false;
             }
         },
         handleOutsideClick(event: MouseEvent) {

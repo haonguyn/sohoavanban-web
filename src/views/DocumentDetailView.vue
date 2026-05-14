@@ -141,7 +141,7 @@
                         </div>
 
                         <!-- File Preview Viewer Section -->
-                        <div class="flex-grow bg-gray-200 relative min-h-[600px] sm:min-h-[800px] flex justify-center items-center p-1">
+                        <div class="flex-grow bg-gray-200 relative min-h-[700px] sm:min-h-[1000px] flex justify-center items-center p-1">
                             <!-- Loading State -->
                             <div v-if="loadingPdf" class="absolute inset-0 flex items-center justify-center z-10">
                                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -183,35 +183,18 @@
                         <div class="border-t border-gray-200">
                             <!-- Tab Headers -->
                             <div class="flex border-b border-gray-200 bg-gray-50">
-                                <button @click="activeTab = 'history'"
-                                    :class="['px-6 py-3 text-sm font-medium focus:outline-none transition-colors border-b-2', activeTab === 'history' ? 'border-blue-600 text-blue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100']">
-                                    Lịch sử xử lý
-                                </button>
                                 <button @click="activeTab = 'feedback'"
                                     :class="['px-6 py-3 text-sm font-medium focus:outline-none transition-colors border-b-2', activeTab === 'feedback' ? 'border-blue-600 text-blue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100']">
                                     Góp ý / Hỏi đáp
+                                </button>
+                                <button @click="activeTab = 'history'"
+                                    :class="['px-6 py-3 text-sm font-medium focus:outline-none transition-colors border-b-2', activeTab === 'history' ? 'border-blue-600 text-blue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100']">
+                                    Lịch sử xử lý
                                 </button>
                             </div>
 
                             <!-- Tab Contents -->
                             <div class="p-6 bg-white min-h-[200px]">
-                                <!-- Tab: Lịch sử -->
-                                <div v-if="activeTab === 'history'">
-                                    <ol class="relative border-l border-gray-200 ml-3">
-                                        <li v-for="(log, idx) in document.history" :key="idx" class="mb-6 ml-4">
-                                            <div
-                                                class="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -left-1.5 border border-white">
-                                            </div>
-                                            <time class="mb-1 text-sm font-normal leading-none text-gray-400">{{
-                                                formatDate(log.date)
-                                            }}</time>
-                                            <h3 class="text-sm font-semibold text-gray-900">{{ log.action }}</h3>
-                                            <p class="mb-2 text-sm font-normal text-gray-500">Thực hiện bởi: {{ log.user
-                                                }}</p>
-                                        </li>
-                                    </ol>
-                                </div>
-
                                 <!-- Tab: Góp ý -->
                                 <div v-if="activeTab === 'feedback'">
                                     <div class="space-y-6">
@@ -261,6 +244,23 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+
+                                <!-- Tab: Lịch sử -->
+                                <div v-if="activeTab === 'history'">
+                                    <ol class="relative border-l border-gray-200 ml-3">
+                                        <li v-for="(log, idx) in document.history" :key="idx" class="mb-6 ml-4">
+                                            <div
+                                                class="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -left-1.5 border border-white">
+                                            </div>
+                                            <time class="mb-1 text-sm font-normal leading-none text-gray-400">{{
+                                                formatDate(log.date)
+                                            }}</time>
+                                            <h3 class="text-sm font-semibold text-gray-900">{{ log.action }}</h3>
+                                            <p class="mb-2 text-sm font-normal text-gray-500">Thực hiện bởi: {{ log.user
+                                                }}</p>
+                                        </li>
+                                    </ol>
                                 </div>
                             </div>
                         </div>
@@ -319,7 +319,7 @@ import { getDocumentDetail, getDocumentLinks } from "../api/documentApi";
 import { fetchAttachmentsByDoc, fetchAttachmentDetail } from "../api/attachmentApi";
 import { base64ToBlob, downloadFile, formatDate, formatFileSize, getDocumentEffectiveStatus, formatNumber } from "../utils/fileUtils";
 import ToastNotification from "../components/ToastNotification.vue";
-import { getStatusClass } from "../utils/textUtils";
+import { getStatusClass, formatLinkType, formatAiText } from "../utils/textUtils";
 import LoadingComponent from "../components/LoadingComponent.vue";
 import { fetchFeedbacks, submitFeedback } from "../api/feedbackApi";
 import type { Feedback } from "../types/FeedbackTypes";
@@ -336,7 +336,7 @@ export default defineComponent({
     },
     data() {
         return {
-            activeTab: 'history' as 'history' | 'feedback',
+            activeTab: 'feedback' as 'history' | 'feedback',
             loadingPdf: true,
             document: {} as Doc,
             relatedDocs: [] as any[],
@@ -443,6 +443,14 @@ export default defineComponent({
                 if (this.isLoggedIn) {
                     this.loadFeedbacks();
                 }
+            } catch (err: any) {
+                console.error("Lỗi tải văn bản:", err);
+                // Nếu không tìm thấy văn bản (404), chuyển hướng sang trang Not Found
+                if (err.response?.status === 404) {
+                    this.$router.replace({ name: "not-found" });
+                } else {
+                    (this.$refs.myToast as any).error("Lỗi", "Không thể tải thông tin văn bản. Vui lòng thử lại sau.");
+                }
             } finally {
                 (this.$refs.loadingRef as any).hide();
             }
@@ -470,34 +478,14 @@ export default defineComponent({
                 const blob = base64ToBlob(fileData);
                 downloadFile(blob, att.filename);
             } catch (err) {
-                (this.$refs.myToast as any).error("Lỗi", "Không thể tải file xuống lúc này");
+                console.error("Lỗi download:", err);
+                (this.$refs.myToast as any).error("Lỗi", "Không thể tải file lúc này");
             } finally {
                 (this.$refs.loadingRef as any).hide();
             }
         },
-        formatAiText(text: string) {
-            if (!text) return '';
-            let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            html = html.replace(/\n\s*-\s/g, '<br/>• ');
-            html = html.replace(/\n/g, '<br/>');
-            return html;
-        },
-        formatLinkType(type: string) {
-            const raw = type.replace(" (Nhận)", "");
-            const mapping: Record<string, string> = {
-                'can_cu': 'Văn bản căn cứ',
-                'thay_the': 'Văn bản thay thế',
-                'bi_thay_the': 'Văn bản bị thay thế',
-                'sua_doi': 'Sửa đổi, bổ sung',
-                'bi_sua_doi': 'Bị sửa đổi, bổ sung',
-                'het_hieu_luc': 'Hết hiệu lực',
-                'het_hieu_luc_1_phan': 'Hết hiệu lực 1 phần',
-                'dinh_chinh': 'Đính chính',
-            };
-            const label = mapping[raw] || raw;
-            return type.includes("(Nhận)") ? label + " (Tới)" : label;
-        },
+        formatLinkType,
+        formatAiText,
         shareFacebook() {
             const url = encodeURIComponent(window.location.href);
             window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=400');

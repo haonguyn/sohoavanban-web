@@ -56,15 +56,13 @@
                                   </select>
                                 </div>
 
-                                <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100/50 mb-4">
-                                  <label for="issuer" class="block text-[11px] font-bold text-indigo-500 uppercase tracking-wider mb-2">Cơ quan ban hành</label>
-                                  <select id="issuer" v-model="filters.issued_by"
-                                      class="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-blue-500 outline-none transition-all">
-                                      <option value="">Tất cả cơ quan</option>
-                                      <option v-for="issuer in uniqueIssuers" :key="issuer" :value="issuer">
-                                          {{ issuer }}
-                                      </option>
-                                  </select>
+                                <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100/50 mb-4 relative z-10">
+                                  <label for="issuerGroup" class="block text-[11px] font-bold text-blue-500 uppercase tracking-wider mb-2">Cơ quan ban hành</label>
+                                  <AppGroupedSelect 
+                                      v-model="filters.issued_by"
+                                      :groups="groupedIssuers"
+                                      placeholder="Tất cả cơ quan"
+                                  />
                                 </div>
 
                                 <!-- Lọc theo ngày ban hành -->
@@ -287,15 +285,16 @@ import Footer from "../components/layout/Footer.vue";
 import ToastNotification from "../components/ToastNotification.vue";
 import LoadingComponent from "../components/LoadingComponent.vue";
 import AppDatePicker from "../components/AppDatePicker.vue";
+import AppGroupedSelect from "../components/AppGroupedSelect.vue";
 import { filterDocuments, getDocumentMetadata, fetchDocuments } from "../api/documentApi";
-import { fetchAttachmentsByDoc } from "../api/attachmentApi";
+import { fetchAttachmentsByDoc, fetchAttachmentDetail } from "../api/attachmentApi";
 import {
     base64ToBlob,
     downloadFile,
     getDocumentEffectiveStatus,
     formatDate,
 } from "../utils/fileUtils";
-import { getStatusClass, truncate, normalizeDocType } from "../utils/textUtils";
+import { getStatusClass, truncate, normalizeDocType, removeVietnameseTones } from "../utils/textUtils";
 import type { Doc } from "../types/DocumentTypes";
 
 export default defineComponent({
@@ -306,6 +305,7 @@ export default defineComponent({
         ToastNotification,
         LoadingComponent,
         AppDatePicker,
+        AppGroupedSelect,
     },
     data() {
         return {
@@ -331,6 +331,9 @@ export default defineComponent({
             uniqueIssuers: [] as string[],
             sortBy: "newest",
             debounceTimer: null as ReturnType<typeof setTimeout> | null,
+            /** Lưu trữ các biến thể của từng cụm để gửi API (dùng để xử lý lỗi sai dấu trong DB) */
+            issuerVariations: new Map<string, string[]>(),
+            docTypeVariations: new Map<string, string[]>(),
             /** Tránh watcher từ khóa chạy khi bootstrap từ URL trong `created`. */
             ignoreKeywordWatch: true,
         };
@@ -366,6 +369,26 @@ export default defineComponent({
                 page: this.currentPage,
                 page_size: this.pageSize,
             };
+
+            // Nếu có chọn cơ quan, gửi tất cả biến thể (sai dấu, khác encoding) để API không bỏ sót
+            if (this.filters.issued_by) {
+                const key = removeVietnameseTones(this.filters.issued_by);
+                const variants = this.issuerVariations.get(key);
+                if (variants && variants.length > 0) {
+                    // Nếu API hỗ trợ nhận danh sách hoặc chuỗi phân cách
+                    params.issued_by = variants.join(',');
+                }
+            }
+
+            // Tương tự cho loại văn bản
+            if (this.filters.doc_type) {
+                const key = removeVietnameseTones(this.filters.doc_type);
+                const variants = this.docTypeVariations.get(key);
+                if (variants && variants.length > 0) {
+                    params.doc_type = variants.join(',');
+                }
+            }
+
             if (opts?.recordTrend) {
                 params.record_trend = 1;
             }
@@ -461,23 +484,41 @@ export default defineComponent({
             this.$router.push({ name: "document-detail", params: { id } });
         },
         async doDownloadFile(document_id: number) {
-            const attachRes = await fetchAttachmentsByDoc(document_id);
-            const att = attachRes.data.length > 0 ? attachRes.data[attachRes.data.length - 1] : null;
-            if (!att || !att.file_base64) {
-                (this.$refs.myToast as any).error("Lỗi", "Không thể tải file");
-                return;
+            (this.$refs.loadingRef as any).show();
+            try {
+                const attachRes = await fetchAttachmentsByDoc(document_id);
+                const att = attachRes.data.length > 0 ? attachRes.data[attachRes.data.length - 1] : null;
+                
+                if (!att) {
+                    throw new Error("Không tìm thấy file đính kèm");
+                }
+
+                let fileData = att.file_base64;
+                if (!fileData) {
+                    const res = await fetchAttachmentDetail(att.id);
+                    fileData = res.data.file_base64;
+                }
+
+                if (!fileData) {
+                    throw new Error("Không thể lấy dữ liệu file");
+                }
+
+                const blob = base64ToBlob(fileData);
+                downloadFile(blob, att.filename);
+            } catch (err) {
+                console.error("Lỗi download:", err);
+                (this.$refs.myToast as any).error("Lỗi", "Không thể tải file lúc này");
+            } finally {
+                (this.$refs.loadingRef as any).hide();
             }
-            const blob = base64ToBlob(att.file_base64);
-            downloadFile(blob, att.filename);
         },
         async fetchMetadata() {
             try {
                 // Thử lấy từ endpoint metadata chuyên dụng
                 const res = await getDocumentMetadata();
                 const { doc_types, issuers } = res.data;
-                console.log("metadata", res.data);
                 
-                this.uniqueDocTypes = this.processMetadataList(doc_types, true);
+                this.uniqueDocTypes = this.processMetadataList(doc_types, false);
                 this.uniqueIssuers = this.processMetadataList(issuers, true);
             } catch (err) {
                 console.warn("Endpoint /metadata/ không tồn tại hoặc lỗi, thực hiện fallback...");
@@ -488,21 +529,60 @@ export default defineComponent({
                     const types = docs.map(d => d.doc_type).filter((t): t is string => !!t);
                     const issuers = docs.map(d => d.issued_by).filter((i): i is string => !!i);
                     
-                    this.uniqueDocTypes = this.processMetadataList(types, true);
+                    this.uniqueDocTypes = this.processMetadataList(types, false);
                     this.uniqueIssuers = this.processMetadataList(issuers, true);
                 } catch (fallbackErr) {
                     console.error("Lỗi fallback fetch metadata", fallbackErr);
                 }
             }
         },
-        processMetadataList(list: string[], shouldNormalize: boolean): string[] {
-            const processed = list.map(item => {
-                const trimmed = (item || "").trim();
-                return shouldNormalize ? normalizeDocType(trimmed) : trimmed;
-            });
-            return Array.from(new Set(processed))
-                .filter(Boolean)
-                .sort((a, b) => a.localeCompare(b, 'vi'));
+        processMetadataList(list: string[], isIssuer: boolean): string[] {
+            const shouldNormalize = true;
+            // Map<KeyKhôngDấu, Map<BảnGốc, SốLầnXuấtHiện>>
+            const stats = new Map<string, Map<string, number>>();
+            const variationsMap = isIssuer ? this.issuerVariations : this.docTypeVariations;
+            
+            variationsMap.clear();
+            
+            for (const raw of list) {
+                const trimmed = (raw || "").trim();
+                const normalized = shouldNormalize ? normalizeDocType(trimmed) : trimmed;
+                if (!normalized) continue;
+
+                const key = removeVietnameseTones(normalized);
+                
+                if (!stats.has(key)) {
+                    stats.set(key, new Map<string, number>());
+                }
+                const variants = stats.get(key)!;
+                variants.set(normalized, (variants.get(normalized) || 0) + 1);
+            }
+            
+            const results: string[] = [];
+            for (const [key, variants] of stats.entries()) {
+                // Chọn bản ghi xuất hiện nhiều nhất (heuristic cho bản ghi chuẩn)
+                let bestVariant = "";
+                let maxCount = -1;
+                
+                for (const [variant, count] of variants.entries()) {
+                    if (count > maxCount) {
+                        maxCount = count;
+                        bestVariant = variant;
+                    } else if (count === maxCount) {
+                        // Nếu số lần bằng nhau, ưu tiên bản ghi dài hơn hoặc có dấu (NFD normalize có thể giúp)
+                        if (variant.length >= bestVariant.length) {
+                            bestVariant = variant;
+                        }
+                    }
+                }
+                if (bestVariant) {
+                    results.push(bestVariant);
+                    // Lưu lại tất cả biến thể của cụm này
+                    variationsMap.set(key, Array.from(variants.keys()));
+                }
+            }
+            
+            return results.sort((a, b) => a.localeCompare(b, 'vi'));
         },
         formatDate,
         getStatusClass,
@@ -538,6 +618,48 @@ export default defineComponent({
     },
 
     computed: {
+        groupedIssuers() {
+            const groups: Record<string, string[]> = {
+                "Cơ quan Trung ương": [],
+                "Cơ quan Địa phương": [],
+                "Khác": []
+            };
+            const centralKeywords = [
+                "bo ", "chinh phu", "quoc hoi", "thu tuong", "chu tich nuoc",
+                "toa an", "vien kiem sat", "trung uong", "quoc gia",
+                "uy ban thuong vu", "kiem toan nha nuoc", "ngan hang nha nuoc",
+                "ban chi dao"
+            ];
+
+            const localKeywords = [
+                "uy ban nhan dan", "ubnd", "hoi dong nhan dan", "hdnd",
+                "so ", "tinh ", "thanh pho", "tp ", "quan ", "huyen ", "thi xa"
+            ];
+
+            for (const issuer of this.uniqueIssuers) {
+                const normalizedIssuer = removeVietnameseTones(issuer);
+                let matchedCategory = "Khác";
+                
+                // Ưu tiên kiểm tra cụm địa phương trước
+                if (localKeywords.some(kw => normalizedIssuer.includes(kw))) {
+                    matchedCategory = "Cơ quan Địa phương";
+                } else if (centralKeywords.some(kw => normalizedIssuer.includes(kw))) {
+                    matchedCategory = "Cơ quan Trung ương";
+                }
+                
+                let list = groups[matchedCategory];
+                if (!list) {
+                    list = [];
+                    groups[matchedCategory] = list;
+                }
+                list.push(issuer);
+            }
+
+            return Object.entries(groups)
+                .filter(([_, items]) => items.length > 0)
+                .map(([group, items]) => ({ group, items }));
+        },
+
         visiblePages(): (number | string)[] {
             const pages: (number | string)[] = [];
             const { totalPages, currentPage } = this;
@@ -564,11 +686,7 @@ export default defineComponent({
         },
 
         effectiveStatus() {
-            return (doc: Doc) =>
-                getDocumentEffectiveStatus({
-                    effective_start_date: doc.effective_start_date,
-                    effective_end_date: doc.effective_end_date,
-                });
+            return (doc: Doc) => getDocumentEffectiveStatus(doc);
         },
     },
 });

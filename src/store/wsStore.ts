@@ -23,20 +23,19 @@ export function connectWS() {
 
   // Gọi biến môi trường hoặc fallback về localhost
   const wsBaseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws';
-  console.log("Connecting WebSocket to", wsBaseUrl);
-  
+
   ws = new WebSocket(`${wsBaseUrl}/notifications/?token=${token}`);
 
-  ws.onopen = () => {
-    console.log('WebSocket connected: Admin Notifications');
-  };
+  // ws.onopen = () => {
+  //   console.log('WebSocket connected: Admin Notifications');
+  // };
 
   ws.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
       if (data.type === 'new_document') {
         unreadDocsCount.value++;
-        
+
         // Gọi CustomEvent cho ToastNotification lắng nghe và hiển thị
         window.dispatchEvent(new CustomEvent('global-toast', {
           detail: {

@@ -7,9 +7,14 @@ export function formatFileSize(bytes: number): string {
 }
 
 export function downloadFile(
-  source: Blob | string,
+  source: Blob | string | null | undefined,
   filename = "download"
 ): void {
+  if (!source) {
+    console.error("downloadFile: No source provided");
+    return;
+  }
+
   const isBlob = source instanceof Blob;
   const url = isBlob ? URL.createObjectURL(source) : source;
 
@@ -17,6 +22,12 @@ export function downloadFile(
   a.href = url;
   a.download = filename;
   a.style.display = "none";
+  
+  // For cross-origin URLs, a.download might not work. 
+  // In that case, we suggest opening in a new tab as fallback.
+  if (!isBlob && typeof source === 'string' && source.startsWith('http')) {
+    a.target = "_blank";
+  }
 
   document.body.appendChild(a);
   a.click();
@@ -27,7 +38,11 @@ export function downloadFile(
   }
 }
 
-export function base64ToBlob(base64: string, mime = "application/octet-stream") {
+export function base64ToBlob(base64: string | null | undefined, mime = "application/octet-stream") {
+  if (!base64) {
+    console.error("base64ToBlob: No base64 data provided");
+    return new Blob([], { type: mime });
+  }
   const byteChars = atob(base64);
   const byteNumbers = new Array(byteChars.length);
 
@@ -50,24 +65,45 @@ export function formatDate(dateString: string | null | undefined): string {
 }
 
 export function getDocumentEffectiveStatus(
-  {
-    effective_start_date,
-    effective_end_date,
-  }: {
+  doc: {
     effective_start_date?: string;
     effective_end_date?: string;
+    status?: string;
   },
   now: Date = new Date(),
-): "Sắp có hiệu lực" | "Còn hiệu lực" | "Hết hiệu lực" {
-  const start = effective_start_date ? new Date(effective_start_date) : null;
-  const end = effective_end_date ? new Date(effective_end_date) : null;
-
-  if (start && now < start) {
-    return "Sắp có hiệu lực";
+): string {
+  // 1. Ưu tiên các trạng thái đặc biệt được đánh dấu từ Database
+  const dbStatus = doc.status?.trim();
+  
+  if (dbStatus === "Hết hiệu lực một phần") {
+    return "Hết hiệu lực một phần";
   }
-  if (end && now > end) {
+  
+  if (dbStatus === "Hết hiệu lực" || dbStatus === "Bị bãi bỏ" || dbStatus === "Bị thay thế") {
     return "Hết hiệu lực";
   }
+
+  // 2. Nếu không có trạng thái đặc biệt, tính toán dựa trên ngày tháng
+  const start = doc.effective_start_date ? new Date(doc.effective_start_date) : null;
+  const end = doc.effective_end_date ? new Date(doc.effective_end_date) : null;
+
+  // Xử lý ngày hiệu lực (bỏ qua giờ phút giây để so sánh chính xác theo ngày)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if (start) {
+    const startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    if (today < startDate) {
+      return "Sắp có hiệu lực";
+    }
+  }
+
+  if (end) {
+    const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    if (today > endDate) {
+      return "Hết hiệu lực";
+    }
+  }
+
   return "Còn hiệu lực";
 }
 

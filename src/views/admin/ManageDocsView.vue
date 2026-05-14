@@ -288,10 +288,10 @@
                                             class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl group">
                                             <div class="flex items-center gap-3">
                                                 <div class="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-500 uppercase">
-                                                    {{ link.link_type }}
+                                                    {{ formatLinkType(link.link_type) }}
                                                 </div>
                                                 <span class="text-sm font-semibold text-slate-700">
-                                                    {{ link.target_document_number || link.source_document_number }}
+                                                    {{ link.target_doc_number }}
                                                 </span>
                                             </div>
                                             <button @click="handleDeleteLink(link.id)" type="button"
@@ -384,14 +384,14 @@
                                             class="flex flex-col p-3 bg-white border border-blue-50 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                                             <div class="flex items-center justify-between mb-1.5">
                                                 <span class="text-[10px] font-bold text-blue-500 uppercase px-2 py-0.5 bg-blue-50 rounded border border-blue-100">
-                                                    {{ link.link_type }}
+                                                    {{ formatLinkType(link.link_type) }}
                                                 </span>
                                             </div>
                                             <p class="text-[13px] font-bold text-slate-700 mb-1">
-                                                {{ link.target_document_number || link.source_document_number }}
+                                                {{ link.target_doc_number }}
                                             </p>
                                             <p class="text-[11px] text-slate-500 line-clamp-1 italic">
-                                                {{ link.target_document_title || link.source_document_title }}
+                                                {{ link.target_title }}
                                             </p>
                                         </div>
                                     </div>
@@ -465,9 +465,9 @@ import { useConfirmStore } from "../../store/confirmStore";
 import LoadingComponent from "../../components/LoadingComponent.vue";
 import ToastNotification from "../../components/ToastNotification.vue";
 import AppDatePicker from "../../components/AppDatePicker.vue";
-import { fetchAttachmentsByDoc } from "../../api/attachmentApi";
+import { fetchAttachmentsByDoc, fetchAttachmentDetail } from "../../api/attachmentApi";
 import { base64ToBlob, downloadFile, formatDate } from "../../utils/fileUtils";
-import { normalizeDocType, removeVietnameseTones } from "../../utils/textUtils";
+import { normalizeDocType, removeVietnameseTones, formatLinkType, formatAiText } from "../../utils/textUtils";
 
 export default defineComponent({
     name: "DocumentList",
@@ -712,7 +712,29 @@ export default defineComponent({
         async fetchExistingLinks(docId: number) {
             try {
                 const res = await getDocumentLinks(docId);
-                this.existingLinks = res.data;
+                const flatLinks = Array.isArray(res.data) ? res.data : [];
+                this.existingLinks = flatLinks.map((l: any) => {
+                    const isOutgoing = (l.source_document === docId);
+                    if (isOutgoing) {
+                        return {
+                            ...l,
+                            target_doc_id: l.target_document,
+                            target_doc_number: l.target_document_number,
+                            target_title: l.target_document_title,
+                            link_type: l.link_type,
+                            direction: 'outgoing'
+                        };
+                    } else {
+                        return {
+                            ...l,
+                            target_doc_id: l.source_document,
+                            target_doc_number: l.source_document_number,
+                            target_title: l.source_document_title,
+                            link_type: l.link_type + " (Nhận)",
+                            direction: 'incoming'
+                        };
+                    }
+                });
             } catch (e) {
                 console.error("Lỗi lấy danh sách liên kết hiện tại:", e);
             }
@@ -860,15 +882,31 @@ export default defineComponent({
         },
         async doDownloadFile() {
             const att = this.selectedDoc?.attachments;
-            if (!att || !att.file_base64) {
-                (this.$refs.myToast as any).error(
-                    "Lỗi",
-                    `Xảy ra lỗi khi yêu cầu tải file xuống`
-                );
+            if (!att) {
+                (this.$refs.myToast as any).error("Lỗi", "Không tìm thấy file đính kèm");
                 return;
             }
-            const blob = base64ToBlob(att.file_base64);
-            downloadFile(blob, att.filename);
+
+            (this.$refs.loadingRef as any).show();
+            try {
+                let fileData = att.file_base64;
+                if (!fileData) {
+                    const res = await fetchAttachmentDetail(att.id);
+                    fileData = res.data.file_base64;
+                }
+
+                if (!fileData) {
+                    throw new Error("Không thể lấy dữ liệu file");
+                }
+
+                const blob = base64ToBlob(fileData);
+                downloadFile(blob, att.filename);
+            } catch (err) {
+                console.error("Lỗi download:", err);
+                (this.$refs.myToast as any).error("Lỗi", "Không thể tải file lúc này");
+            } finally {
+                (this.$refs.loadingRef as any).hide();
+            }
         },
 
         // NEW LINKING METHODS
@@ -902,7 +940,9 @@ export default defineComponent({
             // Remove from suggestions list to avoid duplicate add
             this.aiSuggestions = this.aiSuggestions.filter(s => s.doc_number !== docNumber);
             (this.$refs.myToast as any).success("Đã thêm", `Đã thêm văn bản ${docNumber} vào danh sách chờ liên kết.`);
-        }
+        },
+        formatLinkType,
+        formatAiText,
     }
 });
 </script>
